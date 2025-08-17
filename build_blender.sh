@@ -15,6 +15,35 @@ for cmd in git cmake make; do
   check_command "$cmd"
 done
 
+# Automatically install missing dependencies on Debian/Ubuntu systems
+install_packages() {
+  local packages=("$@")
+  local missing=()
+
+  for pkg in "${packages[@]}"; do
+    dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  done
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "Installing missing packages: ${missing[*]}"
+    local sudo_cmd=""
+    if command -v sudo >/dev/null 2>&1; then
+      sudo_cmd="sudo"
+    fi
+    $sudo_cmd apt-get update
+    # shellcheck disable=SC2086
+    $sudo_cmd apt-get install -y ${missing[*]}
+  fi
+}
+
+# Only attempt installation if apt-get and dpkg are available
+if command -v apt-get >/dev/null 2>&1 && command -v dpkg >/dev/null 2>&1; then
+  deps=(libzstd-dev libjpeg-dev)
+  install_packages "${deps[@]}"
+else
+  echo "Warning: apt-get or dpkg not found, skipping dependency installation" >&2
+fi
+
 # Update submodules
 if [ -d "$ROOT_DIR/.git" ]; then
   git submodule update --init --recursive
