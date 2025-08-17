@@ -10,7 +10,9 @@ Useful for reviewing revisions to backport to stable builds.
 
 Example usage:
 
-   ./git_log_review_commits.py --source=../../.. --range=HEAD~40..HEAD --filter=BUGFIX
+   ./git_log_review_commits.py --range=HEAD~40..HEAD --filter=BUGFIX
+
+The repository é detectado automaticamente quando `--source` não é informado.
 """
 __all__ = (
     "main",
@@ -100,6 +102,7 @@ bugfix = ""
 import os
 import sys
 import io
+import subprocess
 
 sys.stdin = os.fdopen(sys.stdin.fileno(), "rb")
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='surrogateescape', line_buffering=True)
@@ -132,8 +135,8 @@ def argparse_create():
 
     parser.add_argument(
         "--source", dest="source_dir",
-        metavar='PATH', required=True,
-        help="Path to git repository")
+        metavar='PATH', required=False,
+        help="Path to git repository (defaults to current repository)")
     parser.add_argument(
         "--range", dest="range_sha1",
                         metavar='SHA1_RANGE', required=True,
@@ -158,6 +161,13 @@ def main():
     # Parse Args
 
     args = argparse_create().parse_args()
+    if args.source_dir is None:
+        try:
+            args.source_dir = subprocess.check_output([
+                "git", "rev-parse", "--show-toplevel"
+            ], text=True).strip()
+        except Exception:
+            raise SystemExit("Unable to determine repository path; specify --source")
 
     from git_log import GitCommitIter
 
