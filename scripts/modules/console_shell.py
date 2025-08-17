@@ -58,10 +58,32 @@ def execute(context, _is_interactive):
     return {'FINISHED'}
 
 
-def autocomplete(_context):
-    # sc = context.space_data
-    # TODO
-    return {'CANCELLED'}
+def autocomplete(context):
+    import glob
+    import os
+
+    sc = context.space_data
+    try:
+        current_line = sc.history[-1]
+    except Exception:
+        return {'CANCELLED'}
+
+    line = current_line.body
+    before, sep, prefix = line.rpartition(" ")
+    matches = glob.glob(prefix + "*")
+    if not matches:
+        return {'CANCELLED'}
+
+    add_scrollback("  ".join(sorted(matches)), 'INFO')
+
+    if len(matches) == 1:
+        match = matches[0]
+        if os.path.isdir(match):
+            match += os.sep
+        current_line.body = before + sep + match if sep else match
+        current_line.current_character = len(current_line.body)
+
+    return {'FINISHED'}
 
 
 def banner(context):
