@@ -23,6 +23,7 @@ Alguns subdiretórios relevantes:
 - `license/`: informações sobre licenciamento.
 - `manpage/`: script para geração da página de manual (`man blender`).
 - `python_api/`: documentação gerada da API Python.
+- `manual/`: espelho do manual oficial do Blender disponível em [docs.blender.org](https://docs.blender.org/manual/en/latest/).
 
 ## Scripts
 
