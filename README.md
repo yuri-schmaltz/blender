@@ -27,6 +27,7 @@ Development
 - [Code Review & Bug Tracker](https://projects.blender.org)
 - [Developer Forum](https://devtalk.blender.org)
 - [Developer Documentation](https://developer.blender.org/docs/)
+- [Como contribuir](CONTRIBUTING.md)
 
 
 License

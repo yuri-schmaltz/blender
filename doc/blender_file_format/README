@@ -1,3 +1,5 @@
+# NOTE: Este documento refere-se ao Blender 2.5x e é mantido apenas para fins históricos.
+
 To inspect the blend-file-format used by a certain version of blender 2.5x,
 navigate to this folder and run this command:
 
