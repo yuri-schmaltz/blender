@@ -117,6 +117,7 @@ class TOPBAR_MT_editor_menus(Menu):
             layout.menu("TOPBAR_MT_blender", text="Blender")
 
         layout.menu("TOPBAR_MT_file")
+        layout.menu("TOPBAR_MT_preferences")
         layout.menu("TOPBAR_MT_edit")
 
         layout.menu("TOPBAR_MT_render")
@@ -517,8 +518,12 @@ class TOPBAR_MT_edit(Menu):
         tool_settings = context.tool_settings
         layout.prop(tool_settings, "lock_object_mode")
 
-        layout.separator()
 
+class TOPBAR_MT_preferences(Menu):
+    bl_label = "Preferences"
+
+    def draw(self, _context):
+        layout = self.layout
         layout.operator("screen.userpref_show", text="Preferences...", icon='PREFERENCES')
 
 
