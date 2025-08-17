@@ -11,11 +11,7 @@ check_command() {
   }
 }
 
-for cmd in git cmake make; do
-  check_command "$cmd"
-done
-
-# Automatically install missing dependencies on Debian/Ubuntu systems
+# Automatically install missing packages on Debian/Ubuntu systems
 install_packages() {
   local packages=("$@")
   local missing=()
@@ -36,10 +32,30 @@ install_packages() {
   fi
 }
 
-# Only attempt installation if apt-get and dpkg are available
+# Ensure essential build tools are present
+for cmd in git cmake make; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1 && command -v dpkg >/dev/null 2>&1; then
+      install_packages "$cmd"
+    fi
+  fi
+  check_command "$cmd"
+done
+
+# Use Blender's official dependency installer when available
 if command -v apt-get >/dev/null 2>&1 && command -v dpkg >/dev/null 2>&1; then
-  deps=(libzstd-dev libjpeg-dev)
-  install_packages "${deps[@]}"
+  install_packages python3
+  install_script="$ROOT_DIR/build_files/build_environment/install_linux_packages.py"
+  if command -v python3 >/dev/null 2>&1; then
+    echo "Ensuring all build dependencies are installed"
+    if [ "$(id -u)" -eq 0 ]; then
+      python3 "$install_script" --no-sudo --all
+    else
+      python3 "$install_script" --all
+    fi
+  else
+    echo "Warning: python3 not found after installation attempt, skipping dependency installation" >&2
+  fi
 else
   echo "Warning: apt-get or dpkg not found, skipping dependency installation" >&2
 fi
