@@ -3,7 +3,17 @@ setlocal enabledelayedexpansion
 
 set "ROOT_DIR=%~dp0"
 set "BUILD_DIR=%ROOT_DIR%build"
+set "LOG_FILE=%ROOT_DIR%install.log"
+if exist "%LOG_FILE%" del "%LOG_FILE%"
 
+call :main 2>>"%LOG_FILE%"
+if errorlevel 1 (
+  echo Errors were encountered during installation. See "%LOG_FILE%" for details.
+  exit /b 1
+)
+exit /b 0
+
+:main
 rem Ensure essential build tools are available
 for %%i in (git cmake python) do (
   call :check_command %%i

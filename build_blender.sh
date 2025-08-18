@@ -3,6 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$ROOT_DIR/build"
+LOG_FILE="$ROOT_DIR/install.log"
+: >"$LOG_FILE"
+exec 2> >(tee -a "$LOG_FILE" >&2)
+trap 'echo "An error occurred. Check $LOG_FILE for details." >&2' ERR
 
 check_command() {
   command -v "$1" >/dev/null 2>&1 || {
