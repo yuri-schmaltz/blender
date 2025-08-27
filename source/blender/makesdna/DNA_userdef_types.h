@@ -119,12 +119,17 @@ typedef struct bUserExtensionRepo {
   char custom_dirpath[/*FILE_MAX*/ 1024];
   char remote_url[/*FILE_MAX*/ 1024];
 
+  /** Proxy settings for accessing repositories behind corporate proxies. */
+  char proxy_address[/*FILE_MAX*/ 1024];
+  char proxy_username[/*MAX_NAME*/ 64];
+  char proxy_password[/*MAX_NAME*/ 64];
+  uint16_t proxy_port;
+
   /** Options for the repository (#eUserExtensionRepo_Flag). */
   uint8_t flag;
   /** The source location when the custom directory isn't used (#eUserExtensionRepo_Source). */
   uint8_t source;
-
-  char _pad0[6];
+  char _pad0[4];
 } bUserExtensionRepo;
 
 typedef enum eUserExtensionRepo_Flag {
@@ -135,6 +140,7 @@ typedef enum eUserExtensionRepo_Flag {
   USER_EXTENSION_REPO_FLAG_USE_REMOTE_URL = 1 << 3,
   USER_EXTENSION_REPO_FLAG_SYNC_ON_STARTUP = 1 << 4,
   USER_EXTENSION_REPO_FLAG_USE_ACCESS_TOKEN = 1 << 5,
+  USER_EXTENSION_REPO_FLAG_USE_PROXY = 1 << 6,
 } eUserExtensionRepo_Flag;
 
 /**
