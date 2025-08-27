@@ -34,6 +34,10 @@
     .module = {'\0'}, \
     .custom_dirpath = {'\0'}, \
     .remote_url = {'\0'}, \
+    .proxy_address = {'\0'}, \
+    .proxy_username = {'\0'}, \
+    .proxy_password = {'\0'}, \
+    .proxy_port = 0, \
     .flag = 0, \
   }
 
