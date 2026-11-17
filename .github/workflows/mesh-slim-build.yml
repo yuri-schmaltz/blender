@@ -168,6 +168,28 @@ jobs:
           eng_pat = re.compile(r"engines/(compositor|eevee|external|gpencil|image)(/|\s|$)")
           with open("source/blender/draw/CMakeLists.txt", "w", encoding="utf-8") as f:
               f.writelines([l for l in draw_lines if not eng_pat.search(l)])
+
+          stub_cmake = """
+          foreach(_stub_target
+            bf_animrig
+            bf_asset_system
+            bf_compositor
+            bf_freestyle
+            bf_functions
+            bf_ikplugin
+            bf_nodes
+            bf_render
+            bf_sequencer
+            bf_shader_fx
+            bf_simulation
+          )
+            add_library(${_stub_target} INTERFACE)
+            string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
+            add_library(${_stub_alias} ALIAS ${_stub_target})
+          endforeach()
+          """
+          with open("source/blender/CMakeLists.txt", "a", encoding="utf-8") as f:
+              f.write(stub_cmake)
           EOF
 
       - name: Commit stripped tree
@@ -190,7 +212,7 @@ jobs:
             libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev libxinerama-dev \
             libgl-dev libepoxy-dev libfreetype-dev libpng-dev libjpeg-dev zlib1g-dev libzstd-dev \
             libtbb-dev libgmp-dev libeigen3-dev \
-            libfmt-dev libopenexr-dev libopenimageio-dev openimageio-tools libopencolorio-dev libbrotli-dev libpugixml-dev
+            libfmt-dev libopenexr-dev libopenimageio-dev openimageio-tools libopencolorio-dev libbrotli-dev libpugixml-dev && sudo mkdir -p /include /usr/include/opencv4
 
       - name: Configure CMake (mesh-only)
         run: |
