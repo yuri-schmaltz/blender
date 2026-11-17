@@ -4,7 +4,6 @@
 
 
 add_subdirectory(common)
-add_subdirectory(csv)
 
 if(WITH_IO_WAVEFRONT_OBJ)
   add_subdirectory(wavefront_obj)
@@ -15,7 +14,6 @@ if(WITH_IO_PLY)
 endif()
 
 if(WITH_IO_SPZ)
-  add_subdirectory(spz)
 endif()
 
 if(WITH_IO_STL)
@@ -23,7 +21,6 @@ if(WITH_IO_STL)
 endif()
 
 if(WITH_IO_GREASE_PENCIL)
-  add_subdirectory(grease_pencil)
 endif()
 
 if(WITH_IO_FBX)
@@ -31,13 +28,10 @@ if(WITH_IO_FBX)
 endif()
 
 if(WITH_ALEMBIC)
-  add_subdirectory(alembic)
 endif()
 
 if(WITH_USD)
-  add_subdirectory(usd)
 endif()
 
 if(WITH_OPENTIMELINEIO)
-  add_subdirectory(otio)
 endif()

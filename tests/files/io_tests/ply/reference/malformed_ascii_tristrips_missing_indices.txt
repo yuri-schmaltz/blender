@@ -1,1 +1,0 @@
-Error during import: Error: PLY Importer: failed importing malformed_ascii_tristrips_missing_indices: Could not read tristrips

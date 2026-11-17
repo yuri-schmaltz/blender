@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Libs that adhere to strict flags
-add_subdirectory(curve_fit_nd)
 add_subdirectory(fast_float)
 add_subdirectory(json)
 add_subdirectory(toml11)
@@ -53,7 +52,6 @@ add_subdirectory(md4c)
 
 if(WITH_BULLET)
   if(NOT WITH_SYSTEM_BULLET)
-    add_subdirectory(bullet2)
   endif()
 endif()
 
@@ -63,10 +61,8 @@ endif()
 
 if(WITH_CYCLES OR WITH_OPENSUBDIV)
   if((WITH_CYCLES_DEVICE_CUDA OR WITH_CYCLES_DEVICE_OPTIX) AND WITH_CUDA_DYNLOAD)
-    add_subdirectory(cuew)
   endif()
   if(WITH_CYCLES_DEVICE_HIP AND WITH_HIP_DYNLOAD)
-    add_subdirectory(hipew)
   endif()
 endif()
 
@@ -76,20 +72,15 @@ endif()
 
 if(WITH_LIBMV OR WITH_GTESTS)
   if(NOT WITH_SYSTEM_GFLAGS)
-    add_subdirectory(gflags)
   endif()
-  add_subdirectory(glog)
 endif()
 
 if(WITH_GTESTS)
-  add_subdirectory(gtest)
-  add_subdirectory(gmock)
 endif()
 
 if(WITH_AUDASPACE AND NOT WITH_SYSTEM_AUDASPACE)
   set(AUDASPACE_CMAKE_CFG ${CMAKE_CURRENT_SOURCE_DIR}/audaspace/blender_config.cmake)
   set(LIB_SUFFIX "")  # Quiet uninitialized warning.
-  add_subdirectory(audaspace)
   unset(LIB_SUFFIX)
 endif()
 
@@ -99,7 +90,6 @@ if(WITH_QUADRIFLOW)
 endif()
 
 if(WITH_MOD_FLUID)
-  add_subdirectory(mantaflow)
 endif()
 
 if(WITH_VULKAN_BACKEND)
@@ -108,5 +98,4 @@ if(WITH_VULKAN_BACKEND)
 endif()
 
 if(WITH_TRACY)
-  add_subdirectory(tracy_profiler)
 endif()
