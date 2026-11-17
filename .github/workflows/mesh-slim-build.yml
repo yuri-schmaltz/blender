@@ -200,6 +200,10 @@ jobs:
             add_library(bf_nodes_shader INTERFACE)
             add_library(bf::nodes::shader ALIAS bf_nodes_shader)
           endif()
+          if(NOT TARGET bf_intern_optional_openvdb)
+            add_library(bf_intern_optional_openvdb INTERFACE)
+            add_library(bf::intern::optional::openvdb ALIAS bf_intern_optional_openvdb)
+          endif()
           """
           with open("source/blender/CMakeLists.txt", "w", encoding="utf-8") as f:
               f.write(sb_cm)
