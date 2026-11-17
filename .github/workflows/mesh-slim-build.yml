@@ -162,6 +162,12 @@ jobs:
           )
           with open("CMakeLists.txt", "w", encoding="utf-8") as f:
               f.write(cm)
+
+          with open("source/blender/draw/CMakeLists.txt", "r", encoding="utf-8") as f:
+              draw_lines = f.readlines()
+          eng_pat = re.compile(r"engines/(compositor|eevee|external|gpencil|image)(/|\s|$)")
+          with open("source/blender/draw/CMakeLists.txt", "w", encoding="utf-8") as f:
+              f.writelines([l for l in draw_lines if not eng_pat.search(l)])
           EOF
 
       - name: Commit stripped tree
