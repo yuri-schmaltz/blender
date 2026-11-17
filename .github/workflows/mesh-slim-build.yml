@@ -191,6 +191,7 @@ jobs:
           cmake -S . -B ../build -G Ninja \
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
+            -DPYTHON_VERSION=3.12 \
             -DWITH_EMBREE=OFF \
             -DWITH_MANIFOLD=OFF \
             -DWITH_VULKAN_BACKEND=OFF \
