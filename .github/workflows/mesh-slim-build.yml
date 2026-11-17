@@ -188,6 +188,14 @@ jobs:
 
       - name: Configure CMake (mesh-only)
         run: |
+          OCIO_CMAKE=$(find /usr -iname "OpenColorIOConfig.cmake" -o -iname "opencolorio-config.cmake" 2>/dev/null | head -n1)
+          echo "OCIO_CMAKE=$OCIO_CMAKE"
+          EXTRA_CMAKE_ARGS=""
+          if [ -n "$OCIO_CMAKE" ]; then
+            EXTRA_CMAKE_ARGS="-DOpenColorIO_DIR=$(dirname "$OCIO_CMAKE")"
+          else
+            dpkg -L libopencolorio-dev | grep -iE "cmake|\.pc" || true
+          fi
           cmake -S . -B ../build -G Ninja \
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
@@ -231,7 +239,8 @@ jobs:
             -DWITH_DRACO=OFF \
             -DWITH_KTX=OFF \
             -DWITH_MESHOPTIMIZER=OFF \
-            -DWITH_QUADRIFLOW=OFF
+            -DWITH_QUADRIFLOW=OFF \
+            $EXTRA_CMAKE_ARGS
 
       - name: Build (test compilation)
         run: |
