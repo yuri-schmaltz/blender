@@ -184,7 +184,7 @@ jobs:
             libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev libxinerama-dev \
             libgl-dev libepoxy-dev libfreetype-dev libpng-dev libjpeg-dev zlib1g-dev libzstd-dev \
             libtbb-dev libgmp-dev libeigen3-dev \
-            libfmt-dev libopenexr-dev libopenimageio-dev libopencolorio-dev libbrotli-dev libpugixml-dev
+            libfmt-dev libopenexr-dev libopenimageio-dev openimageio-tools libopencolorio-dev libbrotli-dev libpugixml-dev
 
       - name: Configure CMake (mesh-only)
         run: |
@@ -192,6 +192,7 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
             -DPYTHON_VERSION=3.14 \
+            -DWITH_LIBS_PRECOMPILED=OFF \
             -DWITH_EMBREE=OFF \
             -DWITH_MANIFOLD=OFF \
             -DWITH_VULKAN_BACKEND=OFF \
