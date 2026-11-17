@@ -156,3 +156,21 @@ endif()
 if(WITH_CPU_CHECK)
   add_subdirectory(cpucheck)
 endif()
+
+foreach(_stub_target
+  bf_animrig
+  bf_asset_system
+  bf_compositor
+  bf_freestyle
+  bf_functions
+  bf_ikplugin
+  bf_nodes
+  bf_render
+  bf_sequencer
+  bf_shader_fx
+  bf_simulation
+)
+  add_library(${_stub_target} INTERFACE)
+  string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
+  add_library(${_stub_alias} ALIAS ${_stub_target})
+endforeach()
