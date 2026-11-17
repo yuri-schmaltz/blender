@@ -1,0 +1,217 @@
+name: Mesh Slim Strip & Build Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  strip-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Strip non-mesh modules and update CMakeLists
+        run: |
+          python3 - << 'EOF'
+          import os
+          import shutil
+          import re
+
+          dirs_to_remove = [
+              "source/blender/animrig",
+              "source/blender/asset_system",
+              "source/blender/compositor",
+              "source/blender/freestyle",
+              "source/blender/functions",
+              "source/blender/ikplugin",
+              "source/blender/nodes",
+              "source/blender/render",
+              "source/blender/sequencer",
+              "source/blender/shader_fx",
+              "source/blender/simulation",
+              "source/blender/editors/animation",
+              "source/blender/editors/armature",
+              "source/blender/editors/asset",
+              "source/blender/editors/curve",
+              "source/blender/editors/curves",
+              "source/blender/editors/geometry",
+              "source/blender/editors/gpencil_legacy",
+              "source/blender/editors/grease_pencil",
+              "source/blender/editors/lattice",
+              "source/blender/editors/mask",
+              "source/blender/editors/metaball",
+              "source/blender/editors/physics",
+              "source/blender/editors/pointcloud",
+              "source/blender/editors/render",
+              "source/blender/editors/sculpt_paint",
+              "source/blender/editors/sound",
+              "source/blender/editors/space_action",
+              "source/blender/editors/space_clip",
+              "source/blender/editors/space_graph",
+              "source/blender/editors/space_image",
+              "source/blender/editors/space_nla",
+              "source/blender/editors/space_node",
+              "source/blender/editors/space_project",
+              "source/blender/editors/space_script",
+              "source/blender/editors/space_sequencer",
+              "source/blender/editors/space_spreadsheet",
+              "source/blender/editors/uvedit",
+              "source/blender/io/alembic",
+              "source/blender/io/csv",
+              "source/blender/io/grease_pencil",
+              "source/blender/io/otio",
+              "source/blender/io/spz",
+              "source/blender/io/usd",
+              "source/blender/draw/engines/compositor",
+              "source/blender/draw/engines/eevee",
+              "source/blender/draw/engines/external",
+              "source/blender/draw/engines/gpencil",
+              "source/blender/draw/engines/image",
+              "intern/cycles",
+              "intern/iksolver",
+              "intern/itasc",
+              "intern/ktx_bridge",
+              "intern/libmv",
+              "intern/mantaflow",
+              "intern/openvdb",
+              "intern/renderdoc_dynload",
+              "intern/rigidbody",
+              "intern/sky",
+              "intern/slim",
+              "extern/audaspace",
+              "extern/bullet2",
+              "extern/cuew",
+              "extern/curve_fit_nd",
+              "extern/gflags",
+              "extern/glog",
+              "extern/gmock",
+              "extern/gtest",
+              "extern/hipew",
+              "extern/mantaflow",
+              "extern/renderdoc",
+              "extern/tracy_profiler",
+              "assets",
+              "tests",
+              "scripts/freestyle",
+              "scripts/templates_osl",
+              "scripts/addons_core/hydra_storm",
+              "scripts/addons_core/io_anim_bvh",
+              "scripts/addons_core/io_curve_svg",
+              "scripts/addons_core/io_mesh_uv_layout",
+              "scripts/addons_core/node_wrangler",
+              "scripts/addons_core/pose_library",
+              "scripts/addons_core/rigify",
+              "scripts/addons_core/viewport_vr_preview",
+          ]
+
+          removed = 0
+          for d in dirs_to_remove:
+              if os.path.isdir(d):
+                  shutil.rmtree(d)
+                  removed += 1
+          print(f"Removed {removed} directories")
+
+          def remove_subdirs(cmake_path, names):
+              with open(cmake_path, "r", encoding="utf-8") as f:
+                  lines = f.readlines()
+              pat = re.compile(r"^\s*add_subdirectory\(\s*(" + "|".join(re.escape(n) for n in names) + r")\s*\)\s*$")
+              new_lines = [l for l in lines if not pat.match(l)]
+              with open(cmake_path, "w", encoding="utf-8") as f:
+                  f.writelines(new_lines)
+
+          remove_subdirs("source/blender/CMakeLists.txt", [
+              "animrig", "asset_system", "draw/engines/eevee/shaders", "draw/engines/gpencil/shaders",
+              "render", "ikplugin", "simulation", "gpu/shaders/nodes", "nodes", "sequencer",
+              "shader_fx", "functions", "compositor", "compositor/shaders", "freestyle",
+          ])
+          remove_subdirs("source/blender/editors/CMakeLists.txt", [
+              "animation", "armature", "asset", "curve", "curves", "geometry", "gpencil_legacy",
+              "grease_pencil", "lattice", "mask", "metaball", "physics", "pointcloud", "render",
+              "sculpt_paint", "sound", "space_action", "space_clip", "space_graph", "space_image",
+              "space_nla", "space_node", "space_project", "space_script", "space_sequencer",
+              "space_spreadsheet", "uvedit",
+          ])
+          remove_subdirs("source/blender/io/CMakeLists.txt", [
+              "csv", "spz", "grease_pencil", "alembic", "usd", "otio",
+          ])
+          remove_subdirs("intern/CMakeLists.txt", [
+              "libmv", "sky", "openvdb", "iksolver", "itasc", "cycles", "rigidbody",
+              "mantaflow", "slim", "renderdoc_dynload", "ktx_bridge",
+          ])
+          remove_subdirs("extern/CMakeLists.txt", [
+              "curve_fit_nd", "bullet2", "cuew", "hipew", "gflags", "glog",
+              "gtest", "gmock", "audaspace", "mantaflow", "tracy_profiler",
+          ])
+          remove_subdirs("CMakeLists.txt", [
+              "tests", "intern/cycles", "extern/cuew", "extern/hipew",
+          ])
+          EOF
+
+      - name: Commit stripped tree
+        run: |
+          git config user.name "yuri-schmaltz"
+          git config user.email "yuri-schmaltz@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Strip non-mesh-modeling modules and update CMakeLists"
+            git push origin HEAD
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Install minimal Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build build-essential python3-dev \
+            libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev libxinerama-dev \
+            libgl-dev libepoxy-dev libfreetype-dev libpng-dev libjpeg-dev zlib1g-dev libzstd-dev \
+            libtbb-dev libgmp-dev libeigen3-dev
+
+      - name: Configure CMake (mesh-only)
+        run: |
+          cmake -S . -B ../build -G Ninja \
+            -DWITH_CYCLES=OFF \
+            -DWITH_MOD_FLUID=OFF \
+            -DWITH_MOD_OCEANSIM=OFF \
+            -DWITH_FREESTYLE=OFF \
+            -DWITH_AUDASPACE=OFF \
+            -DWITH_CODEC_FFMPEG=OFF \
+            -DWITH_CODEC_SNDFILE=OFF \
+            -DWITH_ALEMBIC=OFF \
+            -DWITH_USD=OFF \
+            -DWITH_HYDRA=OFF \
+            -DWITH_MATERIALX=OFF \
+            -DWITH_LIBMV=OFF \
+            -DWITH_XR_OPENXR=OFF \
+            -DWITH_BULLET=OFF \
+            -DWITH_JOLT=OFF \
+            -DWITH_OPENVDB=OFF \
+            -DWITH_NANOVDB=OFF \
+            -DWITH_OPENIMAGEDENOISE=OFF \
+            -DWITH_OPENTIMELINEIO=OFF \
+            -DWITH_IO_GREASE_PENCIL=OFF \
+            -DWITH_IO_SPZ=OFF \
+            -DWITH_UV_SLIM=OFF \
+            -DWITH_IK_SOLVER=OFF \
+            -DWITH_IK_ITASC=OFF \
+            -DWITH_POTRACE=OFF \
+            -DWITH_HARU=OFF \
+            -DWITH_PUGIXML=OFF \
+            -DWITH_FFTW3=OFF \
+            -DWITH_BLENDER_THUMBNAILER=OFF \
+            -DWITH_INTERNATIONAL=OFF \
+            -DWITH_DRACO=OFF \
+            -DWITH_KTX=OFF \
+            -DWITH_MESHOPTIMIZER=OFF \
+            -DWITH_QUADRIFLOW=OFF
+
+      - name: Build (test compilation)
+        run: |
+          cmake --build ../build -j$(nproc)
