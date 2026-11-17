@@ -169,7 +169,10 @@ jobs:
           with open("source/blender/draw/CMakeLists.txt", "w", encoding="utf-8") as f:
               f.writelines([l for l in draw_lines if not eng_pat.search(l)])
 
-          stub_cmake = """
+          with open("source/blender/CMakeLists.txt", "r", encoding="utf-8") as f:
+              sb_cm = f.read()
+          sb_cm = re.split(r"\n*foreach\(_stub_target\b", sb_cm, maxsplit=1)[0].rstrip() + "\n"
+          sb_cm += """
           foreach(_stub_target
             bf_animrig
             bf_asset_system
@@ -183,17 +186,23 @@ jobs:
             bf_shader_fx
             bf_simulation
           )
-            add_library(${_stub_target} INTERFACE)
-            string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
-            add_library(${_stub_alias} ALIAS ${_stub_target})
+            if(NOT TARGET ${_stub_target})
+              add_library(${_stub_target} INTERFACE)
+              string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
+              add_library(${_stub_alias} ALIAS ${_stub_target})
+            endif()
           endforeach()
-          add_library(extern_curve_fit_nd INTERFACE)
-          add_library(bf::extern::curve_fit_nd ALIAS extern_curve_fit_nd)
-          add_library(bf_nodes_shader INTERFACE)
-          add_library(bf::nodes::shader ALIAS bf_nodes_shader)
+          if(NOT TARGET extern_curve_fit_nd)
+            add_library(extern_curve_fit_nd INTERFACE)
+            add_library(bf::extern::curve_fit_nd ALIAS extern_curve_fit_nd)
+          endif()
+          if(NOT TARGET bf_nodes_shader)
+            add_library(bf_nodes_shader INTERFACE)
+            add_library(bf::nodes::shader ALIAS bf_nodes_shader)
+          endif()
           """
-          with open("source/blender/CMakeLists.txt", "a", encoding="utf-8") as f:
-              f.write(stub_cmake)
+          with open("source/blender/CMakeLists.txt", "w", encoding="utf-8") as f:
+              f.write(sb_cm)
           EOF
 
       - name: Commit stripped tree
