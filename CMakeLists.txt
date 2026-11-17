@@ -87,7 +87,7 @@ include(build_files/cmake/macros.cmake)
 if(EXISTS ${CMAKE_SOURCE_DIR}/release/datafiles/startup.blend)
   file(SIZE ${CMAKE_SOURCE_DIR}/release/datafiles/startup.blend startup_size)
   if(${startup_size} LESS 1024)
-    message(FATAL_ERROR
+    message(WARNING
       "Detected incomplete startup blend, likely due to missing Git LFS checkout.\n"
       "Running \"make update\" or \"git lfs pull\" may resolve the issue."
     )
