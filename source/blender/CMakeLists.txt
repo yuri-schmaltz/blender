@@ -170,29 +170,17 @@ foreach(_stub_target
   bf_shader_fx
   bf_simulation
 )
-  add_library(${_stub_target} INTERFACE)
-  string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
-  add_library(${_stub_alias} ALIAS ${_stub_target})
+  if(NOT TARGET ${_stub_target})
+    add_library(${_stub_target} INTERFACE)
+    string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
+    add_library(${_stub_alias} ALIAS ${_stub_target})
+  endif()
 endforeach()
-
-foreach(_stub_target
-  bf_animrig
-  bf_asset_system
-  bf_compositor
-  bf_freestyle
-  bf_functions
-  bf_ikplugin
-  bf_nodes
-  bf_render
-  bf_sequencer
-  bf_shader_fx
-  bf_simulation
-)
-  add_library(${_stub_target} INTERFACE)
-  string(REGEX REPLACE "^bf_" "bf::" _stub_alias "${_stub_target}")
-  add_library(${_stub_alias} ALIAS ${_stub_target})
-endforeach()
-add_library(extern_curve_fit_nd INTERFACE)
-add_library(bf::extern::curve_fit_nd ALIAS extern_curve_fit_nd)
-add_library(bf_nodes_shader INTERFACE)
-add_library(bf::nodes::shader ALIAS bf_nodes_shader)
+if(NOT TARGET extern_curve_fit_nd)
+  add_library(extern_curve_fit_nd INTERFACE)
+  add_library(bf::extern::curve_fit_nd ALIAS extern_curve_fit_nd)
+endif()
+if(NOT TARGET bf_nodes_shader)
+  add_library(bf_nodes_shader INTERFACE)
+  add_library(bf::nodes::shader ALIAS bf_nodes_shader)
+endif()
