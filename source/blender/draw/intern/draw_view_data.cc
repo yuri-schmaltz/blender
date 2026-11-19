@@ -111,13 +111,6 @@ void DRWViewData::texture_list_size_validate(const int2 &size)
 void DRW_view_data_reset(DRWViewData *view_data)
 {
   view_data->foreach_enabled_engine([&](DrawEngine &instance) { instance.used = false; });
-
-  for (std::unique_ptr<draw::TextureFromPool> &texture :
-       view_data->viewport_compositor_passes.values())
-  {
-    texture->release();
-  }
-  view_data->viewport_compositor_passes.clear();
 }
 
 void DRW_view_data_free_unused(DRWViewData *view_data)

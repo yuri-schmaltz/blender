@@ -88,7 +88,6 @@ struct RenderJob : public RenderJobBase {
   ReportList *reports;
   int orig_layer;
   int last_layer;
-  bool use_sequencer_scene;
   ScrArea *area;
   ColorManagedViewSettings view_settings;
   ColorManagedDisplaySettings display_settings;
@@ -176,29 +175,20 @@ static wmOperatorStatus screen_render_exec(bContext *C, wmOperator *op)
 
   const bool is_animation = RNA_boolean_get(op->ptr, "animation");
   const bool is_write_still = RNA_boolean_get(op->ptr, "write_still");
-  const bool use_sequencer_scene = RNA_boolean_get(op->ptr, "use_sequencer_scene");
 
-  Scene *scene = use_sequencer_scene ? CTX_data_sequencer_scene(C) : CTX_data_scene(C);
+  Scene *scene = CTX_data_scene(C);
 
   if (scene == nullptr) {
-    BKE_report(op->reports,
-               RPT_ERROR,
-               use_sequencer_scene ? "No sequencer scene to render" : "No scene to render");
+    BKE_report(op->reports, RPT_ERROR, "No scene to render");
     return OPERATOR_CANCELLED;
   }
 
-  ViewLayer *active_layer = use_sequencer_scene ? BKE_view_layer_default_render(scene) :
-                                                  CTX_data_view_layer(C);
+  ViewLayer *active_layer = CTX_data_view_layer(C);
   RenderEngineType *re_type = RE_engines_find(scene->r.engine);
   Object *camera_override = v3d ? V3D_CAMERA_LOCAL(v3d) : nullptr;
 
   /* Cannot do render if there is not this function. */
   if (re_type->render == nullptr) {
-    return OPERATOR_CANCELLED;
-  }
-
-  if (use_sequencer_scene && !RE_seq_render_active(scene, &scene->r)) {
-    BKE_report(op->reports, RPT_ERROR, "No sequencer scene with video strips to render");
     return OPERATOR_CANCELLED;
   }
 
@@ -602,9 +592,7 @@ static void render_image_restore_scene_and_layer(RenderJob *rj)
           if (area.spacetype == SPACE_IMAGE) {
             SpaceImage *sima = area.spacedata.first_as<SpaceImage>();
 
-            /* Automatically show scene we just rendered. */
-            SET_FLAG_FROM_TEST(
-                sima->iuser.flag, rj->use_sequencer_scene, IMA_SHOW_SEQUENCER_SCENE);
+            sima->iuser.flag &= ~IMA_SHOW_SEQUENCER_SCENE;
 
             if (RE_HasSingleLayer(rj->re)) {
               /* For single layer renders keep the active layer
@@ -809,30 +797,21 @@ static wmOperatorStatus screen_render_invoke(bContext *C, wmOperator *op, const 
   const bool is_animation = RNA_boolean_get(op->ptr, "animation");
   const bool is_write_still = RNA_boolean_get(op->ptr, "write_still");
   const bool use_viewport = RNA_boolean_get(op->ptr, "use_viewport");
-  const bool use_sequencer_scene = RNA_boolean_get(op->ptr, "use_sequencer_scene");
 
   View3D *v3d = use_viewport ? CTX_wm_view3d(C) : nullptr;
-  Scene *scene = use_sequencer_scene ? CTX_data_sequencer_scene(C) : CTX_data_scene(C);
+  Scene *scene = CTX_data_scene(C);
 
   if (scene == nullptr) {
-    BKE_report(op->reports,
-               RPT_ERROR,
-               use_sequencer_scene ? "No sequencer scene to render" : "No scene to render");
+    BKE_report(op->reports, RPT_ERROR, "No scene to render");
     return OPERATOR_CANCELLED;
   }
 
-  ViewLayer *active_layer = use_sequencer_scene ? BKE_view_layer_default_render(scene) :
-                                                  CTX_data_view_layer(C);
+  ViewLayer *active_layer = CTX_data_view_layer(C);
   RenderEngineType *re_type = RE_engines_find(scene->r.engine);
   Object *camera_override = v3d ? V3D_CAMERA_LOCAL(v3d) : nullptr;
 
   /* Cannot do render if there is not this function. */
   if (re_type->render == nullptr) {
-    return OPERATOR_CANCELLED;
-  }
-
-  if (use_sequencer_scene && !RE_seq_render_active(scene, &scene->r)) {
-    BKE_report(op->reports, RPT_ERROR, "No sequencer scene with video strips to render");
     return OPERATOR_CANCELLED;
   }
 
@@ -911,7 +890,6 @@ static wmOperatorStatus screen_render_invoke(bContext *C, wmOperator *op, const 
   rj->reports = op->reports;
   rj->orig_layer = 0;
   rj->last_layer = 0;
-  rj->use_sequencer_scene = use_sequencer_scene;
   rj->area = area;
   rj->frame_start = frame_start;
   rj->frame_end = frame_end;
@@ -949,18 +927,10 @@ static wmOperatorStatus screen_render_invoke(bContext *C, wmOperator *op, const 
   }
 
   /* setup job */
-  const char *name;
-  if (RE_seq_render_active(scene, &scene->r)) {
-    name = RPT_("Rendering sequence...");
-  }
-  else {
-    name = RPT_("Rendering...");
-  }
-
   wm_job = WM_jobs_get(CTX_wm_manager(C),
                        CTX_wm_window(C),
                        scene,
-                       name,
+                       RPT_("Rendering..."),
                        WM_JOB_EXCL_RENDER | WM_JOB_PRIORITY | WM_JOB_PROGRESS,
                        WM_JOB_TYPE_RENDER);
   WM_jobs_customdata_set(wm_job, rj, render_freejob);
@@ -1016,17 +986,6 @@ static wmOperatorStatus screen_render_invoke(bContext *C, wmOperator *op, const 
   return OPERATOR_RUNNING_MODAL;
 }
 
-static std::string screen_render_get_description(bContext * /*C*/,
-                                                 wmOperatorType * /*ot*/,
-                                                 PointerRNA *ptr)
-{
-  const bool use_sequencer_scene = RNA_boolean_get(ptr, "use_sequencer_scene");
-  if (use_sequencer_scene) {
-    return TIP_("Render active sequencer scene");
-  }
-  return TIP_("Render active scene");
-}
-
 void RENDER_OT_render(wmOperatorType *ot)
 {
   PropertyRNA *prop;
@@ -1040,7 +999,7 @@ void RENDER_OT_render(wmOperatorType *ot)
   ot->modal = screen_render_modal;
   ot->cancel = screen_render_cancel;
   ot->exec = screen_render_exec;
-  ot->get_description = screen_render_get_description;
+  ot->description = "Render active scene";
 
   /* This isn't needed, causes failure in background mode. */
 #if 0
@@ -1064,12 +1023,6 @@ void RENDER_OT_render(wmOperatorType *ot)
                          false,
                          "Use 3D Viewport",
                          "When inside a 3D viewport, use layers and camera of the viewport");
-  RNA_def_property_flag(prop, PROP_SKIP_SAVE);
-  prop = RNA_def_boolean(ot->srna,
-                         "use_sequencer_scene",
-                         false,
-                         "Use Sequencer Scene",
-                         "Render the sequencer scene instead of the active scene");
   RNA_def_property_flag(prop, PROP_SKIP_SAVE);
   prop = RNA_def_string(ot->srna,
                         "layer",

@@ -92,16 +92,6 @@ static void shader_get_from_context(const bContext *C,
       }
     }
   }
-#ifdef WITH_FREESTYLE
-  else if (snode->shaderfrom == SNODE_SHADER_LINESTYLE) {
-    FreestyleLineStyle *linestyle = BKE_linestyle_active_from_view_layer(view_layer);
-    if (linestyle) {
-      *r_from = nullptr;
-      *r_id = &linestyle->id;
-      *r_ntree = linestyle->nodetree;
-    }
-  }
-#endif
   else { /* SNODE_SHADER_WORLD */
     if (scene->world) {
       *r_from = nullptr;

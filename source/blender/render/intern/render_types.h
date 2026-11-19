@@ -16,10 +16,8 @@
 
 #include "DNA_scene_types.h"
 
-#include "BLI_mutex.hh"
 #include "BLI_threads.hh"
 
-#include "RE_compositor.hh"
 #include "RE_pipeline.h"
 
 #include "tile_highlight.h"
@@ -27,11 +25,6 @@
 class GHOST_IContext;
 
 namespace blender {
-
-namespace compositor {
-class RenderContext;
-enum class SideEffectOutputTypes : uint8_t;
-}  // namespace compositor
 
 struct bNodeTree;
 struct Depsgraph;
@@ -50,9 +43,6 @@ struct BaseRender {
    * Note that it might not exist: for example, viewport render does not support the tile
    * highlight. */
   virtual render::TilesHighlight *get_tile_highlight() = 0;
-
-  virtual void compositor_execute(render::CompositorInputData input_data) = 0;
-  virtual void compositor_free() = 0;
 
   /**
    * Executed right before the initialization of the depsgraph, in order to modify some stuff in
@@ -76,10 +66,7 @@ struct BaseRender {
   /* Guard for drawing render result using engine's `draw()` callback. */
   ThreadMutex engine_draw_mutex = BLI_MUTEX_INITIALIZER;
 
-  /**
-   * GPU context and callbacks. This can be shared for recursive compositor and
-   * sequencer renders that we want to display in the same place.
-   */
+  /** GPU context and callbacks shared with recursive renders displayed together. */
   std::shared_ptr<RenderDisplay> display;
   bool display_shared = false;
 };
@@ -89,9 +76,6 @@ struct ViewRender : public BaseRender {
   {
     return nullptr;
   }
-
-  void compositor_execute(render::CompositorInputData /*input_data*/) override {}
-  void compositor_free() override {}
 
   bool prepare_viewlayer(struct ViewLayer * /*view_layer*/,
                          struct Depsgraph * /*depsgraph*/) override
@@ -109,9 +93,6 @@ struct Render : public BaseRender {
   {
     return &tile_highlight;
   }
-
-  void compositor_execute(render::CompositorInputData input_data) override;
-  void compositor_free() override;
 
   bool prepare_viewlayer(struct ViewLayer *view_layer, struct Depsgraph *depsgraph) override;
 
@@ -157,15 +138,9 @@ struct Render : public BaseRender {
 
   render::TilesHighlight tile_highlight;
 
-  /* NOTE: This is a minimal dependency graph and evaluated scene which is enough to access view
-   * layer visibility and use for postprocessing (compositor and sequencer). */
+  /* Minimal dependency graph for the evaluated scene and view layer visibility. */
   struct Depsgraph *pipeline_depsgraph = nullptr;
   Scene *pipeline_scene_eval = nullptr;
-
-  /* Compositor.
-   * NOTE: Use bare pointer instead of smart pointer because the it is a fully opaque type. */
-  render::Compositor *compositor = nullptr;
-  Mutex compositor_mutex;
 
   /* Callbacks for the corresponding base class method implementation. */
   bool (*prepare_viewlayer_cb)(void *handle,
@@ -230,11 +205,4 @@ struct RenderDisplay {
 
 /** #R.flag */
 #define R_ANIMATION 1 << 0
-/* Indicates that the render pipeline should not write its render result. This happens for instance
- * when the render pipeline uses the compositor, but the compositor node tree does not have a group
- * output node or a render layer input, and consequently no render result. In that case, the output
- * will be written from the File Output nodes, since the render pipeline will early fail if neither
- * a File Output nor a Group Output node exist in the scene. */
-#define R_SKIP_WRITE 1 << 1
-
 }  // namespace blender

@@ -30,7 +30,6 @@
 #include "BLT_translation.hh"
 
 #include "BKE_camera.h"
-#include "BKE_compositor.hh"
 #include "BKE_context.hh"
 #include "BKE_curve.hh"
 #include "BKE_curves.h"
@@ -100,7 +99,6 @@
 /* only for callbacks */
 #include "draw_cache_impl.hh"
 
-#include "engines/compositor/compositor_engine.h"
 #include "engines/eevee/eevee_engine.h"
 #include "engines/external/external_engine.h"
 #include "engines/gpencil/gpencil_engine.hh"
@@ -519,17 +517,6 @@ void DRWContext::release_data()
   }
   this->data = nullptr;
   this->viewport = nullptr;
-}
-
-draw::TextureFromPool &DRW_viewport_pass_texture_get(const char *pass_name)
-{
-  return *drw_get().view_data_active->viewport_compositor_passes.lookup_or_add_cb(
-      pass_name, [&]() { return std::make_unique<draw::TextureFromPool>(pass_name); });
-}
-
-bool DRW_viewport_pass_texture_exists(const char *pass_name)
-{
-  return drw_get().view_data_active->viewport_compositor_passes.contains(pass_name);
 }
 
 void DRW_viewport_request_redraw()
@@ -1527,8 +1514,6 @@ void DRWContext::enable_engines(bool gpencil_engine_needed, RenderEngineType *re
     if ((drawtype >= OB_SOLID) || !use_xray) {
       view_data.grease_pencil.set_used(gpencil_engine_needed);
     }
-
-    view_data.compositor.set_used(is_viewport_compositor_used());
 
     view_data.overlay.set_used(true);
 
@@ -2540,16 +2525,6 @@ bool DRWContext::is_painting() const
 bool DRWContext::is_transforming() const
 {
   return (G.moving & (G_TRANSFORM_OBJ | G_TRANSFORM_EDIT)) != 0;
-}
-
-bool DRWContext::is_viewport_compositor_used() const
-{
-  if (!this->v3d || !this->rv3d) {
-    return false;
-  }
-
-  return bke::compositor::is_viewport_compositor_enabled(*this->v3d, *this->rv3d) &&
-         bke::compositor::is_enabled(*this->scene, bke::compositor::ExecutionMode::Preview);
 }
 
 /** \} */

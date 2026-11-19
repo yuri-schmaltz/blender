@@ -309,14 +309,8 @@ void Resources::update_theme_settings(const DRWContext *ctx, const State &state)
       float3(dot(gb.colors.edit_mesh_middle.xyz(), float3(0.3333f))),
       gb.colors.edit_mesh_middle.w);
 
-#ifdef WITH_FREESTYLE
-  ui::theme::get_color_4fv(TH_FREESTYLE, gb.colors.edge_freestyle),
-      gb.colors.edge_freestyle[3] = 1.0f;
-  ui::theme::get_color_4fv(TH_FREESTYLE, gb.colors.face_freestyle);
-#else
   gb.colors.edge_freestyle = float4(0.0f);
   gb.colors.face_freestyle = float4(0.0f);
-#endif
 
   ui::theme::get_color_4fv(TH_TEXT, gb.colors.text);
   ui::theme::get_color_4fv(TH_TEXT_HI, gb.colors.text_hi);

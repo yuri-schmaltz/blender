@@ -50,34 +50,10 @@ void OBJECT_OT_lightprobe_cache_free(wmOperatorType *ot);
 void SCENE_OT_render_view_add(wmOperatorType *ot);
 void SCENE_OT_render_view_remove(wmOperatorType *ot);
 
-#ifdef WITH_FREESTYLE
-void SCENE_OT_freestyle_module_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_module_remove(wmOperatorType *ot);
-void SCENE_OT_freestyle_module_move(wmOperatorType *ot);
-void SCENE_OT_freestyle_lineset_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_lineset_copy(wmOperatorType *ot);
-void SCENE_OT_freestyle_lineset_paste(wmOperatorType *ot);
-void SCENE_OT_freestyle_lineset_remove(wmOperatorType *ot);
-void SCENE_OT_freestyle_lineset_move(wmOperatorType *ot);
-void SCENE_OT_freestyle_linestyle_new(wmOperatorType *ot);
-void SCENE_OT_freestyle_color_modifier_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_alpha_modifier_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_thickness_modifier_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_geometry_modifier_add(wmOperatorType *ot);
-void SCENE_OT_freestyle_modifier_remove(wmOperatorType *ot);
-void SCENE_OT_freestyle_modifier_move(wmOperatorType *ot);
-void SCENE_OT_freestyle_modifier_copy(wmOperatorType *ot);
-void SCENE_OT_freestyle_stroke_material_create(wmOperatorType *ot);
-#endif
 
 void TEXTURE_OT_slot_copy(wmOperatorType *ot);
 void TEXTURE_OT_slot_paste(wmOperatorType *ot);
 void TEXTURE_OT_slot_move(wmOperatorType *ot);
-
-/* `render_texture_cache.cc` */
-
-void RENDER_OT_generate_texture_cache(wmOperatorType *ot);
-void RENDER_OT_clear_texture_cache(wmOperatorType *ot);
 
 /* `render_internal.cc` */
 

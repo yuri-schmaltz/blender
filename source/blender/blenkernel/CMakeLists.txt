@@ -6,9 +6,9 @@ set(INC
   PUBLIC .
   ../ikplugin
   ../makesrna
+  ../shader_fx
   ../modifiers
   ../nodes/geometry/include
-  ../shader_fx
   ../simulation
   ../windowmanager
   ../../../intern/eigen
@@ -268,13 +268,12 @@ set(SRC
   intern/report.cc
   intern/rigidbody.cc
   intern/scene.cc
+  intern/shader_fx.cc
   intern/scene_context.cc
   intern/screen.cc
-  intern/shader_fx.cc
   intern/shrinkwrap.cc
   intern/softbody.cc
   intern/sound.cc
-  intern/sound_reader_cache.cc
   intern/speaker.cc
   intern/studiolight.cc
   intern/subdiv.cc
@@ -516,10 +515,10 @@ set(SRC
   BKE_report.hh
   BKE_rigidbody.h
   BKE_scene.hh
+  BKE_shader_fx.hh
   BKE_scene_context.hh
   BKE_scene_runtime.hh
   BKE_screen.hh
-  BKE_shader_fx.hh
   BKE_shrinkwrap.hh
   BKE_softbody.h
   BKE_sound.hh
@@ -578,7 +577,6 @@ set(SRC
   intern/pbvh_pixels_copy.hh
   intern/pbvh_pixels_rasterize.hh
   intern/pbvh_uv_islands.hh
-  intern/sound_reader_cache.hh
   intern/subdiv_converter.hh
   intern/subdiv_inline.hh
   intern/tracking_private.hh
@@ -618,8 +616,6 @@ set(LIB
   PRIVATE bf::nodes
   PRIVATE bf::render
   bf_rna
-  PRIVATE bf::sequencer
-  bf_shader_fx
   bf_simulation
   PRIVATE bf::extern::toml
   PRIVATE bf::extern::xxhash
@@ -629,7 +625,7 @@ set(LIB
   PRIVATE bf::dependencies::freetype  # For `vfontdata_freetype.c`.
   PRIVATE bf::dependencies::optional::fftw3
   PRIVATE bf::dependencies::optional::opensubdiv
-  PRIVATE bf::dependencies::optional::audaspace
+  PRIVATE bf::sequencer
 )
 
 if(WITH_BINRELOC)
@@ -675,10 +671,6 @@ if(WITH_IMAGE_WEBP)
   add_definitions(-DWITH_IMAGE_WEBP)
 endif()
 
-if(WITH_CODEC_FFMPEG)
-  add_definitions(-DWITH_FFMPEG)
-endif()
-
 if(WITH_PYTHON)
   list(APPEND INC
     ../python
@@ -718,18 +710,6 @@ endif()
 
 if(WITH_MOD_OCEANSIM)
   add_definitions(-DWITH_OCEANSIM)
-endif()
-
-if(WITH_JACK)
-  add_definitions(-DWITH_JACK)
-endif()
-
-if(WITH_LIBMV)
-  add_definitions(-DWITH_LIBMV)
-endif()
-
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
 endif()
 
 if(WITH_ALEMBIC)
@@ -812,7 +792,6 @@ if(WITH_GTESTS)
     intern/path_templates_test.cc
     intern/recents_test.cc
     intern/scene_test.cc
-    intern/sound_reader_cache_test.cc
     intern/subdiv_ccg_test.cc
     intern/tracking_test.cc
     intern/volume_test.cc

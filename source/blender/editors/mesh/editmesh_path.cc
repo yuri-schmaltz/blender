@@ -11,9 +11,6 @@
 #include "DNA_scene_types.h"
 #include "DNA_windowmanager_types.h"
 
-#ifdef WITH_FREESTYLE
-#  include "DNA_meshdata_types.h"
-#endif
 
 #include "BLI_linklist.hh"
 #include "BLI_math_vector_c.hh"
@@ -57,7 +54,6 @@ enum {
   EDGE_MODE_TAG_SHARP = 2,
   EDGE_MODE_TAG_CREASE = 3,
   EDGE_MODE_TAG_BEVEL = 4,
-  EDGE_MODE_TAG_FREESTYLE = 5,
 };
 
 struct PathSelectParams {
@@ -78,7 +74,6 @@ static void path_select_properties(wmOperatorType *ot)
       {EDGE_MODE_TAG_SHARP, "SHARP", 0, "Tag Sharp", ""},
       {EDGE_MODE_TAG_CREASE, "CREASE", 0, "Tag Crease", ""},
       {EDGE_MODE_TAG_BEVEL, "BEVEL", 0, "Tag Bevel", ""},
-      {EDGE_MODE_TAG_FREESTYLE, "FREESTYLE", 0, "Tag Freestyle Edge Mark", ""},
       {0, nullptr, 0, nullptr, nullptr},
   };
 
@@ -189,9 +184,6 @@ static void mouse_mesh_shortest_path_vert(Scene * /*scene*/,
     case EDGE_MODE_SELECT:
     case EDGE_MODE_TAG_SEAM:
     case EDGE_MODE_TAG_SHARP:
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE:
-#endif
       break;
     case EDGE_MODE_TAG_CREASE:
       cd_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_FLOAT, "crease_edge");
@@ -309,11 +301,6 @@ static bool edgetag_test_cb(BMEdge *e, void *user_data_v)
     case EDGE_MODE_TAG_CREASE:
     case EDGE_MODE_TAG_BEVEL:
       return BM_ELEM_CD_GET_FLOAT(e, user_data->cd_offset);
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE: {
-      return BM_ELEM_CD_GET_BOOL(e, user_data->cd_offset);
-    }
-#endif
   }
   return false;
 }
@@ -337,12 +324,6 @@ static void edgetag_set_cb(BMEdge *e, bool val, void *user_data_v)
     case EDGE_MODE_TAG_BEVEL:
       BM_ELEM_CD_SET_FLOAT(e, user_data->cd_offset, (val) ? 1.0f : 0.0f);
       break;
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE: {
-      BM_ELEM_CD_SET_BOOL(e, user_data->cd_offset, val);
-      break;
-    }
-#endif
   }
 }
 
@@ -361,13 +342,6 @@ static void edgetag_ensure_cd_flag(Mesh *mesh, const char edge_mode)
         BM_data_layer_add_named(bm, &bm->edata, CD_PROP_FLOAT, "bevel_weight_edge");
       }
       break;
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE:
-      if (!CustomData_has_layer_named(&bm->edata, CD_PROP_BOOL, "freestyle_edge")) {
-        BM_data_layer_add_named(bm, &bm->edata, CD_PROP_BOOL, "freestyle_edge");
-      }
-      break;
-#endif
     default:
       break;
   }
@@ -389,10 +363,6 @@ static void mouse_mesh_shortest_path_edge(
     case EDGE_MODE_SELECT:
     case EDGE_MODE_TAG_SEAM:
     case EDGE_MODE_TAG_SHARP:
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE:
-      cd_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_BOOL, "freestyle_edge");
-#endif
       break;
     case EDGE_MODE_TAG_CREASE:
       cd_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_FLOAT, "crease_edge");
@@ -538,9 +508,6 @@ static void mouse_mesh_shortest_path_face(Scene * /*scene*/,
     case EDGE_MODE_SELECT:
     case EDGE_MODE_TAG_SEAM:
     case EDGE_MODE_TAG_SHARP:
-#ifdef WITH_FREESTYLE
-    case EDGE_MODE_TAG_FREESTYLE:
-#endif
       break;
     case EDGE_MODE_TAG_CREASE:
       cd_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_FLOAT, "crease_edge");

@@ -5,6 +5,8 @@
 #ifndef LIBMV_C_API_AUTOTRACK_H_
 #define LIBMV_C_API_AUTOTRACK_H_
 
+#include <stddef.h>
+
 #include "intern/frame_accessor.h"
 #include "intern/region.h"
 #include "intern/track_region.h"

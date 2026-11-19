@@ -19,12 +19,6 @@ class RENDER_PT_format_presets(PresetPanel, Panel):
     preset_add_operator = "render.preset_add"
 
 
-class RENDER_PT_ffmpeg_presets(PresetPanel, Panel):
-    bl_label = "FFmpeg Presets"
-    preset_subdir = "ffmpeg"
-    preset_operator = "script.python_file_run"
-
-
 class RENDER_MT_framerate_presets(Menu):
     bl_label = "Frame Rate Presets"
     preset_subdir = "framerate"
@@ -190,10 +184,6 @@ class RENDER_PT_post_processing(RenderOutputButtonsPanel, Panel):
 
         rd = context.scene.render
 
-        col = layout.column(heading="Pipeline")
-        col.prop(rd, "use_compositing")
-        col.prop(rd, "use_sequencer")
-
         layout.prop(rd, "dither_intensity", text="Dither", slider=True)
 
 
@@ -213,9 +203,6 @@ class RENDER_PT_stamp(RenderOutputButtonsPanel, Panel):
 
         rd = context.scene.render
 
-        if rd.use_sequencer:
-            layout.prop(rd, "metadata_input")
-
         col = layout.column(heading="Include")
         col.prop(rd, "use_stamp_date", text="Date")
         col.prop(rd, "use_stamp_time", text="Time")
@@ -229,9 +216,6 @@ class RENDER_PT_stamp(RenderOutputButtonsPanel, Panel):
         col.prop(rd, "use_stamp_scene", text="Scene")
         col.prop(rd, "use_stamp_marker", text="Marker")
         col.prop(rd, "use_stamp_filename", text="Filename")
-
-        if rd.use_sequencer:
-            col.prop(rd, "use_stamp_sequencer_strip", text="Strip Name")
 
 
 class RENDER_PT_stamp_note(RenderOutputButtonsPanel, Panel):
@@ -470,199 +454,6 @@ class RENDER_PT_output_pixel_density(RenderOutputButtonsPanel, Panel):
         self.draw_pixeldensity(layout, rd)
 
 
-class RENDER_PT_encoding(RenderOutputButtonsPanel, Panel):
-    bl_label = "Encoding"
-    bl_parent_id = "RENDER_PT_output"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {
-        'BLENDER_RENDER',
-        'BLENDER_EEVEE',
-        'BLENDER_WORKBENCH',
-    }
-
-    def draw_header_preset(self, _context):
-        RENDER_PT_ffmpeg_presets.draw_panel_header(self.layout)
-
-    @classmethod
-    def poll(cls, context):
-        rd = context.scene.render
-        return rd.image_settings.file_format in {'FFMPEG', 'XVID', 'H264', 'THEORA'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        rd = context.scene.render
-        ffmpeg = rd.ffmpeg
-
-        layout.prop(rd.ffmpeg, "format")
-        layout.prop(ffmpeg, "use_autosplit")
-
-
-class RENDER_PT_encoding_video(RenderOutputButtonsPanel, Panel):
-    bl_label = "Video"
-    bl_parent_id = "RENDER_PT_encoding"
-    COMPAT_ENGINES = {
-        'BLENDER_RENDER',
-        'BLENDER_EEVEE',
-        'BLENDER_WORKBENCH',
-    }
-
-    @classmethod
-    def poll(cls, context):
-        rd = context.scene.render
-        return rd.image_settings.file_format in {'FFMPEG', 'XVID', 'H264', 'THEORA'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        self.draw_vcodec(context)
-
-    def draw_vcodec(self, context):
-        """Video codec options."""
-        layout = self.layout
-        ffmpeg = context.scene.render.ffmpeg
-
-        needs_codec = ffmpeg.format in {
-            'AVI',
-            'QUICKTIME',
-            'MKV',
-            'OGG',
-            'MPEG4',
-            'WEBM',
-        }
-        if needs_codec:
-            layout.prop(ffmpeg, "codec")
-
-        if needs_codec and ffmpeg.codec == 'NONE':
-            return
-
-        image_settings = context.scene.render.image_settings
-
-        if image_settings.color_management == 'OVERRIDE':
-            display_settings = image_settings.display_settings
-            view_settings = image_settings.view_settings
-        else:
-            display_settings = context.scene.display_settings
-            view_settings = context.scene.view_settings
-
-        # HDR compatibility
-        if view_settings.is_hdr and (not needs_codec or ffmpeg.codec not in {'H265', 'AV1'}):
-            layout.label(text="HDR needs H.265 or AV1", icon='STATUS_ERROR')
-
-        # Color depth. List of codecs needs to be in sync with
-        # `IMB_ffmpeg_valid_bit_depths` in source code.
-        use_bpp = needs_codec and ffmpeg.codec in {'H264', 'H265', 'AV1', 'PRORES', 'FFV1'}
-        if use_bpp:
-            layout.prop(image_settings, "color_depth", expand=True)
-
-        # HDR compatibility
-        if view_settings.is_hdr and image_settings.color_depth not in {'10', '12'}:
-            layout.label(text="HDR needs 10 or 12 bits", icon='STATUS_ERROR')
-
-        # Color space
-        split = layout.split(factor=layout.property_split_factor)
-        col = split.column()
-        col.alignment = 'RIGHT'
-        col.label(text="Color Space")
-
-        col = split.column()
-        row = col.row()
-        row.enabled = False
-        row.prop(display_settings, "display_device", text="")
-
-        if needs_codec and ffmpeg.codec == 'DNXHD':
-            layout.prop(ffmpeg, "use_lossless_output")
-
-        if needs_codec and ffmpeg.codec == 'PRORES':
-            layout.prop(ffmpeg, "ffmpeg_prores_profile")
-
-        # Output quality
-        use_crf = needs_codec and ffmpeg.codec in {
-            'H264',
-            'H265',
-            'MPEG4',
-            'WEBM',
-            'AV1',
-        }
-        if use_crf:
-            layout.prop(ffmpeg, "constant_rate_factor")
-            if (ffmpeg.constant_rate_factor == 'CUSTOM'):
-                layout.prop(ffmpeg, "custom_constant_rate_factor")
-
-        use_encoding_speed = needs_codec and ffmpeg.codec not in {'DNXHD', 'FFV1', 'HUFFYUV', 'PNG', 'PRORES', 'QTRLE'}
-        use_bitrate = needs_codec and ffmpeg.codec not in {'FFV1', 'HUFFYUV', 'PNG', 'PRORES', 'QTRLE'}
-        use_min_max_bitrate = ffmpeg.codec not in {'DNXHD'}
-        use_gop = needs_codec and ffmpeg.codec not in {'DNXHD', 'HUFFYUV', 'PNG', 'PRORES'}
-        use_b_frames = needs_codec and use_gop and ffmpeg.codec not in {'FFV1', 'QTRLE'}
-
-        # Encoding speed
-        if use_encoding_speed:
-            layout.prop(ffmpeg, "ffmpeg_preset")
-        # I-frames
-        if use_gop:
-            layout.prop(ffmpeg, "gopsize")
-        # B-Frames
-        if use_b_frames:
-            row = layout.row(align=True, heading="Max B-frames")
-            row.prop(ffmpeg, "use_max_b_frames", text="")
-            sub = row.row(align=True)
-            sub.active = ffmpeg.use_max_b_frames
-            sub.prop(ffmpeg, "max_b_frames", text="")
-
-        if (not use_crf or ffmpeg.constant_rate_factor == 'NONE') and use_bitrate:
-            col = layout.column()
-
-            sub = col.column(align=True)
-            sub.prop(ffmpeg, "video_bitrate")
-            if use_min_max_bitrate:
-                sub.prop(ffmpeg, "minrate", text="Minimum")
-                sub.prop(ffmpeg, "maxrate", text="Maximum")
-
-                col.prop(ffmpeg, "buffersize", text="Buffer")
-
-                col.separator()
-
-                col.prop(ffmpeg, "muxrate", text="Mux Rate")
-                col.prop(ffmpeg, "packetsize", text="Mux Packet Size")
-
-
-class RENDER_PT_encoding_audio(RenderOutputButtonsPanel, Panel):
-    bl_label = "Audio"
-    bl_parent_id = "RENDER_PT_encoding"
-    COMPAT_ENGINES = {
-        'BLENDER_RENDER',
-        'BLENDER_EEVEE',
-        'BLENDER_WORKBENCH',
-    }
-
-    @classmethod
-    def poll(cls, context):
-        rd = context.scene.render
-        return rd.image_settings.file_format in {'FFMPEG', 'XVID', 'H264', 'THEORA'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        rd = context.scene.render
-        ffmpeg = rd.ffmpeg
-
-        if ffmpeg.format != 'MP3':
-            layout.prop(ffmpeg, "audio_codec", text="Audio Codec")
-
-        if ffmpeg.audio_codec != 'NONE':
-            layout.prop(ffmpeg, "audio_channels")
-            layout.prop(ffmpeg, "audio_mixrate", text="Sample Rate")
-            if ffmpeg.audio_codec not in {'FLAC', 'PCM'}:
-                layout.prop(ffmpeg, "audio_bitrate")
-            layout.prop(ffmpeg, "audio_volume", slider=True)
-
-
 class RENDER_UL_renderviews(UIList):
     def draw_item(self, _context, layout, _data, item, icon, _active_data, _active_propname, index):
         view = item
@@ -724,7 +515,6 @@ class RENDER_PT_stereoscopy(RenderOutputButtonsPanel, Panel):
 
 classes = (
     RENDER_PT_format_presets,
-    RENDER_PT_ffmpeg_presets,
     RENDER_MT_framerate_presets,
     RENDER_MT_pixeldensity_presets,
     RENDER_PT_format,
@@ -735,9 +525,6 @@ classes = (
     RENDER_PT_output_views,
     RENDER_PT_output_color_management,
     RENDER_PT_output_pixel_density,
-    RENDER_PT_encoding,
-    RENDER_PT_encoding_video,
-    RENDER_PT_encoding_audio,
     RENDER_PT_stamp,
     RENDER_PT_stamp_note,
     RENDER_PT_stamp_burn,

@@ -291,15 +291,6 @@ def km_screen_editing(params):
         ("screen.area_move", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
          {"properties": [("snap", True)]}),
         ("screen.area_options", {"type": 'RIGHTMOUSE', "value": 'PRESS'}, None),
-        # Render
-        ("render.render", {"type": 'RET', "value": 'PRESS', "ctrl": True},
-         {"properties": [("use_viewport", True)]}),
-        ("render.render", {"type": 'RET', "value": 'PRESS', "ctrl": True, "alt": True},
-         {"properties": [("animation", True), ("use_viewport", True)]}),
-        ("render.render", {"type": 'F12', "value": 'PRESS', "alt": True},
-         {"properties": [("use_sequencer_scene", True), ("use_viewport", True)]}),
-        ("render.render", {"type": 'F12', "value": 'PRESS', "ctrl": True, "alt": True},
-         {"properties": [("animation", True), ("use_sequencer_scene", True), ("use_viewport", True)]}),
         ("render.view_cancel", {"type": 'ESC', "value": 'PRESS'}, None),
     ])
 
@@ -476,11 +467,6 @@ def km_property_editor(params):
         ("constraint.copy", {"type": 'D', "value": 'PRESS', "ctrl": True}, None),
         # Strip modifiers
         ("sequencer.strip_modifier_set_active", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        # Scene Compositor Effects
-        ("scene.set_active_compositor_effect", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        ("scene.remove_compositor_effect", {"type": 'BACK_SPACE', "value": 'PRESS'}, None),
-        ("scene.remove_compositor_effect", {"type": 'DEL', "value": 'PRESS'}, None),
-        ("scene.duplicate_compositor_effect", {"type": 'D', "value": 'PRESS', "ctrl": True}, None),
     ])
 
     return keymap
@@ -1806,190 +1792,6 @@ def km_text(params):
     return keymap
 
 
-def km_sequencer_generic(_params):
-    items = []
-    keymap = (
-        "Video Sequence Editor",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        op_panel("TOPBAR_PT_name", {"type": 'RET', "value": 'PRESS'}, [("keep_open", False)]),
-        ("wm.context_toggle", {"type": 'LEFT_BRACKET', "value": 'PRESS', "ctrl": True},
-         {"properties": [("data_path", "space_data.show_region_channels")]}),
-        ("wm.context_toggle", {"type": 'RIGHT_BRACKET', "value": 'PRESS', "ctrl": True},
-         {"properties": [("data_path", "space_data.show_region_ui")]}),
-    ])
-
-    return keymap
-
-
-def km_sequencer(params):
-    items = []
-    keymap = (
-        "Sequencer",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        *_template_items_animation(),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'CLICK'}, None),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("extend", True)]}),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "alt": True},
-         {"properties": [("linked_handle", True)]}),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True, "alt": True},
-         {"properties": [("extend", True), ("linked_handle", True)]}),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("side_of_frame", True), ("linked_time", True)]}),
-        ("sequencer.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True, "ctrl": True},
-         {"properties": [("extend", True), ("side_of_frame", True), ("linked_time", True)]}),
-        ("sequencer.select_more", {"type": 'UP_ARROW', "value": 'PRESS', "repeat": True}, None),
-        ("sequencer.select_less", {"type": 'DOWN_ARROW', "value": 'PRESS', "repeat": True}, None),
-        ("sequencer.select_linked_pick", {"type": 'L', "value": 'PRESS', "ctrl": True},
-         {"properties": [("extend", False)]}),
-        ("sequencer.select_linked_pick", {"type": 'RIGHT_BRACKET', "value": 'PRESS', "shift": True},
-         {"properties": [("extend", True)]}),
-        ("sequencer.select_linked", {"type": 'L', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.select_box", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
-         {"properties": [("tweak", True), ("mode", 'SET')]}),
-        ("sequencer.select_box", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
-         {"properties": [("tweak", True), ("mode", 'ADD')]}),
-        ("sequencer.select_box", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
-         {"properties": [("tweak", True), ("mode", 'SUB')]}),
-        ("sequencer.select_grouped", {"type": 'G', "value": 'PRESS', "shift": True}, None),
-        ("sequencer.select_all", {"type": 'A', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'SELECT')]}),
-        ("sequencer.select_all", {"type": 'A', "value": 'PRESS', "ctrl": True,
-         "shift": True}, {"properties": [("action", 'DESELECT')]}),
-        ("sequencer.select_all", {"type": 'I', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'INVERT')]}),
-        ("sequencer.split", {"type": 'B', "value": 'PRESS', "ctrl": True},
-         {"properties": [("type", 'SOFT'), ("only_selected", True)]}),
-        ("sequencer.mute", {"type": 'M', "value": 'PRESS'},
-         {"properties": [("unselected", False)]}),
-        ("sequencer.mute", {"type": 'M', "value": 'PRESS', "shift": True},
-         {"properties": [("unselected", True)]}),
-        ("sequencer.unmute", {"type": 'M', "value": 'PRESS', "alt": True},
-         {"properties": [("unselected", False)]}),
-        ("sequencer.unmute", {"type": 'M', "value": 'PRESS', "shift": True, "alt": True},
-         {"properties": [("unselected", True)]}),
-        ("sequencer.lock", {"type": 'L', "value": 'PRESS', "shift": True}, None),
-        ("sequencer.unlock", {"type": 'L', "value": 'PRESS', "shift": True, "alt": True}, None),
-        ("sequencer.connect", {"type": 'L', "value": 'PRESS', "ctrl": True, "alt": True},
-         {"properties": [("toggle", True)]}),
-        ("sequencer.reassign_inputs", {"type": 'R', "value": 'PRESS'}, None),
-        ("sequencer.reload", {"type": 'R', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.reload", {"type": 'R', "value": 'PRESS', "shift": True, "alt": True},
-         {"properties": [("adjust_length", True)]}),
-        ("sequencer.offset_clear", {"type": 'O', "value": 'PRESS', "alt": True}, None),
-        ("sequencer.duplicate_move", {"type": 'D', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.duplicate_move_linked", {"type": 'D', "value": 'PRESS', "ctrl": True, "alt": True}, None),
-        ("sequencer.retiming_key_delete", {"type": 'BACK_SPACE', "value": 'PRESS'}, None),
-        ("sequencer.retiming_key_delete", {"type": 'DEL', "value": 'PRESS'}, None),
-        ("sequencer.delete", {"type": 'BACK_SPACE', "value": 'PRESS'}, None),
-        ("sequencer.delete", {"type": 'DEL', "value": 'PRESS'}, None),
-        ("sequencer.ripple_delete", {"type": 'DEL', "value": 'PRESS', "shift": True}, None),
-        ("sequencer.copy", {"type": 'C', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.paste", {"type": 'V', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.images_separate", {"type": 'Y', "value": 'PRESS'}, None),
-        ("sequencer.meta_toggle", {"type": 'LEFTMOUSE', "value": 'DOUBLE_CLICK'}, None),
-        ("sequencer.meta_make", {"type": 'G', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.meta_separate", {"type": 'G', "value": 'PRESS', "ctrl": True, "alt": True}, None),
-        ("sequencer.view_all", {"type": 'A', "value": 'PRESS'}, None),
-        ("sequencer.view_all", {"type": 'NDOF_BUTTON_FIT', "value": 'PRESS'}, None),
-        ("sequencer.view_selected", {"type": 'F', "value": 'PRESS'}, None),
-        ("sequencer.view_frame", {"type": 'NUMPAD_0', "value": 'PRESS'}, None),
-        ("sequencer.strip_jump", {"type": 'PAGE_UP', "value": 'PRESS', "repeat": True},
-         {"properties": [("next", False), ("center", False)]}),
-        ("sequencer.strip_jump", {"type": 'PAGE_DOWN', "value": 'PRESS', "repeat": True},
-         {"properties": [("next", True), ("center", False)]}),
-        ("sequencer.strip_jump", {"type": 'PAGE_UP', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("next", False), ("center", True)]}),
-        ("sequencer.strip_jump", {"type": 'PAGE_DOWN', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("next", True), ("center", True)]}),
-        ("sequencer.swap", {"type": 'LEFT_ARROW', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("side", 'LEFT')]}),
-        ("sequencer.swap", {"type": 'RIGHT_ARROW', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("side", 'RIGHT')]}),
-        ("sequencer.gap_remove", {"type": 'BACK_SPACE', "value": 'PRESS'},
-         {"properties": [("all", False)]}),
-        ("sequencer.gap_remove", {"type": 'BACK_SPACE', "value": 'PRESS', "shift": True},
-         {"properties": [("all", True)]}),
-        ("sequencer.gap_insert", {"type": 'EQUAL', "value": 'PRESS', "shift": True}, None),
-        ("sequencer.snap", {"type": 'X', "value": 'PRESS'}, {"properties": [("keep_offset", True)]}),
-        ("sequencer.swap_inputs", {"type": 'S', "value": 'PRESS', "alt": True}, None),
-        *(
-            (("sequencer.split_multicam",
-              {"type": NUMBERS_1[i], "value": 'PRESS'},
-              {"properties": [("camera", i + 1)]})
-             for i in range(10)
-             )
-        ),
-        ("sequencer.slip", {"type": 'R', "value": 'PRESS'}, None),
-        ("wm.context_set_int", {"type": 'O', "value": 'PRESS'},
-         {"properties": [("data_path", "sequencer_scene.sequence_editor.overlay_frame"), ("value", 0)]}),
-        ("transform.seq_slide", {"type": 'W', "value": 'PRESS'},
-         {"properties": [("view2d_edge_pan", True)]}),
-        ("transform.seq_slide", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
-         {"properties": [("view2d_edge_pan", True), ("use_restore_handle_selection", True)]}),
-        ("transform.seq_slide", {"type": 'MIDDLEMOUSE', "value": 'CLICK_DRAG'},
-         {"properties": [("view2d_edge_pan", True), ("use_restore_handle_selection", True)]}),
-        ("transform.transform", {"type": 'E', "value": 'PRESS'},
-         {"properties": [("mode", 'TIME_EXTEND')]}),
-        ("marker.add", {"type": 'M', "value": 'PRESS'}, None),
-        *_template_items_context_menu("SEQUENCER_MT_context_menu", {"type": 'RIGHTMOUSE', "value": 'PRESS'}),
-        op_menu("SEQUENCER_MT_retiming", {"type": 'I', "value": 'PRESS'}),
-        ("sequencer.retiming_segment_speed_set", {"type": 'R', "value": 'PRESS', "shift": True}, None),
-        ("sequencer.retiming_show", {"type": 'R', "value": 'PRESS', "ctrl": True, "shift": True}, None),
-        # Tools
-        op_tool_cycle("builtin.select_box", {"type": 'Q', "value": 'PRESS'}),
-        op_tool_cycle("builtin.blade", {"type": 'B', "value": 'PRESS'}),
-        op_tool_cycle("builtin.slip", {"type": 'S', "value": 'PRESS'}),
-    ])
-
-    return keymap
-
-
-def km_sequencer_preview(params):
-    items = []
-    keymap = (
-        "Preview",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        ("sequencer.view_all_preview", {"type": 'A', "value": 'PRESS'}, None),
-        ("sequencer.view_all_preview", {"type": 'NDOF_BUTTON_FIT', "value": 'PRESS'}, None),
-        ("sequencer.view_selected", {"type": 'F', "value": 'PRESS'}, None),
-        ("sequencer.view_ghost_border", {"type": 'O', "value": 'PRESS'}, None),
-        ("sequencer.view_zoom_ratio", {"type": 'NUMPAD_1', "value": 'PRESS'},
-         {"properties": [("ratio", 1.0)]}),
-        ("sequencer.sample", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-    ])
-
-    return keymap
-
-
-def km_sequencer_channels(params):
-    items = []
-    keymap = (
-        "Sequencer Channels",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        # Rename.
-        ("sequencer.rename_channel", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, None),
-        ("sequencer.rename_channel", {"type": 'LEFTMOUSE', "value": 'DOUBLE_CLICK'}, None),
-    ])
-    return keymap
-
-
 def km_console(params):
     items = []
     keymap = (
@@ -2064,218 +1866,6 @@ def km_console(params):
         ("console.unindent", {"type": 'TAB', "value": 'PRESS', "shift": True, "repeat": True}, None),
         *_template_items_context_menu("CONSOLE_MT_context_menu", {"type": 'RIGHTMOUSE', "value": 'PRESS'}),
         ("console.insert", {"type": 'TEXTINPUT', "value": 'ANY', "any": True, "repeat": True}, None),
-    ])
-
-    return keymap
-
-
-def km_clip(params):
-    items = []
-    keymap = (
-        "Clip",
-        {"space_type": 'CLIP_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        op_panel("TOPBAR_PT_name", {"type": 'RET', "value": 'PRESS'}, [("keep_open", False)]),
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        ("clip.open", {"type": 'O', "value": 'PRESS', "alt": True}, None),
-        ("clip.track_markers", {"type": 'LEFT_ARROW', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("backwards", True), ("sequence", False)]}),
-        ("clip.track_markers", {"type": 'RIGHT_ARROW', "value": 'PRESS', "alt": True, "repeat": True},
-         {"properties": [("backwards", False), ("sequence", False)]}),
-        ("clip.track_markers", {"type": 'T', "value": 'PRESS', "ctrl": True},
-         {"properties": [("backwards", False), ("sequence", True)]}),
-        ("clip.track_markers", {"type": 'T', "value": 'PRESS', "shift": True, "ctrl": True},
-         {"properties": [("backwards", True), ("sequence", True)]}),
-        ("wm.context_toggle_enum", {"type": 'TAB', "value": 'PRESS'},
-         {"properties": [("data_path", "space_data.mode"), ("value_1", 'TRACKING'), ("value_2", 'MASK')]}),
-        ("clip.solve_camera", {"type": 'S', "value": 'PRESS', "shift": True}, None),
-        ("clip.prefetch", {"type": 'P', "value": 'PRESS'}, None),
-    ])
-
-    return keymap
-
-
-def km_clip_editor(params):
-    items = []
-    keymap = (
-        "Clip Editor",
-        {"space_type": 'CLIP_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        ("wm.context_toggle", {"type": 'LEFT_BRACKET', "value": 'PRESS', "ctrl": True},
-         {"properties": [("data_path", "space_data.show_region_toolbar")]}),
-        ("wm.context_toggle", {"type": 'RIGHT_BRACKET', "value": 'PRESS', "ctrl": True},
-         {"properties": [("data_path", "space_data.show_region_ui")]}),
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        ("clip.view_pan", {"type": 'MIDDLEMOUSE', "value": 'PRESS'}, None),
-        ("clip.view_pan", {"type": 'MIDDLEMOUSE', "value": 'PRESS', "shift": True}, None),
-        ("clip.view_pan", {"type": 'TRACKPADPAN', "value": 'ANY'}, None),
-        ("clip.view_zoom", {"type": 'MIDDLEMOUSE', "value": 'PRESS', "ctrl": True}, None),
-        ("clip.view_zoom", {"type": 'TRACKPADZOOM', "value": 'ANY'}, None),
-        ("clip.view_zoom", {"type": 'TRACKPADPAN', "value": 'ANY', "ctrl": True}, None),
-        ("clip.view_zoom_in", {"type": 'WHEELINMOUSE', "value": 'PRESS'}, None),
-        ("clip.view_zoom_out", {"type": 'WHEELOUTMOUSE', "value": 'PRESS'}, None),
-        ("clip.view_zoom_in", {"type": 'WHEELINMOUSE', "value": 'PRESS', "alt": True}, None),
-        ("clip.view_zoom_out", {"type": 'WHEELOUTMOUSE', "value": 'PRESS', "alt": True}, None),
-        ("clip.view_zoom_in", {"type": 'NUMPAD_PLUS', "value": 'PRESS', "repeat": True}, None),
-        ("clip.view_zoom_out", {"type": 'NUMPAD_MINUS', "value": 'PRESS', "repeat": True}, None),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_8', "value": 'PRESS', "ctrl": True},
-         {"properties": [("ratio", 8.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_4', "value": 'PRESS', "ctrl": True},
-         {"properties": [("ratio", 4.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_2', "value": 'PRESS', "ctrl": True},
-         {"properties": [("ratio", 2.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_8', "value": 'PRESS', "shift": True},
-         {"properties": [("ratio", 8.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_4', "value": 'PRESS', "shift": True},
-         {"properties": [("ratio", 4.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_2', "value": 'PRESS', "shift": True},
-         {"properties": [("ratio", 2.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_1', "value": 'PRESS'},
-         {"properties": [("ratio", 1.0)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_2', "value": 'PRESS'},
-         {"properties": [("ratio", 0.5)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_4', "value": 'PRESS'},
-         {"properties": [("ratio", 0.25)]}),
-        ("clip.view_zoom_ratio", {"type": 'NUMPAD_8', "value": 'PRESS'},
-         {"properties": [("ratio", 0.125)]}),
-        ("clip.view_all", {"type": 'A', "value": 'PRESS'}, None),
-        ("clip.view_selected", {"type": 'F', "value": 'PRESS'}, None),
-        ("clip.view_all", {"type": 'NDOF_BUTTON_FIT', "value": 'PRESS'}, None),
-        ("clip.view_ndof", {"type": 'NDOF_MOTION', "value": 'ANY'}, None),
-        ("clip.frame_jump", {"type": 'LEFT_ARROW', "value": 'PRESS', "shift": True, "ctrl": True, "repeat": True},
-         {"properties": [("position", 'PATHSTART')]}),
-        ("clip.frame_jump", {"type": 'RIGHT_ARROW', "value": 'PRESS', "shift": True, "ctrl": True, "repeat": True},
-         {"properties": [("position", 'PATHEND')]}),
-        ("clip.frame_jump", {"type": 'LEFT_ARROW', "value": 'PRESS', "shift": True, "alt": True, "repeat": True},
-         {"properties": [("position", 'FAILEDPREV')]}),
-        ("clip.frame_jump", {"type": 'RIGHT_ARROW', "value": 'PRESS', "shift": True, "alt": True, "repeat": True},
-         {"properties": [("position", 'PATHSTART')]}),
-        ("clip.change_frame", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        ("clip.select", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("extend", False), ("deselect_all", True)]}),
-        ("clip.select", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("extend", True)]}),
-        ("clip.select_box", {"type": 'Q', "value": 'PRESS'}, None),
-        ("clip.select_all", {"type": 'A', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'SELECT')]}),
-        ("clip.select_all", {"type": 'A', "value": 'PRESS', "ctrl": True,
-         "shift": True}, {"properties": [("action", 'DESELECT')]}),
-        ("clip.select_all", {"type": 'I', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'INVERT')]}),
-        op_menu("CLIP_MT_select_grouped", {"type": 'G', "value": 'PRESS', "shift": True}),
-        ("clip.add_marker_slide", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, None),
-        ("clip.delete_marker", {"type": 'BACK_SPACE', "value": 'PRESS', "shift": True}, None),
-        ("clip.delete_marker", {"type": 'DEL', "value": 'PRESS', "shift": True}, None),
-        ("clip.slide_marker", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        ("clip.disable_markers", {"type": 'D', "value": 'PRESS', "shift": True},
-         {"properties": [("action", 'TOGGLE')]}),
-        ("clip.delete_track", {"type": 'BACK_SPACE', "value": 'PRESS'}, None),
-        ("clip.delete_track", {"type": 'DEL', "value": 'PRESS'}, None),
-        ("clip.lock_tracks", {"type": 'L', "value": 'PRESS', "ctrl": True},
-         {"properties": [("action", 'LOCK')]}),
-        ("clip.lock_tracks", {"type": 'L', "value": 'PRESS', "alt": True},
-         {"properties": [("action", 'UNLOCK')]}),
-        ("clip.hide_tracks", {"type": 'H', "value": 'PRESS', "ctrl": True},
-         {"properties": [("unselected", False)]}),
-        ("clip.hide_tracks", {"type": 'H', "value": 'PRESS', "shift": True},
-         {"properties": [("unselected", True)]}),
-        ("clip.hide_tracks_clear", {"type": 'H', "value": 'PRESS', "alt": True}, None),
-        ("clip.slide_plane_marker", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        ("clip.keyframe_insert", {"type": 'S', "value": 'PRESS'}, None),
-        ("clip.keyframe_delete", {"type": 'S', "value": 'PRESS', "alt": True}, None),
-        ("clip.join_tracks", {"type": 'J', "value": 'PRESS', "ctrl": True}, None),
-        *_template_items_context_menu("CLIP_MT_tracking_context_menu", {"type": 'RIGHTMOUSE', "value": 'PRESS'}),
-        ("wm.context_toggle", {"type": 'L', "value": 'PRESS'},
-         {"properties": [("data_path", "space_data.lock_selection")]}),
-        ("wm.context_toggle", {"type": 'D', "value": 'PRESS', "alt": True},
-         {"properties": [("data_path", "space_data.show_disabled")]}),
-        ("wm.context_toggle", {"type": 'S', "value": 'PRESS', "alt": True},
-         {"properties": [("data_path", "space_data.show_marker_search")]}),
-        ("wm.context_toggle", {"type": 'M', "value": 'PRESS'},
-         {"properties": [("data_path", "space_data.use_mute_footage")]}),
-        ("transform.translate", {"type": 'W', "value": 'PRESS'}, None),
-        ("transform.translate", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'}, None),
-        ("transform.resize", {"type": 'R', "value": 'PRESS'}, None),
-        ("transform.rotate", {"type": 'E', "value": 'PRESS'}, None),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "alt": True},
-         {"properties": [("action", 'REMAINED'), ("clear_active", False)]}),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "shift": True},
-         {"properties": [("action", 'UPTO'), ("clear_active", False)]}),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "shift": True, "alt": True},
-         {"properties": [("action", 'ALL'), ("clear_active", False)]}),
-        op_menu_pie("CLIP_MT_pivot_pie", {"type": 'PERIOD', "value": 'PRESS'}),
-        ("clip.copy_tracks", {"type": 'C', "value": 'PRESS', "ctrl": True}, None),
-        ("clip.paste_tracks", {"type": 'V', "value": 'PRESS', "ctrl": True}, None),
-    ])
-
-    return keymap
-
-
-def km_clip_graph_editor(params):
-    items = []
-    keymap = (
-        "Clip Graph Editor",
-        {"space_type": 'CLIP_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        op_panel("TOPBAR_PT_name", {"type": 'RET', "value": 'PRESS'}, [("keep_open", False)]),
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        ("clip.graph_select", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("extend", False)]}),
-        ("clip.graph_select", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("extend", True)]}),
-        ("clip.graph_select_box", {"type": 'Q', "value": 'PRESS'}, None),
-        ("clip.graph_select_all", {"type": 'A', "value": 'PRESS', "ctrl": True}, None),
-        # ("clip.graph_select_all",
-        #  {"type": 'A', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'DESELECT')]}),
-        # ("clip.graph_select_all",
-        #  {"type": 'I', "value": 'PRESS', "ctrl": True}, {"properties": [("action", 'INVERT')]}),
-        ("clip.graph_delete_curve", {"type": 'BACK_SPACE', "value": 'PRESS'}, None),
-        ("clip.graph_delete_curve", {"type": 'DEL', "value": 'PRESS'}, None),
-        ("clip.graph_delete_knot", {"type": 'BACK_SPACE', "value": 'PRESS', "shift": True}, None),
-        ("clip.graph_delete_knot", {"type": 'DEL', "value": 'PRESS', "shift": True}, None),
-        ("clip.graph_view_all", {"type": 'A', "value": 'PRESS'}, None),
-        ("clip.graph_view_all", {"type": 'NDOF_BUTTON_FIT', "value": 'PRESS'}, None),
-        ("clip.graph_center_current_frame", {"type": 'NUMPAD_0', "value": 'PRESS'}, None),
-        ("wm.context_toggle", {"type": 'L', "value": 'PRESS'},
-         {"properties": [("data_path", "space_data.lock_time_cursor")]}),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "alt": True},
-         {"properties": [("action", 'REMAINED'), ("clear_active", True)]}),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "shift": True},
-         {"properties": [("action", 'UPTO'), ("clear_active", True)]}),
-        ("clip.clear_track_path", {"type": 'T', "value": 'PRESS', "shift": True, "alt": True},
-         {"properties": [("action", 'ALL'), ("clear_active", True)]}),
-        ("clip.graph_disable_markers", {"type": 'D', "value": 'PRESS', "shift": True},
-         {"properties": [("action", 'TOGGLE')]}),
-        ("transform.translate", {"type": 'W', "value": 'PRESS'}, None),
-        ("transform.translate", {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'}, None),
-        ("transform.resize", {"type": 'R', "value": 'PRESS'}, None),
-        ("transform.rotate", {"type": 'E', "value": 'PRESS'}, None),
-    ])
-
-    return keymap
-
-
-def km_clip_dopesheet_editor(_params):
-    items = []
-    keymap = (
-        "Clip Dopesheet Editor",
-        {"space_type": 'CLIP_EDITOR', "region_type": 'WINDOW'},
-        {"items": items},
-    )
-
-    items.extend([
-        ("wm.search_menu", {"type": 'TAB', "value": 'PRESS'}, None),
-        ("clip.dopesheet_select_channel", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("extend", True)]}),
-        ("clip.dopesheet_view_all", {"type": 'HOME', "value": 'PRESS'}, None),
-        ("clip.dopesheet_view_all", {"type": 'NDOF_BUTTON_FIT', "value": 'PRESS'}, None),
     ])
 
     return keymap
@@ -3715,21 +3305,6 @@ def km_image_editor_tool_uv_select(params):
     )
 
 
-def km_sequencer_editor_tool_select_preview(params):
-    return (
-        "Preview Tool: Select Box",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": _template_items_tool_select(params, "sequencer.select", extend="toggle")}
-    )
-
-
-def km_sequencer_editor_tool_select_timeline(params):
-    return (
-        "Sequencer Tool: Select Box",
-        {"space_type": 'SEQUENCE_EDITOR', "region_type": 'WINDOW'},
-        {"items": _template_items_tool_select(params, "sequencer.select", extend="toggle")}
-    )
-
 # NOTE: duplicated from `blender_default.py`.
 
 
@@ -3841,15 +3416,7 @@ def generate_keymaps_impl(params=None):
         km_nla_editor(params),
         km_text_generic(params),
         km_text(params),
-        km_sequencer_generic(params),
-        km_sequencer(params),
-        km_sequencer_preview(params),
-        km_sequencer_channels(params),
         km_console(params),
-        km_clip(params),
-        km_clip_editor(params),
-        km_clip_graph_editor(params),
-        km_clip_dopesheet_editor(params),
         km_spreadsheet_generic(params),
 
         # Animation.
@@ -3893,8 +3460,6 @@ def generate_keymaps_impl(params=None):
         km_3d_view_tool_select(params),
         km_3d_view_tool_interactive_add(params),
         km_image_editor_tool_uv_select(params),
-        km_sequencer_editor_tool_select_preview(params),
-        km_sequencer_editor_tool_select_timeline(params),
     ]
 
 

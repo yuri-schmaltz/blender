@@ -53,6 +53,8 @@ class NODE_HT_header(Header):
         is_compositor = snode.tree_type == 'CompositorNodeTree'
 
         layout.template_header()
+        if is_compositor:
+            return
 
         # Now expanded via the `ui_type`.
         # layout.prop(snode, "tree_type", text="")
@@ -107,23 +109,6 @@ class NODE_HT_header(Header):
                 row.enabled = not snode.pin
                 row.template_ID(scene, "world", new="world.new")
 
-            if snode.shader_type == 'LINESTYLE':
-                view_layer = context.view_layer
-                lineset = view_layer.freestyle_settings.linesets.active
-
-                if lineset is not None:
-                    NODE_MT_editor_menus.draw_collapsible(context, layout)
-
-                    if snode_id:
-                        row = layout.row()
-                        row.prop(snode_id, "use_nodes")
-
-                    layout.separator_spacer()
-
-                    row = layout.row()
-                    row.enabled = not snode.pin
-                    row.template_ID(lineset, "linestyle", new="scene.freestyle_linestyle_new")
-
         elif snode.tree_type == 'TextureNodeTree':
             layout.prop(snode, "texture_type", text="")
 
@@ -139,57 +124,6 @@ class NODE_HT_header(Header):
                     layout.template_ID(id_from, "texture", new="texture.new")
                 else:
                     layout.template_ID(id_from, "active_texture", new="texture.new")
-
-        elif snode.tree_type == 'CompositorNodeTree':
-            layout.prop(snode, "node_tree_sub_type", text="")
-            NODE_MT_editor_menus.draw_collapsible(context, layout)
-            layout.separator_spacer()
-
-            if snode.node_tree_sub_type == 'SCENE':
-                row = layout.row()
-                active_effect = scene.compositor_effects.active
-                if snode.pin:
-                    row.enabled = False
-                    row.template_ID(snode, "node_tree", new="scene.new_compositor_effect_node_group")
-                elif active_effect:
-                    if active_effect.node_group:
-                        row.template_ID(
-                            active_effect,
-                            "node_group",
-                            new="scene.duplicate_compositor_effect_node_group")
-                    else:
-                        row.template_ID(
-                            active_effect,
-                            "node_group",
-                            new="scene.new_compositor_effect_node_group")
-                else:
-                    row.template_ID(snode, "node_tree", new="scene.new_compositor_effect_node_group")
-            elif snode.node_tree_sub_type == 'SEQUENCER':
-                row = layout.row()
-                sequencer_scene = context.workspace.sequencer_scene
-                sequencer_editor = sequencer_scene.sequence_editor if sequencer_scene else None
-                active_strip = sequencer_editor.active_strip if sequencer_editor else None
-                if active_strip:
-                    active_modifier = active_strip.modifiers.active
-                    is_compositor_modifier_active = active_modifier and active_modifier.type == 'COMPOSITOR'
-                    is_compositor_effect_active = active_strip.type == 'COMPOSITOR'
-                    if is_compositor_effect_active and not snode.pin:
-                        row.template_ID(  # @TODO: duplicate operator
-                            active_strip,
-                            "node_group",
-                            new="node.new_compositor_sequencer_node_group")
-                    elif is_compositor_modifier_active and not snode.pin:
-                        if active_modifier.node_group:
-                            row.template_ID(active_modifier,
-                                            "node_group",
-                                            new="node.duplicate_compositing_modifier_node_group")
-                        else:
-                            row.template_ID(
-                                active_modifier,
-                                "node_group",
-                                new="node.new_compositor_sequencer_node_group")
-                    elif active_strip.type != 'SOUND':
-                        row.template_ID(snode, "node_tree", new="node.new_compositor_sequencer_node_group")
 
         elif snode.tree_type == 'GeometryNodeTree':
             layout.prop(snode, "node_tree_sub_type", text="")
@@ -239,23 +173,6 @@ class NODE_HT_header(Header):
             op = layout.operator("node.tree_path_parent", text="", icon='FILE_PARENT')
             op.parent_tree_index = len(snode.path) - 2
 
-        # Backdrop
-        if is_compositor and snode.node_tree_sub_type == 'SCENE':
-            row = layout.row(align=True)
-            row.prop(snode, "show_backdrop", toggle=True)
-            row.active = snode.node_tree is not None
-            sub = row.row(align=True)
-            sub.active = snode.show_backdrop
-            sub.prop(snode, "backdrop_channels", icon_only=True, text="")
-
-            # Gizmo toggle and popover.
-            row = layout.row(align=True)
-            row.prop(snode, "show_gizmo", icon='GIZMO', text="")
-            row.active = snode.node_tree is not None
-            sub = row.row(align=True)
-            sub.active = snode.show_gizmo and row.active
-            sub.popover(panel="NODE_PT_gizmo_display", text="")
-
         # Snap
         row = layout.row(align=True)
         row.prop(tool_settings, "use_snap_node", text="")
@@ -268,30 +185,6 @@ class NODE_HT_header(Header):
         row.active = snode.node_tree is not None
         sub.active = overlay.show_overlays and row.active
         sub.popover(panel="NODE_PT_overlay", text="")
-
-
-class NODE_PT_gizmo_display(Panel):
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'HEADER'
-    bl_label = "Gizmos"
-    bl_ui_units_x = 8
-
-    def draw(self, context):
-        layout = self.layout
-        snode = context.space_data
-        is_compositor = snode.tree_type == 'CompositorNodeTree'
-
-        if not is_compositor:
-            return
-
-        col = layout.column()
-        col.label(text="Viewport Gizmos")
-        col.separator()
-
-        col.active = snode.show_gizmo
-        colsub = col.column()
-        colsub.active = snode.node_tree is not None and col.active
-        colsub.prop(snode, "show_gizmo_active_node", text="Active Node")
 
 
 class NODE_MT_editor_menus(Menu):
@@ -327,8 +220,6 @@ class NODE_MT_add(node_add_menu.AddNodeMenu):
         snode = context.space_data
         if snode.tree_type == 'GeometryNodeTree':
             layout.menu_contents("NODE_MT_geometry_node_add_all")
-        elif snode.tree_type == 'CompositorNodeTree':
-            layout.menu_contents("NODE_MT_compositor_node_add_all")
         elif snode.tree_type == 'ShaderNodeTree':
             layout.menu_contents("NODE_MT_shader_node_add_all")
         elif snode.tree_type == 'TextureNodeTree':
@@ -357,8 +248,6 @@ class NODE_MT_swap(node_add_menu.SwapNodeMenu):
         snode = context.space_data
         if snode.tree_type == 'GeometryNodeTree':
             layout.menu_contents("NODE_MT_geometry_node_swap_all")
-        elif snode.tree_type == 'CompositorNodeTree':
-            layout.menu_contents("NODE_MT_compositor_node_swap_all")
         elif snode.tree_type == 'ShaderNodeTree':
             layout.menu_contents("NODE_MT_shader_node_swap_all")
         elif snode.tree_type == 'TextureNodeTree':
@@ -372,13 +261,9 @@ class NODE_MT_view(Menu):
         layout = self.layout
 
         snode = context.space_data
-        is_compositor = snode.tree_type == 'CompositorNodeTree'
 
         layout.prop(snode, "show_region_toolbar")
         layout.prop(snode, "show_region_ui")
-
-        if is_compositor:
-            layout.prop(snode, "show_region_asset_shelf")
 
         layout.separator()
 
@@ -392,14 +277,6 @@ class NODE_MT_view(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         layout.operator("node.view_selected")
         layout.operator("node.view_all")
-
-        if context.space_data.show_backdrop:
-            layout.separator()
-
-            layout.operator("node.backimage_move", text="Backdrop Move")
-            layout.operator("node.backimage_zoom", text="Backdrop Zoom In").factor = 1.2
-            layout.operator("node.backimage_zoom", text="Backdrop Zoom Out").factor = 1.0 / 1.2
-            layout.operator("node.backimage_fit", text="Fit Backdrop to Available Space")
 
         layout.separator()
 
@@ -444,7 +321,6 @@ class NODE_MT_node(Menu):
         layout = self.layout
         snode = context.space_data
         group = snode.edit_tree
-        is_compositor = snode.tree_type == 'CompositorNodeTree'
 
         layout.operator("transform.translate").view2d_edge_pan = True
         layout.operator("transform.rotate")
@@ -490,10 +366,6 @@ class NODE_MT_node(Menu):
         layout.separator()
         layout.menu("NODE_MT_swap")
         layout.menu("NODE_MT_context_menu_show_hide_menu")
-
-        if is_compositor:
-            layout.separator()
-            layout.operator("node.read_viewlayers", icon='RENDERLAYERS')
 
         layout.separator()
         layout.operator("node.delete_reconnect")
@@ -661,17 +533,9 @@ class NODE_MT_context_menu_show_hide_menu(Menu):
     bl_label = "Show/Hide"
 
     def draw(self, context):
-        snode = context.space_data
-        is_compositor = snode.tree_type == 'CompositorNodeTree'
-
         layout = self.layout
 
         layout.operator("node.mute_toggle", text="Mute")
-
-        # Node previews are only available in the Compositor.
-        if is_compositor:
-            layout.operator("node.preview_toggle", text="Node Preview")
-
         layout.operator("node.options_toggle", text="Node Options")
 
         layout.separator()
@@ -918,82 +782,6 @@ class NODE_PT_texture_mapping(Panel):
         layout.prop(mapping, "scale")
 
 
-# Node Backdrop options
-class NODE_PT_backdrop(Panel):
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_category = "View"
-    bl_label = "Backdrop"
-
-    @classmethod
-    def poll(cls, context):
-        snode = context.space_data
-        return snode.tree_type == 'CompositorNodeTree'
-
-    def draw_header(self, context):
-        snode = context.space_data
-        self.layout.prop(snode, "show_backdrop", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        snode = context.space_data
-        layout.active = snode.show_backdrop
-
-        col = layout.column()
-
-        col.prop(snode, "backdrop_channels", text="Channels")
-        col.prop(snode, "backdrop_zoom", text="Zoom")
-
-        col.prop(snode, "backdrop_offset", text="Offset")
-
-        col.separator()
-
-        col.operator("node.backimage_move", text="Move")
-        col.operator("node.backimage_fit", text="Fit")
-
-
-class NODE_PT_quality(Panel):
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_category = "Options"
-    bl_label = "Performance"
-
-    @classmethod
-    def poll(cls, context):
-        snode = context.space_data
-        return snode.tree_type == 'CompositorNodeTree' and snode.node_tree is not None
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        scene = context.scene
-        rd = scene.render
-
-        snode = context.space_data
-
-        col = layout.column()
-        col.prop(rd, "compositor_device", text="Device")
-        if rd.compositor_device == 'GPU':
-            col.prop(rd, "compositor_precision", text="Precision")
-
-        if snode.node_tree_sub_type == 'SCENE':
-            col = layout.column(heading="Cache", align=True)
-            col.prop(rd, "use_compositor_frames_cache", text="Frames")
-
-            heading = layout.column(heading="Proxy", align=True)
-            row = heading.row(align=True)
-            row.prop(rd, "compositor_proxy_use_preview_scale", text="")
-            sub = row.row()
-            sub.active = rd.compositor_proxy_use_preview_scale
-            sub.prop(rd, "compositor_proxy_preview_scale", text="")
-            heading.prop(rd, "compositor_proxy_adapt_to_render_scale", text="Adapt To Render Scale")
-
-
 class NODE_PT_overlay(Panel):
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'HEADER'
@@ -1030,20 +818,6 @@ class NODE_PT_overlay(Panel):
             col.separator()
             col.prop(overlay, "show_timing", text="Timings")
             col.prop(overlay, "show_named_attributes", text="Named Attributes")
-
-        if snode.tree_type == 'CompositorNodeTree':
-            col.prop(overlay, "show_timing", text="Timings")
-
-            subcol = col.column(align=True)
-            subcol.active = overlay.show_render_size and snode.show_backdrop
-
-            subcol = col.column()
-            subcol.prop(overlay, "show_text_info")
-            subcol.active = snode.show_backdrop
-
-            row = subcol.row(align=True)
-            row.prop(overlay, "show_render_size", text="Render Region")
-            row.prop(overlay, "passepartout_alpha", text="Passepartout")
 
 
 class NODE_MT_node_tree_interface_context_menu(Menu):
@@ -1127,13 +901,6 @@ class NODE_PT_node_tree_properties(Panel):
                 col = body.column(align=True)
                 col.prop(group, "is_modifier")
                 col.prop(group, "is_tool")
-        elif group.bl_idname == "CompositorNodeTree":
-            header, body = col.panel("group_usage")
-            header.label(text="Usage")
-            if body:
-                col = body.column(align=True)
-                col.prop(group, "is_strip_modifier")
-                col.prop(group, "allow_usage_in_scene_compositor_effect")
 
 
 class NODE_PT_node_tree_animation(Panel):
@@ -1202,52 +969,6 @@ def node_panel(cls):
     return node_cls
 
 
-class NODE_AST_compositor(bpy.types.AssetShelf):
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_options = {'DEFAULT_VISIBLE', 'STORE_ENABLED_CATALOGS_IN_PREFERENCES'}
-    filter_node_tree = True
-
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'CompositorNodeTree'
-
-    @classmethod
-    def asset_poll(cls, asset):
-        import os
-        from pathlib import Path
-
-        compositing_type = bpy.types.NodeTree.bl_rna.properties["type"].enum_items["COMPOSITING"]
-        if asset.id_type != 'NODETREE' or asset.metadata.get("type") != compositing_type.value:
-            return False
-
-        # Don't display these node groups from the essentials. They will be displayed in the "Add" menu, but are a bit
-        # too low level for the Asset Shelf. The fact that they are assets is more of an implementation detail.
-        # Could use a nicer solution, like a flag or tag on the asset. Not worth if it's just these few assets though.
-        ignored_essentials = {
-            "Combine Cylindrical",
-            "Combine Spherical",
-            "Separate Cylindrical",
-            "Separate Spherical",
-            "3D to Screen Space",
-            "Screen to 3D Space",
-            "Project with Depth",
-            "Transform and Project",
-        }
-
-        compositor_essentials_path = Path(os.path.join(
-            bpy.utils.system_resource('DATAFILES'),
-            "assets",
-            "nodes",
-            "compositing_nodes_essentials.blend"
-        ))
-        if Path(asset.full_library_path) == compositor_essentials_path:
-            if asset.name in ignored_essentials:
-                return False
-
-        return True
-
-
 classes = (
     NODE_HT_header,
     NODE_MT_editor_menus,
@@ -1273,14 +994,10 @@ classes = (
     NODE_PT_active_node_generic,
     NODE_PT_texture_mapping,
     NODE_PT_active_tool,
-    NODE_PT_backdrop,
-    NODE_PT_quality,
     NODE_PT_annotation,
     NODE_PT_overlay,
     NODE_PT_active_node_properties,
     NODE_PT_active_node_custom_properties,
-    NODE_PT_gizmo_display,
-    NODE_AST_compositor,
 
     node_panel(EEVEE_MATERIAL_PT_settings),
     node_panel(EEVEE_MATERIAL_PT_settings_surface),

@@ -65,16 +65,6 @@ if(WITH_OPENVDB)
 endif()
 
 # -----------------------------------------------------------------------------
-# Configure Ceres
-add_library(bf_deps_optional_ceres INTERFACE)
-add_library(bf::dependencies::optional::ceres ALIAS bf_deps_optional_ceres)
-
-if(TARGET Ceres::ceres)
-  target_compile_definitions(bf_deps_optional_ceres INTERFACE WITH_CERES)
-  target_link_libraries(bf_deps_optional_ceres INTERFACE Ceres::ceres)
-endif()
-
-# -----------------------------------------------------------------------------
 # Configure Eigen
 
 add_library(bf_deps_eigen INTERFACE)
@@ -220,21 +210,6 @@ if(WITH_SDL)
 endif()
 
 # -----------------------------------------------------------------------------
-# Configure FFmpeg
-
-add_library(bf_deps_optional_ffmpeg INTERFACE)
-add_library(bf::dependencies::optional::ffmpeg ALIAS bf_deps_optional_ffmpeg)
-
-if(WITH_CODEC_FFMPEG)
-  target_compile_definitions(bf_deps_optional_ffmpeg INTERFACE WITH_FFMPEG)
-  target_include_directories(bf_deps_optional_ffmpeg SYSTEM INTERFACE ${FFMPEG_INCLUDE_DIRS})
-  target_link_libraries(bf_deps_optional_ffmpeg INTERFACE ${FFMPEG_LIBRARIES})
-  if(WITH_IMAGE_OPENJPEG)
-    target_link_libraries(bf_deps_optional_ffmpeg INTERFACE ${OPENJPEG_LIBRARIES})
-  endif()
-endif()
-
-# -----------------------------------------------------------------------------
 # Configure Python
 
 add_library(bf_deps_optional_python INTERFACE)
@@ -327,11 +302,6 @@ endif()
 add_library(bf_deps_optional_openpgl INTERFACE)
 add_library(bf::dependencies::optional::openpgl ALIAS bf_deps_optional_openpgl)
 
-if(WITH_CYCLES_PATH_GUIDING)
-  target_include_directories(bf_deps_optional_openpgl SYSTEM INTERFACE ${OPENPGL_INCLUDE_DIR})
-  target_link_libraries(bf_deps_optional_openpgl INTERFACE ${OPENPGL_LIBRARIES})
-endif()
-
 # -----------------------------------------------------------------------------
 # Configure NanoVDB
 
@@ -357,7 +327,7 @@ target_link_libraries(bf_deps_epoxy INTERFACE ${EPOXY_LIBRARIES})
 add_library(bf_deps_gflags INTERFACE)
 add_library(bf::dependencies::gflags ALIAS bf_deps_gflags)
 
-if(WITH_LIBMV OR WITH_GTESTS)
+if(WITH_GTESTS)
   target_compile_definitions(bf_deps_gflags INTERFACE ${GFLAGS_DEFINES})
   target_include_directories(bf_deps_gflags SYSTEM INTERFACE ${GFLAGS_INCLUDE_DIRS})
   target_link_libraries(bf_deps_gflags INTERFACE ${GFLAGS_LIBRARIES})
@@ -369,7 +339,7 @@ endif()
 add_library(bf_deps_glog INTERFACE)
 add_library(bf::dependencies::glog ALIAS bf_deps_glog)
 
-if(WITH_LIBMV OR WITH_GTESTS)
+if(WITH_GTESTS)
   target_compile_definitions(bf_deps_glog INTERFACE ${GLOG_DEFINES})
   target_include_directories(bf_deps_glog SYSTEM INTERFACE ${GLOG_INCLUDE_DIRS})
   target_link_libraries(bf_deps_glog INTERFACE ${GLOG_LIBRARIES})
@@ -413,25 +383,6 @@ if(WITH_BULLET)
 endif()
 
 # -----------------------------------------------------------------------------
-# Configure Audaspace
-
-add_library(bf_deps_optional_audaspace INTERFACE)
-add_library(bf::dependencies::optional::audaspace ALIAS bf_deps_optional_audaspace)
-
-if(WITH_AUDASPACE)
-  target_compile_definitions(bf_deps_optional_audaspace INTERFACE WITH_AUDASPACE)
-  if(WITH_RUBBERBAND)
-    target_compile_definitions(bf_deps_optional_audaspace INTERFACE WITH_RUBBERBAND)
-  endif()
-  target_include_directories(bf_deps_optional_audaspace SYSTEM INTERFACE ${AUDASPACE_C_INCLUDE_DIRS} ${AUDASPACE_PY_INCLUDE_DIRS})
-  if(WITH_SYSTEM_AUDASPACE)
-    target_link_libraries(bf_deps_optional_audaspace INTERFACE ${AUDASPACE_LIBRARIES} ${AUDASPACE_PY_LIBRARIES})
-  else()
-    target_link_libraries(bf_deps_optional_audaspace INTERFACE audaspace audaspace-py)
-  endif()
-endif()
-
-# -----------------------------------------------------------------------------
 # Configure Potrace
 
 add_library(bf_deps_optional_potrace INTERFACE)
@@ -465,22 +416,6 @@ add_library(bf::dependencies::fmt ALIAS fmt::fmt)
 
 # -----------------------------------------------------------------------------
 # Configure OSL
-
-if(WITH_CYCLES_OSL)
-  add_library(bf_deps_optional_osl INTERFACE)
-  target_link_libraries(bf_deps_optional_osl INTERFACE OSL::oslcomp OSL::oslquery OSL::oslnoise)
-  # Link oslexec with the -force_load flag on macOS.
-  if(APPLE)
-    target_link_libraries(bf_deps_optional_osl INTERFACE -force_load OSL::oslexec)
-  else()
-    target_link_libraries(bf_deps_optional_osl INTERFACE OSL::oslexec)
-  endif()
-  add_library(bf::dependencies::optional::osl ALIAS bf_deps_optional_osl)
-  get_target_property(OSL_COMPILER OSL::oslc LOCATION)
-else()
-  add_library(bf_deps_optional_osl INTERFACE)
-  add_library(bf::dependencies::optional::osl ALIAS bf_deps_optional_osl)
-endif()
 
 # -----------------------------------------------------------------------------
 # Configure Draco
@@ -535,15 +470,4 @@ add_library(bf::dependencies::optional::jolt ALIAS bf_deps_optional_jolt)
 if(TARGET Jolt::Jolt)
   target_compile_definitions(bf_deps_optional_jolt INTERFACE WITH_JOLT)
   target_link_libraries(bf_deps_optional_jolt INTERFACE Jolt::Jolt)
-endif()
-
-# -----------------------------------------------------------------------------
-# Configure OpenTimelineIO
-
-add_library(bf_deps_optional_opentimelineio INTERFACE)
-add_library(bf::dependencies::optional::opentimelineio ALIAS bf_deps_optional_opentimelineio)
-
-if(TARGET OTIO::opentimelineio)
-  target_compile_definitions(bf_deps_optional_opentimelineio INTERFACE WITH_OPENTIMELINEIO)
-  target_link_libraries(bf_deps_optional_opentimelineio INTERFACE OTIO::opentimelineio)
 endif()

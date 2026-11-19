@@ -49,7 +49,6 @@
 #include "DEG_depsgraph_query.hh"
 
 #include "NOD_shader_nodes_inline.hh"
-#include "RE_compositor.hh"
 #include "RE_engine.h"
 #include "RE_pipeline.h"
 

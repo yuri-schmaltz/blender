@@ -6,6 +6,7 @@ set(INC
   ../include
   ../../blenfont
   ../../makesrna
+  ../../sequencer
   # RNA_prototypes.hh
   ${CMAKE_BINARY_DIR}/source/blender/makesrna
 )
@@ -47,7 +48,6 @@ set(SRC
   tree/tree_element_defgroup.cc
   tree/tree_element_driver.cc
   tree/tree_element_edit_bone.cc
-  tree/tree_element_gpencil_effect.cc
   tree/tree_element_gpencil_layer.cc
   tree/tree_element_grease_pencil_node.cc
   tree/tree_element_id.cc
@@ -95,7 +95,6 @@ set(SRC
   tree/tree_element_defgroup.hh
   tree/tree_element_driver.hh
   tree/tree_element_edit_bone.hh
-  tree/tree_element_gpencil_effect.hh
   tree/tree_element_gpencil_layer.hh
   tree/tree_element_grease_pencil_node.hh
   tree/tree_element_id.hh
@@ -146,7 +145,6 @@ set(LIB
   PRIVATE bf::intern::clog
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::nodes
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
 )
 

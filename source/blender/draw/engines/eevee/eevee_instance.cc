@@ -177,10 +177,6 @@ void Instance::init(const int2 &output_res,
     if (depsgraph_last_update_ != DEG_get_update_count(depsgraph)) {
       sampling.reset();
     }
-    if (assign_if_different(is_viewport_compositor_used, draw_ctx->is_viewport_compositor_used()))
-    {
-      sampling.reset();
-    }
     if (assign_if_different(debug_mode, eDebugMode(G.debug_value))) {
       sampling.reset();
     }
@@ -769,10 +765,6 @@ void Instance::draw_viewport()
   render_sample();
   velocity.step_swap();
 
-  if (is_viewport_compositor_used) {
-    this->film.write_viewport_compositor_passes();
-  }
-
   /* Do not request redraw during viewport animation to lock the frame-rate to the animation
    * playback rate. This is in order to preserve motion blur aspect and also to avoid TAA reset
    * that can show flickering. */
@@ -818,10 +810,6 @@ void Instance::draw_viewport_image_render()
     sampling.update_time();
   } while (!sampling.finished_viewport());
   velocity.step_swap();
-
-  if (is_viewport_compositor_used) {
-    this->film.write_viewport_compositor_passes();
-  }
 }
 
 void Instance::draw(Manager & /*manager*/)

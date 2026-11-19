@@ -69,7 +69,6 @@ set(LIB
   PRIVATE bf::nodes
   PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
-  PRIVATE bf::dependencies::optional::audaspace
   PRIVATE bf::intern::clog
 )
 

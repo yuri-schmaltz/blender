@@ -38,7 +38,6 @@ def get_arguments(filepath: Path, output_filepath: Path) -> list[str | Path]:
         "--no-window-focus",
         "--window-geometry",
         "0", "0", "1024", "768",
-        "-noaudio",
         "--factory-startup",
         "--enable-autoexec",
         "--debug-memory",

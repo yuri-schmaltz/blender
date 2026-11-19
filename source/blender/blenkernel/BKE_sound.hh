@@ -15,9 +15,6 @@
 
 #include "BLI_vector.hh"
 
-#if defined(WITH_AUDASPACE)
-#  include <file/IWriter.h>
-#endif
 
 #define SOUND_WAVE_SAMPLES_PER_SECOND 250
 
@@ -116,31 +113,6 @@ bool BKE_sound_stream_info_get(Main *main,
  */
 int BKE_sound_stream_count(Main *main, const char *filepath);
 
-#if defined(WITH_AUDASPACE)
-AUD_Device BKE_sound_mixdown(const Scene *scene,
-                             const aud::DeviceSpecs &specs,
-                             int start,
-                             float volume);
-/**
- * Open the mixdown of the audio of a recording (see #BKE_sound_recording_ensure) for a reader
- * that starts at \a sample. The movie files of the views of a render write the same audio, their
- * readers share the mixdown.
- */
-void BKE_sound_recording_mixdown_open(bke::SoundRecording &recording,
-                                      const Scene *scene,
-                                      const aud::DeviceSpecs &specs,
-                                      int start,
-                                      float volume,
-                                      int64_t sample);
-/**
- * Read the mixed audio that starts at \a sample, with the state recorded up to \a frame. Readers
- * hold the lock of #BKE_sound_recording_lock. Frames must not decrease.
- */
-void BKE_sound_recording_mixdown_read(
-    bke::SoundRecording &recording, int64_t sample, int frame, unsigned char *buffer, int length);
-/** Close the mixdown for a reader that read the audio before \a sample. */
-void BKE_sound_recording_mixdown_close(bke::SoundRecording &recording, int64_t sample);
-#endif
 
 void BKE_sound_create_scene(Scene *scene);
 void BKE_sound_ensure_scene(Scene *scene);
@@ -349,47 +321,5 @@ void BKE_sound_runtime_clear_waveform_loading_tag(bSound *sound);
 bool BKE_sound_runtime_start_waveform_loading(bSound *sound);
 const Vector<float> *BKE_sound_runtime_get_waveform(const bSound *sound);
 
-#if defined(WITH_AUDASPACE)
-namespace bke {
-void sound_system_initialize();
-AUD_Device sound_device_init(const char *device,
-                             const aud::DeviceSpecs &specs,
-                             int buffersize,
-                             const char *name);
-void sound_device_exit();
-AUD_Handle sound_device_play(AUD_Device device, AUD_Sound sound);
-bool sound_device_read(AUD_Device device, unsigned char *buffer, int length);
-AUD_Handle sound_pause_after(AUD_Handle handle, double seconds);
-SoundInfo sound_info_get(AUD_Sound sound);
-float *sound_read_file_buffer(const char *filename,
-                              float low,
-                              float high,
-                              float attack,
-                              float release,
-                              float threshold,
-                              bool accumulate,
-                              bool additive,
-                              bool square,
-                              float sthreshold,
-                              double samplerate,
-                              int stream,
-                              int *length);
-
-bool sound_mixdown(AUD_Sequence sequence,
-                   unsigned int start,
-                   unsigned int length,
-                   unsigned int buffersize,
-                   const char *filename,
-                   const aud::DeviceSpecs &specs,
-                   aud::Container format,
-                   aud::Codec codec,
-                   unsigned int bitrate,
-                   bool split_channels,
-                   std::string &r_error,
-                   bool (*progress_callback)(float, void *),
-                   void *progress_data);
-
-}  // namespace bke
-#endif  // #if defined(WITH_AUDASPACE)
 
 }  // namespace blender

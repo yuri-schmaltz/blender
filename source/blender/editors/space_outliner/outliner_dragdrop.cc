@@ -781,9 +781,7 @@ static bool datastack_drop_init(bContext *C, const wmEvent *event, StackDropData
             TSE_MODIFIER,
             TSE_MODIFIER_BASE,
             TSE_CONSTRAINT,
-            TSE_CONSTRAINT_BASE,
-            TSE_GPENCIL_EFFECT,
-            TSE_GPENCIL_EFFECT_BASE))
+            TSE_CONSTRAINT_BASE))
   {
     return false;
   }
@@ -819,11 +817,7 @@ static bool datastack_drop_init(bContext *C, const wmEvent *event, StackDropData
   }
 
   /* Drag a base for linking. */
-  if (ELEM(drop_data->drag_tselem->type,
-           TSE_MODIFIER_BASE,
-           TSE_CONSTRAINT_BASE,
-           TSE_GPENCIL_EFFECT_BASE))
-  {
+  if (ELEM(drop_data->drag_tselem->type, TSE_MODIFIER_BASE, TSE_CONSTRAINT_BASE)) {
     drop_data->insert_type = TE_INSERT_INTO;
     drop_data->drop_action = DATA_STACK_DROP_LINK;
 
@@ -895,10 +889,6 @@ static bool datastack_drop_are_types_valid(StackDropData *drop_data)
     case TSE_CONSTRAINT_BASE:
     case TSE_CONSTRAINT:
 
-      break;
-    case TSE_GPENCIL_EFFECT_BASE:
-    case TSE_GPENCIL_EFFECT:
-      return ob_parent->type == OB_GREASE_PENCIL && ob_dst->type == OB_GREASE_PENCIL;
       break;
     default:
       break;
@@ -1006,13 +996,6 @@ static void datastack_drop_link(bContext *C, StackDropData *drop_data)
       object::constraint_link(bmain, ob_dst, dst, src);
       break;
     }
-    case TSE_GPENCIL_EFFECT_BASE:
-      if (ob_dst->type != OB_GREASE_PENCIL) {
-        return;
-      }
-
-      object::shaderfx_link(ob_dst, drop_data->ob_parent);
-      break;
     default:
       break;
   }
@@ -1050,14 +1033,6 @@ static void datastack_drop_copy(bContext *C, StackDropData *drop_data)
             bmain, ob_dst, static_cast<bConstraint *>(drop_data->drag_directdata));
       }
       break;
-    case TSE_GPENCIL_EFFECT: {
-      if (ob_dst->type != OB_GREASE_PENCIL) {
-        return;
-      }
-
-      object::shaderfx_copy(ob_dst, static_cast<ShaderFxData *>(drop_data->drag_directdata));
-      break;
-    }
     default:
       break;
   }
@@ -1100,11 +1075,6 @@ static void datastack_drop_reorder(bContext *C, ReportList *reports, StackDropDa
       object::constraint_move_to_index(
           ob, static_cast<bConstraint *>(drop_data->drag_directdata), index);
 
-      break;
-    case TSE_GPENCIL_EFFECT:
-      index = outliner_get_insert_index(drag_te, drop_te, insert_type, &ob->shader_fx);
-      object::shaderfx_move_to_index(
-          reports, ob, static_cast<ShaderFxData *>(drop_data->drag_directdata), index);
       break;
     default:
       break;
@@ -1802,13 +1772,8 @@ static wmOperatorStatus outliner_item_drag_drop_invoke(bContext *C,
     WM_operator_properties_free(&op_ptr);
   }
 
-  const bool use_datastack_drag = ELEM(tselem->type,
-                                       TSE_MODIFIER,
-                                       TSE_MODIFIER_BASE,
-                                       TSE_CONSTRAINT,
-                                       TSE_CONSTRAINT_BASE,
-                                       TSE_GPENCIL_EFFECT,
-                                       TSE_GPENCIL_EFFECT_BASE);
+  const bool use_datastack_drag =
+      ELEM(tselem->type, TSE_MODIFIER, TSE_MODIFIER_BASE, TSE_CONSTRAINT, TSE_CONSTRAINT_BASE);
 
   const eWM_DragDataType wm_drag_type = use_datastack_drag ? WM_DRAG_DATASTACK : WM_DRAG_ID;
   wmDrag *drag = WM_drag_data_create(C, data.icon, wm_drag_type, nullptr, WM_DRAG_NOP);

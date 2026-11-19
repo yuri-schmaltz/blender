@@ -48,7 +48,6 @@ tObject *gpencil_object_cache_add(Instance *inst,
   tObject *tgp_ob = static_cast<tObject *>(BLI_memblock_alloc(inst->gp_object_pool));
 
   tgp_ob->layers.first = tgp_ob->layers.last = nullptr;
-  tgp_ob->vfx.first = tgp_ob->vfx.last = nullptr;
   tgp_ob->camera_z = dot_v3v3(inst->camera_z_axis, ob->object_to_world().location());
   tgp_ob->is_drawmode3d = is_stroke_order_3d;
 

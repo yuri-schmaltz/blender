@@ -8,14 +8,12 @@
 #include "DRW_engine.hh"
 #include "DRW_render.hh"
 
-#include "BKE_compositor.hh"
 #include "BKE_context.hh"
 #include "BKE_curves.hh"
 #include "BKE_grease_pencil.hh"
 #include "BKE_material.hh"
 #include "BKE_object.hh"
 #include "BKE_paint.hh"
-#include "BKE_shader_fx.hh"
 #include "BKE_view3d_runtime.hh"
 
 #include "BKE_camera.h"
@@ -74,7 +72,6 @@ void Instance::init()
   BLI_memblock_clear(this->gp_material_pool, material_pool_free);
   BLI_memblock_clear(this->gp_object_pool, nullptr);
   this->gp_layer_pool->clear();
-  this->gp_vfx_pool->clear();
   BLI_memblock_clear(this->gp_maskbit_pool, nullptr);
 
   this->view_layer = draw_ctx->view_layer;
@@ -192,13 +189,6 @@ void Instance::begin_sync()
   this->use_object_fb = false;
   this->use_mask_fb = false;
 
-  const bool use_viewport_compositor = draw_ctx->is_viewport_compositor_used();
-  const Set<std::string> needed_passes = bke::compositor::get_used_passes(
-      *scene, view_layer, bke::compositor::ExecutionMode::Preview);
-  this->need_combined_pass = use_viewport_compositor &&
-                             needed_passes.contains(RE_PASSNAME_COMBINED);
-  this->need_grease_pencil_pass = use_viewport_compositor &&
-                                  needed_passes.contains(RE_PASSNAME_GREASE_PENCIL);
   this->use_signed_fb = !this->is_viewport;
 
   if (draw_ctx->v3d) {
@@ -263,18 +253,6 @@ void Instance::begin_sync()
     pass.shader_set(ShaderCache::get().depth_merge.get());
     pass.bind_texture("depth_buf", &this->depth_tx);
     pass.push_constant("clipping_rect", this->clipping_rect);
-    pass.push_constant("stroke_order3d", &this->is_stroke_order_3d);
-    pass.push_constant("gp_model_matrix", &this->object_bound_mat);
-    pass.draw_procedural(GPU_PRIM_TRIS, 1, 3);
-  }
-  {
-    /* Merges the object's depth to the viewport compositor depth pass. */
-    PassSimple &pass = this->merge_depth_pass_ps;
-    pass.init();
-    pass.state_set(DRW_STATE_WRITE_COLOR);
-    pass.shader_set(ShaderCache::get().depth_pass_merge.get());
-    pass.bind_texture("depth_buf", &this->depth_tx);
-    pass.bind_image("depth_pass_img", &this->depth_pass_img);
     pass.push_constant("stroke_order3d", &this->is_stroke_order_3d);
     pass.push_constant("gp_model_matrix", &this->object_bound_mat);
     pass.draw_procedural(GPU_PRIM_TRIS, 1, 3);
@@ -661,8 +639,7 @@ void Instance::object_sync(ObjectRef &ob_ref, Manager &manager)
   if (ob->data && (ob->type == OB_GREASE_PENCIL) && (ob->dt >= OB_SOLID)) {
     ResourceHandleRange res_handle = manager.unique_handle(ob_ref);
 
-    tObject *tgp_ob = object_sync_do(ob, res_handle);
-    vfx_sync(ob, tgp_ob);
+    object_sync_do(ob, res_handle);
   }
 
   if (ob->type == OB_LAMP && this->use_lights) {
@@ -741,27 +718,6 @@ void Instance::acquire_resources()
                          GPU_ATTACHMENT_TEXTURE(this->mask_color_tx),
                          GPU_ATTACHMENT_TEXTURE(this->mask_tx));
   }
-
-  /* The engine might not support passes, so check if the combined pass actually exists before
-   * rendering grease pencil to it. */
-  const bool combined_pass_exists = DRW_viewport_pass_texture_exists(RE_PASSNAME_COMBINED);
-  if (this->need_combined_pass && combined_pass_exists) {
-    draw::TextureFromPool &combined_pass = DRW_viewport_pass_texture_get(RE_PASSNAME_COMBINED);
-    this->combined_pass_fb.ensure(GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(combined_pass));
-  }
-
-  if (this->need_grease_pencil_pass) {
-    const int2 size = int2(draw_ctx->viewport_size_get());
-    draw::TextureFromPool &grease_pencil_pass = DRW_viewport_pass_texture_get(
-        RE_PASSNAME_GREASE_PENCIL);
-    grease_pencil_pass.acquire_2d(size, gpu::TextureFormat::SFLOAT_16_16_16_16);
-    this->gpencil_pass_fb.ensure(GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(grease_pencil_pass));
-  }
-
-  if (DRW_viewport_pass_texture_exists(RE_PASSNAME_DEPTH)) {
-    draw::TextureFromPool &depth_pass = DRW_viewport_pass_texture_get(RE_PASSNAME_DEPTH);
-    this->depth_pass_img = depth_pass.gpu_texture();
-  }
 }
 
 void Instance::release_resources()
@@ -836,14 +792,10 @@ void Instance::draw_object(View &view, tObject *ob)
 
   GPU_debug_group_begin("GPencil Object");
 
-  gpu::FrameBuffer *fb_object = (ob->vfx.first) ? this->object_fb : this->gpencil_fb;
+  gpu::FrameBuffer *fb_object = this->gpencil_fb;
 
   GPU_framebuffer_bind(fb_object);
   GPU_framebuffer_clear_depth_stencil(fb_object, ob->is_drawmode3d ? 1.0f : 0.0f, 0x00);
-
-  if (ob->vfx.first) {
-    GPU_framebuffer_multi_clear(fb_object, clear_cols);
-  }
 
   for (tLayer *layer = ob->layers.first; layer; layer = layer->next) {
     if (layer->mask_bits) {
@@ -866,21 +818,12 @@ void Instance::draw_object(View &view, tObject *ob)
     }
   }
 
-  for (tVfx *vfx = ob->vfx.first; vfx; vfx = vfx->next) {
-    GPU_framebuffer_bind(*(vfx->target_fb));
-    manager->submit(*vfx->vfx_ps);
-  }
-
   this->object_bound_mat = float4x4(ob->plane_mat);
   this->is_stroke_order_3d = ob->is_drawmode3d;
 
   if (this->scene_fb) {
     GPU_framebuffer_bind(this->scene_fb);
     manager->submit(this->merge_depth_ps, view);
-  }
-
-  if (DRW_viewport_pass_texture_exists(RE_PASSNAME_DEPTH)) {
-    manager->submit(this->merge_depth_pass_ps, view);
   }
 
   GPU_debug_group_end();

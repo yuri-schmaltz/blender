@@ -387,36 +387,6 @@ static Strip *rna_Strips_meta_new_movie(ID *id,
       id, &strip->seqbase, bmain, reports, name, file, channel, frame_start, fit_method, stream);
 }
 
-#  ifdef WITH_AUDASPACE
-static Strip *rna_Strips_new_sound(ID *id,
-                                   ListBaseT<Strip> *seqbase,
-                                   Main *bmain,
-                                   ReportList *reports,
-                                   const char *name,
-                                   const char *file,
-                                   int channel,
-                                   int frame_start,
-                                   int stream)
-{
-  Scene *scene = (Scene *)id;
-  seq::LoadData load_data;
-  seq::add_load_data_init(&load_data, name, file, frame_start, channel);
-  load_data.allow_invalid_file = true;
-  load_data.stream_index = stream;
-  Strip *strip = seq::add_sound_strip(bmain, scene, seqbase, &load_data);
-
-  if (strip == nullptr) {
-    BKE_report(reports, RPT_ERROR, "Unable to open sound file");
-    return nullptr;
-  }
-
-  DEG_relations_tag_update(bmain);
-  DEG_id_tag_update(&scene->id, ID_RECALC_SEQUENCER_STRIPS);
-  WM_main_add_notifier(NC_SCENE | ND_SEQUENCER, scene);
-
-  return strip;
-}
-#  else  /* WITH_AUDASPACE */
 static Strip *rna_Strips_new_sound(ID * /*id*/,
                                    ListBaseT<Strip> * /*seqbase*/,
                                    Main * /*bmain*/,
@@ -430,7 +400,6 @@ static Strip *rna_Strips_new_sound(ID * /*id*/,
   BKE_report(reports, RPT_ERROR, "Blender compiled without Audaspace support");
   return nullptr;
 }
-#  endif /* WITH_AUDASPACE */
 
 static Strip *rna_Strips_editing_new_sound(ID *id,
                                            Editing *ed,

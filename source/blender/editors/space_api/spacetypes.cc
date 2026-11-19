@@ -25,7 +25,6 @@
 #include "ED_anim_api.hh"
 #include "ED_armature.hh"
 #include "ED_asset.hh"
-#include "ED_clip.hh"
 #include "ED_curve.hh"
 #include "ED_curves.hh"
 #include "ED_curves_sculpt.hh"
@@ -48,8 +47,6 @@
 #include "ED_scene.hh"
 #include "ED_screen.hh"
 #include "ED_sculpt.hh"
-#include "ED_sequencer.hh"
-#include "ED_sound.hh"
 #include "ED_space_api.hh"
 #include "ED_transform.hh"
 #include "ED_userpref.hh"
@@ -79,10 +76,8 @@ void ED_spacetypes_init()
   ED_spacetype_nla();
   ED_spacetype_script();
   ED_spacetype_text();
-  vse::ED_spacetype_sequencer();
   ED_spacetype_console();
   ED_spacetype_userpref();
-  ED_spacetype_clip();
   ED_spacetype_project();
   ED_spacetype_statusbar();
   ED_spacetype_topbar();
@@ -92,8 +87,6 @@ void ED_spacetypes_init()
   ED_operatortypes_userpref();
   ED_operatortypes_workspace();
   ED_operatortypes_scene();
-  ED_operatortypes_scene_compositor();
-  ED_menutypes_scene_compositor();
   ED_operatortypes_screen();
   ED_operatortypes_anim();
   ED_operatortypes_animchannels();
@@ -115,7 +108,6 @@ void ED_spacetypes_init()
   ED_operatortypes_armature();
   ED_operatortypes_marker();
   ED_operatortypes_metaball();
-  ED_operatortypes_sound();
   ED_operatortypes_render();
   ED_operatortypes_mask();
   ED_operatortypes_io();
@@ -166,12 +158,10 @@ void ED_spacemacros_init()
   ED_operatormacros_file();
   ED_operatormacros_graph();
   ED_operatormacros_action();
-  ED_operatormacros_clip();
   ED_operatormacros_curve();
   curves::operatormacros_curves();
   pointcloud::operatormacros_pointcloud();
   ED_operatormacros_mask();
-  vse::ED_operatormacros_sequencer();
   ED_operatormacros_paint();
   ED_operatormacros_grease_pencil();
   ED_operatormacros_nla();

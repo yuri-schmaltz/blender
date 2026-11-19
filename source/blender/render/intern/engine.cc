@@ -1122,12 +1122,6 @@ bool RE_engine_render(Render *re, bool do_all)
     G.is_break = true;
   }
 
-#ifdef WITH_FREESTYLE
-  if (re->r.mode & R_EDGE_FRS) {
-    CLOG_INFO(&LOG, "Rendering freestyle");
-    RE_RenderFreestyleExternal(re);
-  }
-#endif
 
   return true;
 }

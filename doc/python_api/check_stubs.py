@@ -32,7 +32,6 @@ STUB_DIR = SOURCE_DIR / "doc" / "python_api" / "stubs"
 
 SKIP = {
     "doc/python_api/examples/aud.0.py",
-    "doc/python_api/examples/bpy.types.HydraRenderEngine.py",
     "scripts/templates_py/ui_list_generic.py",
 }
 

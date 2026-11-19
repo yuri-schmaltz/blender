@@ -31,7 +31,6 @@ set(SRC
   bpy_app_timers.cc
   bpy_app_translations.cc
   bpy_app_usd.cc
-  bpy_audaspace.cc
   bpy_capi_utils.cc
   bpy_cli_command.cc
   bpy_driver.cc
@@ -84,7 +83,6 @@ set(SRC
   bpy_app_timers.hh
   bpy_app_translations.hh
   bpy_app_usd.hh
-  bpy_audaspace.hh
   bpy_capi_utils.hh
   bpy_cli_command.hh
   bpy_driver.hh
@@ -184,15 +182,6 @@ if(WITH_PYTHON_SAFETY)
   add_definitions(-DWITH_PYTHON_SAFETY)
 endif()
 
-if(WITH_AUDASPACE)
-  # It's possible to build with AUDASPACE (for file IO) but without the `aud` Python API,
-  # when building without NUMPY so define both `WITH_AUDASPACE` & `DWITH_AUDASPACE_PY`.
-  add_definitions(-DWITH_AUDASPACE)
-  if(WITH_PYTHON_NUMPY)
-    add_definitions(-DWITH_AUDASPACE_PY)
-    list(APPEND LIB bf::dependencies::optional::audaspace)
-  endif()
-endif()
 
 if(WITH_BULLET)
   add_definitions(-DWITH_BULLET)
@@ -355,9 +344,6 @@ if(WITH_HYDRA)
   add_definitions(-DWITH_HYDRA)
 endif()
 
-if(WITH_OPENTIMELINEIO)
-  add_definitions(-DWITH_OPENTIMELINEIO)
-endif()
 
 if(WITH_EXPERIMENTAL_FEATURES)
   add_definitions(-DWITH_EXPERIMENTAL_FEATURES)

@@ -70,9 +70,7 @@ else()
   )
 endif()
 
-if(NOT WIN32)
-  harvest(external_aom aom/lib ffmpeg/lib "*.a")
-else()
+if(WIN32)
   if(BUILD_MODE STREQUAL Release)
     # aom insists on building a static version even if you
     # do not want it, get rid of it by copying the import lib

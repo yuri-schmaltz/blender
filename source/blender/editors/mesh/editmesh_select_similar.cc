@@ -72,9 +72,6 @@ static const EnumPropertyItem prop_similar_types[] = {
     {SIMEDGE_BEVEL, "EDGE_BEVEL", 0, "Bevel", ""},
     {SIMEDGE_SEAM, "EDGE_SEAM", 0, "Seam", ""},
     {SIMEDGE_SHARP, "EDGE_SHARP", 0, "Sharpness", ""},
-#ifdef WITH_FREESTYLE
-    {SIMEDGE_FREESTYLE, "EDGE_FREESTYLE", 0, "Freestyle Edge Marks", ""},
-#endif
 
     {SIMFACE_MATERIAL, "FACE_MATERIAL", 0, "Material", ""},
     {SIMFACE_AREA, "FACE_AREA", 0, "Area", ""},
@@ -83,9 +80,6 @@ static const EnumPropertyItem prop_similar_types[] = {
     {SIMFACE_NORMAL, "FACE_NORMAL", 0, "Normal", ""},
     {SIMFACE_COPLANAR, "FACE_COPLANAR", 0, "Coplanar", ""},
     {SIMFACE_SMOOTH, "FACE_SMOOTH", 0, "Flat/Smooth", ""},
-#ifdef WITH_FREESTYLE
-    {SIMFACE_FREESTYLE, "FACE_FREESTYLE", 0, "Freestyle Face Marks", ""},
-#endif
 
     {0, nullptr, 0, nullptr, nullptr},
 };
@@ -209,24 +203,11 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
     float ob_m3[3][3];
     copy_m3_m4(ob_m3, ob->object_to_world().ptr());
 
-    int custom_data_offset = -1;
-    switch (type) {
-      case SIMFACE_MATERIAL: {
-        if (ob->totcol == 0) {
-          continue;
-        }
-        material_array = BKE_object_material_array_p(ob);
-        break;
+    if (type == SIMFACE_MATERIAL) {
+      if (ob->totcol == 0) {
+        continue;
       }
-      case SIMFACE_FREESTYLE: {
-        custom_data_offset = CustomData_get_offset_named(
-            &bm->pdata, CD_PROP_BOOL, "freestyle_face");
-        if (custom_data_offset == -1) {
-          face_data_value |= SIMFACE_DATA_FALSE;
-          continue;
-        }
-        break;
-      }
+      material_array = BKE_object_material_array_p(ob);
     }
 
     BMFace *face; /* Mesh face. */
@@ -275,24 +256,10 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
             }
             break;
           }
-          case SIMFACE_FREESTYLE: {
-            if (custom_data_offset == -1 || !BM_ELEM_CD_GET_BOOL(face, custom_data_offset)) {
-              face_data_value |= SIMFACE_DATA_FALSE;
-            }
-            else {
-              face_data_value |= SIMFACE_DATA_TRUE;
-            }
-            if (face_data_value == SIMFACE_DATA_ALL) {
-              goto face_select_all;
-            }
-            break;
-          }
         }
       }
     }
   }
-
-  BLI_assert((type != SIMFACE_FREESTYLE) || (face_data_value != SIMFACE_DATA_NONE));
 
   switch (type) {
     case SIMFACE_AREA:
@@ -325,23 +292,11 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
     float ob_m3[3][3];
     copy_m3_m4(ob_m3, ob->object_to_world().ptr());
 
-    int custom_data_offset = -1;
-    switch (type) {
-      case SIMFACE_MATERIAL: {
-        if (ob->totcol == 0) {
-          continue;
-        }
-        material_array = BKE_object_material_array_p(ob);
-        break;
+    if (type == SIMFACE_MATERIAL) {
+      if (ob->totcol == 0) {
+        continue;
       }
-      case SIMFACE_FREESTYLE: {
-        custom_data_offset = CustomData_get_offset_named(
-            &bm->pdata, CD_PROP_BOOL, "freestyle_face");
-        if ((face_data_value == SIMFACE_DATA_TRUE) && (custom_data_offset == -1)) {
-          continue;
-        }
-        break;
-      }
+      material_array = BKE_object_material_array_p(ob);
     }
 
     BMFace *face; /* Mesh face. */
@@ -431,20 +386,6 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
               select = true;
             }
             break;
-          case SIMFACE_FREESTYLE: {
-
-            if (custom_data_offset == -1) {
-              BLI_assert(face_data_value == SIMFACE_DATA_FALSE);
-              select = true;
-              break;
-            }
-
-            const bool value = BM_ELEM_CD_GET_BOOL(face, custom_data_offset);
-            if (value == ((face_data_value & SIMFACE_DATA_TRUE) != 0)) {
-              select = true;
-            }
-            break;
-          }
         }
 
         if (select) {
@@ -468,7 +409,7 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
 
   if (false) {
   face_select_all:
-    BLI_assert(ELEM(type, SIMFACE_SMOOTH, SIMFACE_FREESTYLE));
+    BLI_assert(type == SIMFACE_SMOOTH);
 
     for (Object *ob : objects) {
       EditMesh *em = BKE_editmesh_from_object(ob);
@@ -599,13 +540,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
     }
 
     switch (type) {
-      case SIMEDGE_FREESTYLE: {
-        if (!CustomData_has_layer_named(&bm->edata, CD_PROP_BOOL, "freestyle_edge")) {
-          edge_data_value |= SIMEDGE_DATA_FALSE;
-          continue;
-        }
-        break;
-      }
       case SIMEDGE_CREASE: {
         if (!CustomData_has_layer_named(&bm->edata, CD_PROP_FLOAT, "crease_edge")) {
           points_1d.add(0.0f, tree_index++);
@@ -624,11 +558,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
 
     int custom_data_offset;
     switch (type) {
-      case SIMEDGE_FREESTYLE: {
-        custom_data_offset = CustomData_get_offset_named(
-            &bm->edata, CD_PROP_BOOL, "freestyle_edge");
-        break;
-      }
       case SIMEDGE_CREASE:
         custom_data_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_FLOAT, "crease_edge");
         break;
@@ -683,18 +612,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
               goto edge_select_all;
             }
             break;
-          case SIMEDGE_FREESTYLE: {
-            if (custom_data_offset == -1 || !BM_ELEM_CD_GET_BOOL(edge, custom_data_offset)) {
-              edge_data_value |= SIMEDGE_DATA_FALSE;
-            }
-            else {
-              edge_data_value |= SIMEDGE_DATA_TRUE;
-            }
-            if (edge_data_value == SIMEDGE_DATA_ALL) {
-              goto edge_select_all;
-            }
-            break;
-          }
           case SIMEDGE_CREASE:
           case SIMEDGE_BEVEL: {
             const float value = BM_ELEM_CD_GET_FLOAT(edge, custom_data_offset);
@@ -705,8 +622,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
       }
     }
   }
-
-  BLI_assert((type != SIMEDGE_FREESTYLE) || (edge_data_value != SIMEDGE_DATA_NONE));
 
   switch (type) {
     case SIMEDGE_CREASE:
@@ -733,14 +648,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
 
     bool has_custom_data_layer = false;
     switch (type) {
-      case SIMEDGE_FREESTYLE: {
-        has_custom_data_layer = CustomData_has_layer_named(
-            &bm->edata, CD_PROP_BOOL, "freestyle_edge");
-        if ((edge_data_value == SIMEDGE_DATA_TRUE) && !has_custom_data_layer) {
-          continue;
-        }
-        break;
-      }
       case SIMEDGE_CREASE: {
         has_custom_data_layer = CustomData_has_layer_named(
             &bm->edata, CD_PROP_FLOAT, "crease_edge");
@@ -777,10 +684,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
 
     int custom_data_offset;
     switch (type) {
-      case SIMEDGE_FREESTYLE:
-        custom_data_offset = CustomData_get_offset_named(
-            &bm->edata, CD_PROP_BOOL, "freestyle_edge");
-        break;
       case SIMEDGE_CREASE:
         custom_data_offset = CustomData_get_offset_named(&bm->edata, CD_PROP_FLOAT, "crease_edge");
         break;
@@ -854,19 +757,6 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
               select = true;
             }
             break;
-          case SIMEDGE_FREESTYLE: {
-            if (!has_custom_data_layer) {
-              BLI_assert(edge_data_value == SIMEDGE_DATA_FALSE);
-              select = true;
-              break;
-            }
-
-            const bool value = BM_ELEM_CD_GET_BOOL(edge, custom_data_offset);
-            if (value == ((edge_data_value & SIMEDGE_DATA_TRUE) != 0)) {
-              select = true;
-            }
-            break;
-          }
           case SIMEDGE_CREASE:
           case SIMEDGE_BEVEL: {
             if (!has_custom_data_layer) {
@@ -905,7 +795,7 @@ static wmOperatorStatus similar_edge_select_exec(bContext *C, wmOperator *op)
 
   if (false) {
   edge_select_all:
-    BLI_assert(ELEM(type, SIMEDGE_SEAM, SIMEDGE_SHARP, SIMEDGE_FREESTYLE));
+    BLI_assert(ELEM(type, SIMEDGE_SEAM, SIMEDGE_SHARP));
 
     for (Object *ob : objects) {
       EditMesh *em = BKE_editmesh_from_object(ob);
@@ -1309,11 +1199,7 @@ static const EnumPropertyItem *select_similar_type_itemf(bContext *C,
       }
     }
     else if (em->selectmode & SCE_SELECT_FACE) {
-#ifdef WITH_FREESTYLE
-      const int a_end = SIMFACE_FREESTYLE;
-#else
       const int a_end = SIMFACE_SMOOTH;
-#endif
       for (a = SIMFACE_MATERIAL; a <= a_end; a++) {
         RNA_enum_items_add_value(&item, &totitem, prop_similar_types, a);
       }

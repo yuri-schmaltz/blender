@@ -121,9 +121,8 @@ static wmOperatorStatus wm_set_working_color_space_exec(bContext *C, wmOperator 
   STRNCPY_UTF8(bmain->colorspace.scene_linear_name, working_space);
   bmain->colorspace.scene_linear_to_xyz = colorspace::scene_linear_to_xyz;
 
-  /* Free all render, compositor and sequencer caches. */
+  /* Free render and sequencer caches. */
   RE_FreeAllRenderResults();
-  RE_FreeInteractiveCompositorRenders();
   seq::prefetch_stop_all();
   for (Scene &scene : bmain->scenes) {
     seq::cache_cleanup(&scene, seq::CacheCleanup::All);

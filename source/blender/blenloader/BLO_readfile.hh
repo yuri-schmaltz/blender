@@ -538,6 +538,9 @@ void *BLO_library_read_struct(FileData *fd, BHead *bh, const char *blockname);
 void BLO_update_defaults_startup_blend(Main *bmain, const char *app_template);
 void BLO_update_defaults_workspace(WorkSpace *workspace, const char *app_template);
 
+/** Whether a workspace from the embedded startup file is offered in the mesh editor. */
+bool BLO_startup_workspace_is_available(const char *workspace_name);
+
 /** Disable unwanted experimental feature settings on startup. */
 void BLO_sanitize_experimental_features_userpref_blend(UserDef *userdef);
 

@@ -2910,6 +2910,10 @@ void ED_area_newspace(bContext *C, ScrArea *area, int type, const bool skip_regi
   wmWindow *win = CTX_wm_window(C);
   SpaceType *st = BKE_spacetype_from_id(type);
 
+  if (!st && ELEM(type, SPACE_CLIP, SPACE_SEQ)) {
+    return;
+  }
+
   if (area->spacetype != type) {
     SpaceLink *slold = area->spacedata.first_as<SpaceLink>();
     /* store area->type->exit callback */

@@ -31,22 +31,6 @@ find_package(ZLIB REQUIRED)
 find_package(BZip2 REQUIRED)
 list(APPEND ZLIB_LIBRARIES ${BZIP2_LIBRARIES})
 
-if(WITH_OPENAL)
-  find_package(OpenAL REQUIRED)
-endif()
-
-if(WITH_JACK)
-  find_library(JACK_FRAMEWORK
-    NAMES jackmp
-  )
-
-  if(JACK_FRAMEWORK)
-    set(JACK_INCLUDE_DIRS ${JACK_FRAMEWORK}/headers)
-  else()
-    set_and_warn_library_found("JACK" JACK_FRAMEWORK WITH_JACK)
-  endif()
-endif()
-
 if(NOT DEFINED LIBDIR)
   if("${CMAKE_OSX_ARCHITECTURES}" STREQUAL "x86_64")
     set(LIBDIR ${CMAKE_SOURCE_DIR}/lib/macos_x64)
@@ -108,26 +92,6 @@ if(WITH_OPENSUBDIV)
 endif()
 add_bundled_libraries(opensubdiv/lib)
 
-if(WITH_CODEC_SNDFILE)
-  find_package(SndFile)
-  find_library(_sndfile_FLAC_LIBRARY NAMES flac HINTS ${LIBDIR}/sndfile/lib)
-  find_library(_sndfile_OGG_LIBRARY NAMES ogg HINTS ${LIBDIR}/ffmpeg/lib)
-  find_library(_sndfile_VORBIS_LIBRARY NAMES vorbis HINTS ${LIBDIR}/ffmpeg/lib)
-  find_library(_sndfile_VORBISENC_LIBRARY NAMES vorbisenc HINTS ${LIBDIR}/ffmpeg/lib)
-  list(APPEND LIBSNDFILE_LIBRARIES
-    ${_sndfile_FLAC_LIBRARY}
-    ${_sndfile_OGG_LIBRARY}
-    ${_sndfile_VORBIS_LIBRARY}
-    ${_sndfile_VORBISENC_LIBRARY}
-  )
-
-  print_found_status("SndFile libraries" "${LIBSNDFILE_LIBRARIES}")
-  unset(_sndfile_FLAC_LIBRARY)
-  unset(_sndfile_OGG_LIBRARY)
-  unset(_sndfile_VORBIS_LIBRARY)
-  unset(_sndfile_VORBISENC_LIBRARY)
-endif()
-
 if(WITH_PYTHON)
   if(NOT (WITH_PYTHON_MODULE AND PYTHON_ROOT_DIR))
     find_package(PythonLibsUnix REQUIRED)
@@ -165,30 +129,7 @@ set(PLATFORM_LINKFLAGS "\
 -framework QuartzCore"
 )
 
-if(WITH_CODEC_FFMPEG)
-  set(FFMPEG_ROOT_DIR ${LIBDIR}/ffmpeg)
-  set(FFMPEG_FIND_COMPONENTS
-    avcodec avdevice avfilter avformat avutil
-    mp3lame ogg opus swresample swscale
-    theora theoradec theoraenc vorbis vorbisenc
-    vorbisfile vpx x264)
-  # Frameworks required by libavfilter, using legacy macOS CGL
-  string(APPEND PLATFORM_LINKFLAGS " -framework CoreImage -framework OpenGL")
-  string(APPEND PLATFORM_LINKFLAGS " -framework VideoToolbox -framework CoreMedia -framework CoreVideo")
-  if(EXISTS ${LIBDIR}/ffmpeg/lib/libaom.a)
-    list(APPEND FFMPEG_FIND_COMPONENTS aom)
-  endif()
-  if(EXISTS ${LIBDIR}/ffmpeg/lib/libx265.a)
-    list(APPEND FFMPEG_FIND_COMPONENTS x265)
-  endif()
-  if(EXISTS ${LIBDIR}/ffmpeg/lib/libxvidcore.a)
-    list(APPEND FFMPEG_FIND_COMPONENTS xvidcore)
-  endif()
-  find_package(FFmpeg)
-endif()
-
-if(WITH_IMAGE_OPENJPEG OR WITH_CODEC_FFMPEG)
-  # use openjpeg from libdir that is linked into ffmpeg
+if(WITH_IMAGE_OPENJPEG)
   find_package(OpenJPEG)
 endif()
 
@@ -207,10 +148,6 @@ if(WITH_OPENIMAGEDENOISE)
     # OpenImageDenoise uses BNNS from the Accelerate framework.
     string(APPEND PLATFORM_LINKFLAGS " -framework Accelerate")
   endif()
-endif()
-
-if(WITH_JACK)
-  string(APPEND PLATFORM_LINKFLAGS " -F/Library/Frameworks -weak_framework jackmp")
 endif()
 
 if(WITH_VULKAN_BACKEND)
@@ -238,10 +175,6 @@ find_package(fmt REQUIRED)
 if(WITH_IMAGE_WEBP)
   set(WEBP_ROOT_DIR ${LIBDIR}/webp)
   find_package(WebP REQUIRED)
-endif()
-
-if(WITH_CODEC_FFMPEG)
-  string(APPEND PLATFORM_LINKFLAGS " -liconv") # ffmpeg needs it !
 endif()
 
 if(WITH_PUGIXML)
@@ -291,11 +224,7 @@ if(WITH_LLVM)
 
 endif()
 
-if(WITH_CYCLES AND WITH_CYCLES_OSL)
-  find_package(OSL 1.13.4 REQUIRED)
-endif()
-add_bundled_libraries(osl/lib)
-# OSL dependency
+# OpenEXR dependency
 add_bundled_libraries(openjph/lib)
 
 if(WITH_EMBREE)
@@ -339,28 +268,8 @@ if(WITH_MANIFOLD)
   find_package(manifold REQUIRED)
 endif()
 
-if(WITH_RUBBERBAND)
-  find_package(Rubberband REQUIRED)
-endif()
-
-if(WITH_CYCLES AND WITH_CYCLES_PATH_GUIDING)
-  find_package(openpgl QUIET)
-  if(openpgl_FOUND)
-    get_target_property(OPENPGL_LIBRARIES openpgl::openpgl LOCATION)
-    get_target_property(OPENPGL_INCLUDE_DIR openpgl::openpgl INTERFACE_INCLUDE_DIRECTORIES)
-    message(STATUS "Found OpenPGL: ${OPENPGL_LIBRARIES}")
-  else()
-    set(WITH_CYCLES_PATH_GUIDING OFF)
-    message(STATUS "OpenPGL not found, disabling WITH_CYCLES_PATH_GUIDING")
-  endif()
-endif()
-
 find_package(Eigen3 REQUIRED CONFIG)
 
-if(WITH_LIBMV)
-  find_package(Ceres REQUIRED CONFIG)
-endif()
-add_bundled_libraries(ceres/lib)
 
 set(ZSTD_ROOT_DIR ${LIBDIR}/zstd)
 find_package(Zstd REQUIRED)
@@ -389,10 +298,6 @@ if(WITH_JOLT)
 endif()
 add_bundled_libraries(jolt/lib)
 
-if(WITH_OPENTIMELINEIO)
-  find_package(OpenTimelineIO REQUIRED CONFIG)
-endif()
-add_bundled_libraries(opentimelineio/lib)
 
 if(EXISTS ${LIBDIR})
   without_system_libs_end()

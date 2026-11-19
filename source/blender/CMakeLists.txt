@@ -74,7 +74,6 @@ set(SRC_DNA_INC
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_sdna_types.h
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_sequence_types.h
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_session_uid_types.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_shader_fx_types.h
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_sound_types.h
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_space_enums.h
   ${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_space_types.h
@@ -126,6 +125,7 @@ add_subdirectory(draw/engines/overlay/shaders)
 add_subdirectory(draw/engines/workbench/shaders)
 add_subdirectory(draw/engines/select/shaders)
 add_subdirectory(render)
+add_subdirectory(sequencer)
 add_subdirectory(blenfont)
 add_subdirectory(blentranslation)
 add_subdirectory(blenloader)
@@ -143,8 +143,6 @@ add_subdirectory(imbuf/intern/oiio)
 add_subdirectory(imbuf/intern/openexr)
 add_subdirectory(nodes)
 add_subdirectory(modifiers)
-add_subdirectory(sequencer)
-add_subdirectory(shader_fx)
 add_subdirectory(io)
 add_subdirectory(functions)
 add_subdirectory(makesdna)
@@ -162,10 +160,6 @@ endif()
 
 if(WITH_PYTHON)
   add_subdirectory(python)
-endif()
-
-if(WITH_FREESTYLE)
-  add_subdirectory(freestyle)
 endif()
 
 if(WITH_CPU_CHECK)

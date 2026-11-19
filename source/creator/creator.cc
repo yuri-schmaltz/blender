@@ -88,9 +88,6 @@
 #  include "GPU_compilation_subprocess.hh"
 #endif
 
-#ifdef WITH_FREESTYLE
-#  include "FRS_freestyle.h"
-#endif
 
 #include <csignal>
 
@@ -102,13 +99,7 @@
 #  include "binreloc.h"
 #endif
 
-#ifdef WITH_LIBMV
-#  include "libmv-capi.h"
-#endif
 
-#ifdef WITH_CYCLES
-#  include "CCL_api.h"
-#endif
 
 #if defined(WITH_PYTHON_MODULE) && defined(__APPLE__)
 /* Environment is not available in macOS shared libraries. */
@@ -461,9 +452,6 @@ int main(int argc,
   br_init(nullptr);
 #endif
 
-#ifdef WITH_LIBMV
-  libmv_initLogging(argv[0]);
-#endif
 
 #if defined(WITH_TBB_MALLOC) && defined(_MSC_VER) && defined(NDEBUG) && defined(WITH_GMP)
   gmp_blender_init_allocator();
@@ -561,10 +549,6 @@ int main(int argc,
   /* Continue with regular initialization, no need to use "early" exit. */
   app_init_data.early_exit = nullptr;
 
-#ifdef WITH_CYCLES
-  CCL_log_init();
-  CCL_implicit_sharing_init();
-#endif
 
   /* Set max open files to better handle production files that may use many
    * open geometry or texture cache file handles. After logging since it's used .*/
@@ -575,7 +559,6 @@ int main(int argc,
   /* Keep after #ARG_PASS_SETTINGS since debug flags are checked. */
   MOV_init();
 
-  /* After #ARG_PASS_SETTINGS arguments, this is so #WM_main_playanim skips #RNA_init. */
   RNA_init();
 
   RE_texture_rng_init();
@@ -623,11 +606,6 @@ int main(int argc,
           "\n");
 #endif
 
-#ifdef WITH_FREESTYLE
-  /* Initialize Freestyle. */
-  FRS_init();
-  FRS_set_context(C);
-#endif
 
 /* OK we are ready for it. */
 #ifndef WITH_PYTHON_MODULE

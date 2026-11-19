@@ -75,18 +75,14 @@ set(LIB
   PRIVATE bf::intern::memutil
   PRIVATE bf::nodes
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
   PRIVATE bf::extern::xxhash
   PRIVATE bf::dependencies::zstd
+  PRIVATE bf::sequencer
 )
 
 if(WITH_BUILDINFO)
   add_definitions(-DWITH_BUILDINFO)
-endif()
-
-if(WITH_CODEC_FFMPEG)
-  add_definitions(-DWITH_FFMPEG)
 endif()
 
 if(WITH_ALEMBIC)

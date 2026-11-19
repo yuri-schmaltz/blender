@@ -28,7 +28,6 @@
 #include "BKE_lib_remap.hh"
 #include "BKE_modifier.hh"
 #include "BKE_screen.hh"
-#include "BKE_shader_fx.hh"
 
 #include "BLT_translation.hh"
 
@@ -234,7 +233,6 @@ Vector<eSpaceButtons_Context> ED_buttons_tabs_list(const SpaceProperties *sbuts,
   add_tab(BCONTEXT_OUTPUT);
   add_tab(BCONTEXT_SCENE);
   add_tab(BCONTEXT_VIEW_LAYER);
-  add_tab(BCONTEXT_COMPOSITOR);
   add_tab(BCONTEXT_WORLD);
 
   add_spacer();
@@ -297,8 +295,6 @@ static const char *buttons_main_region_context_string(const short mainb)
       return "bone";
     case BCONTEXT_MODIFIER:
       return "modifier";
-    case BCONTEXT_SHADERFX:
-      return "shaderfx";
     case BCONTEXT_CONSTRAINT:
       return "constraint";
     case BCONTEXT_BONE_CONSTRAINT:
@@ -953,12 +949,6 @@ static void buttons_area_listener(const wmSpaceTypeListenerParams *params)
         sbuts->preview = 1;
       }
       break;
-#ifdef WITH_FREESTYLE
-    case NC_LINESTYLE:
-      ED_area_tag_redraw(area);
-      sbuts->preview = 1;
-      break;
-#endif
   }
 
   if (wmn->data == ND_KEYS) {
@@ -1144,15 +1134,6 @@ void ED_spacetype_buttons()
       mti->panel_register(art);
     }
   }
-  for (int i = 0; i < NUM_SHADER_FX_TYPES; i++) {
-    if (i == eShaderFxType_Light_deprecated) {
-      continue;
-    }
-    const ShaderFxTypeInfo *fxti = BKE_shaderfx_get_info(ShaderFxType(i));
-    if (fxti != nullptr && fxti->panel_register != nullptr) {
-      fxti->panel_register(art);
-    }
-  }
   /* Register the panel types from strip modifiers. The actual panels are built per strip modifier
    * rather than per modifier type. */
   for (int i = 0; i < NUM_STRIP_MODIFIER_TYPES; i++) {
@@ -1161,8 +1142,6 @@ void ED_spacetype_buttons()
       mti->panel_register(art);
     }
   }
-
-  ui::register_scene_compositor_effects_panel(art);
 
   /* regions: header */
   art = MEM_new_zeroed<ARegionType>("spacetype buttons region");

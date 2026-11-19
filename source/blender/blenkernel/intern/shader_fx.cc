@@ -11,6 +11,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "BLI_listbase.hh"
+#include "BLI_string.hh"
 #include "BLI_string_utf8.hh"
 #include "BLI_string_utils.hh"
 
@@ -25,13 +26,51 @@
 #include "BKE_screen.hh"
 #include "BKE_shader_fx.hh"
 
-#include "FX_shader_types.hh"
-
 #include "BLO_read_write.hh"
 
 namespace blender {
 
-static ShaderFxTypeInfo *shader_fx_types[NUM_SHADER_FX_TYPES] = {nullptr};
+/* Viewport shader effects are no longer supported: no effect implementation is
+ * registered and no UI is exposed for them.
+ *
+ * The type table below is kept only so that `.blend` files containing shader
+ * effects can still be read (and written back) without corrupting the data
+ * stream. It carries the DNA struct name and size of every effect type, but
+ * none of the behavior callbacks. */
+static ShaderFxTypeInfo shader_fx_types[NUM_SHADER_FX_TYPES] = {};
+
+template<typename T> static ShaderFxTypeInfo shader_fx_type_info(const char *name,
+                                                            const char *struct_name)
+{
+  ShaderFxTypeInfo info = {};
+  STRNCPY(info.name, name);
+  STRNCPY(info.struct_name, struct_name);
+  info.struct_size = int(sizeof(T));
+  info.type = eShaderFxType_NoneType;
+  info.flags = static_cast<ShaderFxTypeFlag>(0);
+  return info;
+}
+
+static void shader_fx_types_init()
+{
+  shader_fx_types[eShaderFxType_Blur] =
+      shader_fx_type_info<BlurShaderFxData>("Blur", "BlurShaderFxData");
+  shader_fx_types[eShaderFxType_Colorize] =
+      shader_fx_type_info<ColorizeShaderFxData>("Colorize", "ColorizeShaderFxData");
+  shader_fx_types[eShaderFxType_Flip] =
+      shader_fx_type_info<FlipShaderFxData>("Flip", "FlipShaderFxData");
+  shader_fx_types[eShaderFxType_Glow] =
+      shader_fx_type_info<GlowShaderFxData>("Glow", "GlowShaderFxData");
+  shader_fx_types[eShaderFxType_Pixel] =
+      shader_fx_type_info<PixelShaderFxData>("Pixel", "PixelShaderFxData");
+  shader_fx_types[eShaderFxType_Rim] = shader_fx_type_info<RimShaderFxData>("Rim", "RimShaderFxData");
+  shader_fx_types[eShaderFxType_Shadow] =
+      shader_fx_type_info<ShadowShaderFxData>("Shadow", "ShadowShaderFxData");
+  shader_fx_types[eShaderFxType_Swirl] =
+      shader_fx_type_info<SwirlShaderFxData>("Swirl", "SwirlShaderFxData");
+  shader_fx_types[eShaderFxType_Wave] =
+      shader_fx_type_info<WaveShaderFxData>("Wave", "WaveShaderFxData");
+}
 
 /* *************************************************** */
 /* Methods - Evaluation Loops, etc. */
@@ -40,7 +79,7 @@ bool BKE_shaderfx_has_gpencil(const Object *ob)
 {
   for (const ShaderFxData &fx : ob->shader_fx) {
     const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx.type));
-    if (fxi->type == eShaderFxType_GpencilType) {
+    if (fxi != nullptr && fxi->type == eShaderFxType_GpencilType) {
       return true;
     }
   }
@@ -49,13 +88,16 @@ bool BKE_shaderfx_has_gpencil(const Object *ob)
 
 void BKE_shaderfx_init()
 {
-  /* Initialize shaders */
-  shaderfx_type_init(shader_fx_types); /* `FX_shader_util.cc`. */
+  shader_fx_types_init();
 }
 
 ShaderFxData *BKE_shaderfx_new(ShaderFxType type)
 {
   const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(type);
+  if (fxi == nullptr) {
+    return nullptr;
+  }
+
   ShaderFxData *fx = static_cast<ShaderFxData *>(
       MEM_new_zeroed(fxi->struct_size, fxi->struct_name));
 
@@ -67,14 +109,6 @@ ShaderFxData *BKE_shaderfx_new(ShaderFxType type)
   fx->flag = eShaderFxFlag_OverrideLibrary_Local;
   /* Expand only the parent panel by default. */
   fx->ui_expand_flag = UI_PANEL_DATA_EXPAND_ROOT;
-
-  if (fxi->flags & eShaderFxTypeFlag_EnableInEditmode) {
-    fx->mode |= eShaderFxMode_Editmode;
-  }
-
-  if (fxi->init_data) {
-    fxi->init_data(fx);
-  }
 
   return fx;
 }
@@ -92,15 +126,10 @@ static void shaderfx_free_data_id_us_cb(void * /*user_data*/,
 
 void BKE_shaderfx_free_ex(ShaderFxData *fx, const int flag)
 {
+  UNUSED_VARS(flag);
   const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx->type));
 
-  if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
-    if (fxi->foreach_ID_link) {
-      fxi->foreach_ID_link(fx, nullptr, shaderfx_free_data_id_us_cb, nullptr);
-    }
-  }
-
-  if (fxi->free_data) {
+  if (fxi != nullptr && fxi->free_data) {
     fxi->free_data(fx);
   }
   if (fx->error) {
@@ -119,6 +148,9 @@ void BKE_shaderfx_unique_name(ListBaseT<ShaderFxData> *shaders, ShaderFxData *fx
 {
   if (shaders && fx) {
     const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx->type));
+    if (fxi == nullptr) {
+      return;
+    }
     BLI_uniquename(
         shaders, fx, DATA_(fxi->name), '.', offsetof(ShaderFxData, name), sizeof(fx->name));
   }
@@ -128,14 +160,14 @@ bool BKE_shaderfx_depends_ontime(ShaderFxData *fx)
 {
   const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx->type));
 
-  return fxi->depends_on_time && fxi->depends_on_time(fx);
+  return fxi != nullptr && fxi->depends_on_time != nullptr && fxi->depends_on_time(fx);
 }
 
 const ShaderFxTypeInfo *BKE_shaderfx_get_info(ShaderFxType type)
 {
   /* type unsigned, no need to check < 0 */
-  if (type < NUM_SHADER_FX_TYPES && type > 0 && shader_fx_types[type]->name[0] != '\0') {
-    return shader_fx_types[type];
+  if (type < NUM_SHADER_FX_TYPES && type > 0 && shader_fx_types[type].struct_size > 0) {
+    return &shader_fx_types[type];
   }
 
   return nullptr;
@@ -194,6 +226,10 @@ void BKE_shaderfx_copydata_ex(ShaderFxData *fx, ShaderFxData *target, const int 
   target->flag = fx->flag;
   target->ui_expand_flag = fx->ui_expand_flag;
 
+  if (fxi == nullptr) {
+    return;
+  }
+
   if (fxi->copy_data) {
     fxi->copy_data(fx, target);
   }
@@ -243,7 +279,7 @@ void BKE_shaderfx_foreach_ID_link(Object *ob, ShaderFxIDWalkFunc walk, void *use
   for (; fx; fx = fx->next) {
     const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx->type));
 
-    if (fxi->foreach_ID_link) {
+    if (fxi != nullptr && fxi->foreach_ID_link) {
       fxi->foreach_ID_link(fx, ob, walk, user_data);
     }
   }
@@ -264,7 +300,7 @@ void BKE_shaderfx_blend_write(BlendWriter *writer, ListBaseT<ShaderFxData> *fxba
   for (ShaderFxData &fx : *fxbase) {
     const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx.type));
     if (fxi == nullptr) {
-      return;
+      continue;
     }
 
     writer->write_struct_by_name(fxi->struct_name, &fx);

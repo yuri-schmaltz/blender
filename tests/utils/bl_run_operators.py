@@ -405,7 +405,6 @@ operator_pattern_exclude_for_silence = (
 operator_pattern_exclude_for_disruptive = (
     "image.external_edit",
     "image.project_edit",
-    "render.play_rendered_anim",
     "render.render",
     "wm.url_open",
     "wm.doc_view",

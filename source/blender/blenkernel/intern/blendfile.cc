@@ -972,11 +972,9 @@ static void setup_app_data(bContext *C,
     mode = LOAD_UI;
   }
 
-  /* Free all render results and interactive compositor renders, without this stale data gets
-   * displayed after loading files */
+  /* Free render results so stale data is not displayed after loading a file. */
   if (mode != LOAD_UNDO) {
     RE_FreeAllRenderResults();
-    RE_FreeInteractiveCompositorRenders();
   }
 
   /* Only make file-paths compatible when loading for real (not undo). */
@@ -1540,12 +1538,10 @@ UserDef *BKE_blendfile_userdef_from_defaults()
   /* Add-ons. */
   {
     const char *addons[] = {
-        "io_anim_bvh",
         "io_curve_svg",
         "io_mesh_uv_layout",
         "io_scene_fbx",
         "io_scene_gltf2",
-        "cycles",
         "pose_library",
         "bl_pkg",
     };

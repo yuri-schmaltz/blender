@@ -100,10 +100,6 @@ if(WITH_PYTHON)
   add_definitions(-DWITH_PYTHON)
 endif()
 
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
-endif()
-
 if(WITH_XR_OPENXR)
   add_definitions(-DWITH_XR_OPENXR)
 

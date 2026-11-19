@@ -36,7 +36,6 @@ static PyStructSequence_Field app_builtopts_info_fields[] = {
     {"image_tiff", nullptr},
     {"image_webp", nullptr},
     {"input_ndof", nullptr},
-    {"audaspace", nullptr},
     {"international", nullptr},
     {"openal", nullptr},
     {"opensubdiv", nullptr},
@@ -99,38 +98,18 @@ static PyObject *make_builtopts_info()
   /* AVI */
   SetObjIncref(Py_False);
 
-#ifdef WITH_FFMPEG
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_SNDFILE
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
   /* Compositor. */
   SetObjIncref(Py_True);
 
-#ifdef WITH_CYCLES
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_CYCLES_OSL
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_FREESTYLE
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
 #ifdef WITH_IMAGE_CINEON
   SetObjIncref(Py_True);
@@ -168,11 +147,7 @@ static PyObject *make_builtopts_info()
   SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_AUDASPACE
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
 #ifdef WITH_INTERNATIONAL
   SetObjIncref(Py_True);
@@ -180,11 +155,7 @@ static PyObject *make_builtopts_info()
   SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_OPENAL
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
 #ifdef WITH_OPENSUBDIV
   SetObjIncref(Py_True);
@@ -198,35 +169,15 @@ static PyObject *make_builtopts_info()
   SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_COREAUDIO
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_JACK
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_PULSEAUDIO
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_WASAPI
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
-#ifdef WITH_LIBMV
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
 #ifdef WITH_OCEANSIM
   SetObjIncref(Py_True);
@@ -315,11 +266,7 @@ static PyObject *make_builtopts_info()
   SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_OPENTIMELINEIO
-  SetObjIncref(Py_True);
-#else
   SetObjIncref(Py_False);
-#endif
 
 #ifdef WITH_POTRACE
   SetObjIncref(Py_True);

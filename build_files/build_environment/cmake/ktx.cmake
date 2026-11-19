@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-set(OPENTIMELINEIO_EXTRA_ARGS
+set(KTX_EXTRA_ARGS
     -DKTX_FEATURE_TOOLS=OFF
     -DKTX_FEATURE_TESTS=OFF
     # Disable code with problematic license
@@ -32,7 +32,7 @@ ExternalProject_Add(external_ktx
 
   CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX=${LIBDIR}/ktx
-    ${DEFAULT_CMAKE_FLAGS} ${OPENTIMELINEIO_EXTRA_ARGS}
+    ${DEFAULT_CMAKE_FLAGS} ${KTX_EXTRA_ARGS}
 
   INSTALL_DIR ${LIBDIR}/ktx
 )

@@ -108,8 +108,7 @@ source/blender/blenkernel/BKE_tracking.*     @sergey
 source/blender/blenkernel/intern/tracking.*  @sergey
 
 # --------------------------------------------------
-# Render and Cycles module.
-intern/cycles/.*           @sergey @brecht @weizhen @sherholz
+# Render module.
 source/blender/render/.*   @sergey @brecht
 
 # --------------------------------------------------

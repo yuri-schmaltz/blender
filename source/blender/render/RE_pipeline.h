@@ -182,11 +182,6 @@ struct Render *RE_GetSceneRender(const struct Scene *scene);
 struct RenderEngineType;
 struct ViewRender *RE_NewViewRender(struct RenderEngineType *engine_type);
 
-/* Creates a new render for interactive compositing of the given scene. If an existing render
- * exists for the given scene, it is returned instead. See interactive_compositor_renders in
- * RenderGlobal for more information. */
-struct Render *RE_NewInteractiveCompositorRender(const struct Scene *scene);
-
 /* Assign default dummy callbacks. */
 
 /**
@@ -200,11 +195,6 @@ void RE_FreeViewRender(struct ViewRender *view_render);
  * Only called on exit.
  */
 void RE_FreeAllRender();
-
-/**
- * On file load, free all interactive compositor renders.
- */
-void RE_FreeInteractiveCompositorRenders();
 
 /**
  * On file load, free render results.
@@ -385,13 +375,6 @@ void RE_RenderAnim(struct Render *re,
                    int sfra,
                    int efra,
                    int tfra);
-#ifdef WITH_FREESTYLE
-void RE_RenderFreestyleStrokes(struct Render *re,
-                               struct Main *bmain,
-                               struct Scene *scene,
-                               bool render);
-void RE_RenderFreestyleExternal(struct Render *re);
-#endif
 
 void RE_SetActiveRenderView(struct Render *re, const char *viewname);
 const char *RE_GetActiveRenderView(struct Render *re);
@@ -440,8 +423,6 @@ void RE_current_scene_update_cb(struct Render *re,
 GHOST_IContext *RE_system_gpu_context_get(Render *re);
 void *RE_blender_gpu_context_ensure(Render *re);
 
-bool RE_seq_render_active(struct Scene *scene, const struct RenderData *rd);
-
 /**
  * Used in the interface to decide whether to show layers or passes.
  */
@@ -478,8 +459,7 @@ void RE_GetWindowMatrixWithOverscan(bool is_ortho,
 struct Scene *RE_GetScene(struct Render *re);
 void RE_SetScene(struct Render *re, struct Scene *sce);
 
-/* When rendering an animation, saving files is required, either through scene saving or through
- * a compositor File Output node. */
+/* Animation rendering requires saving the rendered frames. */
 bool RE_disable_save_output_allowed(const bool is_animation, Scene &scene, ReportList *reports);
 
 bool RE_is_rendering_allowed(const Main &bmain,

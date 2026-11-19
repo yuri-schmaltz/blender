@@ -50,7 +50,6 @@
 #  include "BKE_main.hh"
 #  include "BKE_report.hh"
 #  include "BKE_scene.hh"
-#  include "BKE_sound.hh"
 
 #  include "GPU_context.hh"
 #  ifdef WITH_OPENGL_BACKEND
@@ -68,9 +67,6 @@
 
 #  include "WM_api.hh"
 
-#  ifdef WITH_LIBMV
-#    include "libmv-capi.h"
-#  endif
 
 #  include "DEG_depsgraph.hh"
 
@@ -97,10 +93,6 @@ namespace blender {
 struct BuildDefs {
   bool apple;
   bool win32;
-  bool with_cycles;
-  bool with_ffmpeg;
-  bool with_freestyle;
-  bool with_libmv;
   bool with_opengl_backend;
   bool with_renderdoc;
   bool with_input_ndof;
@@ -124,18 +116,6 @@ static void build_defs_init(BuildDefs *build_defs, bool force_all)
 #  endif
 #  ifdef WIN32
   build_defs->win32 = true;
-#  endif
-#  ifdef WITH_CYCLES
-  build_defs->with_cycles = true;
-#  endif
-#  ifdef WITH_FFMPEG
-  build_defs->with_ffmpeg = true;
-#  endif
-#  ifdef WITH_FREESTYLE
-  build_defs->with_freestyle = true;
-#  endif
-#  ifdef WITH_LIBMV
-  build_defs->with_libmv = true;
 #  endif
 #  ifdef WITH_OPENGL_BACKEND
   build_defs->with_opengl_backend = true;
@@ -674,30 +654,10 @@ static void print_help(bArgs *ba, bool all)
   BLI_args_print_arg_doc(ba, "--engine");
   BLI_args_print_arg_doc(ba, "--threads");
 
-  if (defs.with_cycles) {
-    PRINT("Cycles Render Options:\n");
-    PRINT("\tCycles add-on options must be specified following a double dash.\n");
-    PRINT("\n");
-    PRINT("--cycles-device <device>\n");
-    PRINT("\tSet the device used for rendering.\n");
-    PRINT("\tValid options are: 'CPU' 'CUDA' 'OPTIX' 'HIP' 'ONEAPI' 'METAL'.\n");
-    PRINT("\n");
-    PRINT("\tAppend +CPU to a GPU device to render on both CPU and GPU.\n");
-    PRINT("\n");
-    PRINT("\tExample:\n");
-    PRINT("\t# blender -b file.blend -f 20 -- --cycles-device OPTIX\n");
-    PRINT("--cycles-print-stats\n");
-    PRINT("\tLog statistics about render memory and time usage.\n");
-  }
-
   PRINT("\n");
   PRINT("Format Options:\n");
   BLI_args_print_arg_doc(ba, "--render-format");
   BLI_args_print_arg_doc(ba, "--use-extension");
-
-  PRINT("\n");
-  PRINT("Animation Playback Options:\n");
-  BLI_args_print_arg_doc(ba, "-a");
 
   PRINT("\n");
   PRINT("Window Options:\n");
@@ -749,9 +709,6 @@ static void print_help(bArgs *ba, bool all)
   PRINT("\n");
   BLI_args_print_arg_doc(ba, "--debug-events");
   BLI_args_print_arg_doc(ba, "--debug-handlers");
-  if (defs.with_libmv) {
-    BLI_args_print_arg_doc(ba, "--debug-libmv");
-  }
   BLI_args_print_arg_doc(ba, "--debug-memory");
   BLI_args_print_arg_doc(ba, "--debug-jobs");
   BLI_args_print_arg_doc(ba, "--debug-python");
@@ -790,9 +747,6 @@ static void print_help(bArgs *ba, bool all)
   PRINT("\n");
   BLI_args_print_arg_doc(ba, "--debug-fpe");
   BLI_args_print_arg_doc(ba, "--debug-exit-on-error");
-  if (defs.with_freestyle) {
-    BLI_args_print_arg_doc(ba, "--debug-freestyle");
-  }
   BLI_args_print_arg_doc(ba, "--console-crash-handler");
   BLI_args_print_arg_doc(ba, "--disable-crash-handler");
   BLI_args_print_arg_doc(ba, "--disable-abort-handler");
@@ -823,8 +777,6 @@ static void print_help(bArgs *ba, bool all)
   BLI_args_print_arg_doc(ba, "--env-system-extensions");
   BLI_args_print_arg_doc(ba, "--env-system-python");
   PRINT("\n");
-  BLI_args_print_arg_doc(ba, "-noaudio");
-  BLI_args_print_arg_doc(ba, "-setaudio");
   PRINT("\n");
   BLI_args_print_arg_doc(ba, "--command");
 
@@ -1084,31 +1036,11 @@ static int arg_handle_quiet_set(int /*argc*/, const char ** /*argv*/, void * /*d
 static void background_mode_set()
 {
   G.background = true;
-
-  /* Background Mode Defaults:
-   *
-   * In general background mode should strive to match the behavior of running
-   * Blender inside a graphical session, any exception to this should have a well
-   * justified reason and be noted in the docstring. */
-
-  /* NOTE(@ideasman42): While there is no requirement for sound to be disabled in background-mode,
-   * the use case for playing audio in background mode is enough of a special-case
-   * that users who wish to do this can explicitly enable audio in background mode.
-   * While the down sides for connecting to an audio device aren't terrible they include:
-   * - Listing Blender as an active application which may output audio.
-   * - Unnecessary overhead running an operation in background mode or ...
-   * - Having to remember to include `-noaudio` with batch operations.
-   * - A quiet but audible click when Blender starts & configures its audio device.
-   */
-  BKE_sound_force_device("None");
 }
 
 static const char arg_handle_background_mode_set_doc[] =
     "\n"
-    "\tRun in background (often used for UI-less rendering).\n"
-    "\n"
-    "\tThe audio device is disabled in background-mode by default\n"
-    "\tand can be re-enabled by passing in '-setaudio Default' afterwards.";
+    "\tRun in background (without the desktop interface).";
 static int arg_handle_background_mode_set(int /*argc*/, const char ** /*argv*/, void * /*data*/)
 {
   if (!CLG_quiet_get()) {
@@ -1381,9 +1313,6 @@ static int arg_handle_debug_mode_set(int /*argc*/, const char ** /*argv*/, void 
   return 0;
 }
 
-static const char arg_handle_debug_mode_generic_set_doc_freestyle[] =
-    "\n\t"
-    "Enable debug messages for Freestyle.";
 static const char arg_handle_debug_mode_generic_set_doc_python[] =
     "\n\t"
     "Enable debug messages for Python.";
@@ -1473,40 +1402,6 @@ static const char arg_handle_debug_mode_all_doc[] =
 static int arg_handle_debug_mode_all(int /*argc*/, const char ** /*argv*/, void * /*data*/)
 {
   G.debug |= G_DEBUG_ALL;
-#  ifdef WITH_LIBMV
-  libmv_startDebugLogging();
-#  endif
-  return 0;
-}
-
-static const char arg_handle_debug_mode_libmv_doc[] =
-    "\n\t"
-    "Enable debug messages from libmv library.";
-static int arg_handle_debug_mode_libmv(int /*argc*/, const char ** /*argv*/, void * /*data*/)
-{
-#  ifdef WITH_LIBMV
-  libmv_startDebugLogging();
-#  endif
-  return 0;
-}
-
-static const char arg_handle_debug_mode_cycles_doc[] =
-    "\n\t"
-    "Enable debug messages from Cycles.";
-static int arg_handle_debug_mode_cycles(int /*argc*/, const char ** /*argv*/, void * /*data*/)
-{
-  const char *cycles_filter = "cycles.*";
-  CLG_type_filter_include(cycles_filter, strlen(cycles_filter));
-  return 0;
-}
-
-static const char arg_handle_debug_mode_ffmpeg_doc[] =
-    "\n\t"
-    "Enable debug messages from FFmpeg video input and output.";
-static int arg_handle_debug_mode_ffmpeg(int /*argc*/, const char ** /*argv*/, void * /*data*/)
-{
-  const char *video_filter = "video.*";
-  CLG_type_filter_include(video_filter, strlen(video_filter));
   return 0;
 }
 
@@ -1978,41 +1873,6 @@ static int arg_handle_env_system_set(int argc, const char **argv, void * /*data*
   return 1;
 }
 
-static const char arg_handle_playback_mode_doc[] =
-    "<options> <file(s)>\n"
-    "\tInstead of showing Blender's user interface, this runs Blender as an animation player,\n"
-    "\tto view movies and image sequences rendered in Blender (ignored if '-b' is set).\n"
-    "\n"
-    "\tPlayback Arguments:\n"
-    "\n"
-    "\t-p <sx> <sy>\n"
-    "\t\tOpen with lower left corner at <sx>, <sy>.\n"
-    "\t-m\n"
-    "\t\tRead from disk (Do not buffer).\n"
-    "\t-f <fps> <fps_base>\n"
-    "\t\tSpecify FPS to start with.\n"
-    "\t-j <frame>\n"
-    "\t\tSet frame step to <frame>.\n"
-    "\t-s <frame>\n"
-    "\t\tPlay from <frame>.\n"
-    "\t-e <frame>\n"
-    "\t\tPlay until <frame>.\n"
-    "\t-c <cache_memory>\n"
-    "\t\tAmount of memory in megabytes to allow for caching images during playback.\n"
-    "\t\tZero disables (clamping to a fixed number of frames instead).";
-static int arg_handle_playback_mode(int argc, const char **argv, void * /*data*/)
-{
-  /* Ignore the animation player if `-b` was given first. */
-  if (G.background == 0) {
-    /* Skip this argument (`-a`). */
-    const int exit_code = WM_main_playanim(argc - 1, argv + 1);
-
-    exit(exit_code);
-  }
-
-  return -2;
-}
-
 static const char arg_handle_window_geometry_doc[] =
     "<sx> <sy> <w> <h>\n"
     "\tOpen with lower left corner at <sx>, <sy> and width and height as <w>, <h>.";
@@ -2244,36 +2104,6 @@ static int arg_handle_qos_set(int argc, const char **argv, void * /*data*/)
   return 0;
 }
 
-static const char arg_handle_audio_disable_doc[] =
-    "\n\t"
-    "Force sound system to None.";
-static int arg_handle_audio_disable(int /*argc*/, const char ** /*argv*/, void * /*data*/)
-{
-  BKE_sound_force_device("None");
-  return 0;
-}
-
-static const char arg_handle_audio_set_doc[] =
-    "\n\t"
-    "Force sound system to a specific device.\n"
-    "\t'None' 'Default' 'SDL' 'OpenAL' 'CoreAudio' 'JACK' 'PulseAudio' 'WASAPI'.";
-static int arg_handle_audio_set(int argc, const char **argv, void * /*data*/)
-{
-  if (argc < 1) {
-    fprintf(stderr, "-setaudio requires one argument\n");
-    exit(1);
-  }
-
-  const char *device = argv[1];
-  if (STREQ(device, "Default")) {
-    /* Unset any forced device. */
-    device = nullptr;
-  }
-
-  BKE_sound_force_device(device);
-  return 1;
-}
-
 static const char arg_handle_output_set_doc[] =
     "<path>\n"
     "\tSet the render path and file name.\n"
@@ -2443,9 +2273,6 @@ static int arg_handle_verbosity_set(int argc, const char **argv, void * /*data*/
       fprintf(stderr, "\nError: %s '%s %s'.\n", err_msg, arg_id, argv[1]);
     }
 
-#  ifdef WITH_LIBMV
-    libmv_setLoggingVerbosity(level);
-#  endif
 
     return 1;
   }
@@ -3198,21 +3025,9 @@ void main_args_setup(bContext *C, bArgs *ba, bool all)
                CB(arg_handle_disable_liboverride_auto_resync),
                nullptr);
 
-  BLI_args_add(ba, "-a", nullptr, CB(arg_handle_playback_mode), nullptr);
 
   BLI_args_add(ba, "-d", "--debug", CB(arg_handle_debug_mode_set), ba);
 
-  if (defs.with_ffmpeg) {
-    BLI_args_add(ba, nullptr, "--debug-ffmpeg", CB(arg_handle_debug_mode_ffmpeg), nullptr);
-  }
-
-  if (defs.with_freestyle) {
-    BLI_args_add(ba,
-                 nullptr,
-                 "--debug-freestyle",
-                 CB_EX(arg_handle_debug_mode_generic_set, freestyle),
-                 reinterpret_cast<void *>(G_DEBUG_FREESTYLE));
-  }
   BLI_args_add(ba,
                nullptr,
                "--debug-python",
@@ -3261,12 +3076,6 @@ void main_args_setup(bContext *C, bArgs *ba, bool all)
 
   BLI_args_add(ba, nullptr, "--debug-fpe", CB(arg_handle_debug_fpe_set), nullptr);
 
-  if (defs.with_libmv) {
-    BLI_args_add(ba, nullptr, "--debug-libmv", CB(arg_handle_debug_mode_libmv), nullptr);
-  }
-  if (defs.with_cycles) {
-    BLI_args_add(ba, nullptr, "--debug-cycles", CB(arg_handle_debug_mode_cycles), nullptr);
-  }
   BLI_args_add(ba, nullptr, "--debug-memory", CB(arg_handle_debug_mode_memory_set), nullptr);
 
   BLI_args_add(ba, nullptr, "--debug-value", CB(arg_handle_debug_value_set), nullptr);
@@ -3388,8 +3197,6 @@ void main_args_setup(bContext *C, bArgs *ba, bool all)
 
   /* Pass: Disabling Things & Forcing Settings. */
   BLI_args_pass_set(ba, ARG_PASS_SETTINGS_FORCE);
-  BLI_args_add_case(ba, "-noaudio", 1, nullptr, 0, CB(arg_handle_audio_disable), nullptr);
-  BLI_args_add_case(ba, "-setaudio", 1, nullptr, 0, CB(arg_handle_audio_set), nullptr);
 
   /* Pass: Processing Arguments. */
   /* NOTE: Use #WM_exit for these callbacks, not `exit()`

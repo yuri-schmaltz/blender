@@ -15,7 +15,6 @@ set(INC_SYS
 )
 
 set(SRC
-  scene_compositor.cc
   scene_edit.cc
   scene_fps.cc
 )
@@ -29,8 +28,8 @@ set(LIB
   PRIVATE bf::dna
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::nodes
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
+  PRIVATE bf::sequencer
 )
 
 

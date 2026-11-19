@@ -628,15 +628,6 @@ NlaStrip *BKE_nla_add_soundstrip(Main *bmain, Scene *scene, Speaker *speaker)
 /* if speaker has a sound, set the strip length to the length of the sound,
  * otherwise default to length of 10 frames
  */
-#ifdef WITH_AUDASPACE
-  if (speaker->sound) {
-    SoundInfo info;
-    if (BKE_sound_info_get(bmain, speaker->sound, &info)) {
-      strip->end = float(ceil(double(info.length) * scene->frames_per_second()));
-    }
-  }
-  else
-#endif
   {
     strip->end = 10.0f;
     /* quiet compiler warnings */

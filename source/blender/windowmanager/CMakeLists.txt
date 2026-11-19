@@ -43,7 +43,6 @@ set(SRC
   intern/wm_panel_type.cc
   intern/wm_platform.cc
   intern/wm_platform_support.cc
-  intern/wm_playanim.cc
   intern/wm_splash_screen.cc
   intern/wm_stereo.cc
   intern/wm_subwindow.cc
@@ -111,11 +110,9 @@ set(LIB
   PRIVATE bf::animrig
   PRIVATE bf::nodes
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   bf_intern_ghost
   bf_compositor
-  PRIVATE bf::dependencies::optional::ffmpeg
-  PRIVATE bf::dependencies::optional::audaspace
+  PRIVATE bf::sequencer
 )
 
 if(WITH_HEADLESS)
@@ -150,10 +147,6 @@ if(WITH_GHOST_CSD)
     intern/wm_window_csd_layout.cc
   )
   add_definitions(-DWITH_GHOST_CSD)
-endif()
-
-if(WITH_CYCLES)
-  add_definitions(-DWITH_CYCLES)
 endif()
 
 if(WITH_OPENGL_BACKEND)

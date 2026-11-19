@@ -75,7 +75,6 @@ set(SRC
   ../include/ED_sculpt.hh
   ../include/ED_select_utils.hh
   ../include/ED_sequencer.hh
-  ../include/ED_sound.hh
   ../include/ED_space_api.hh
   ../include/ED_spreadsheet.hh
   ../include/ED_text.hh
@@ -119,8 +118,8 @@ set(LIB
   PRIVATE bf::imbuf
   PRIVATE bf::intern::clog
   PRIVATE bf::intern::guardedalloc
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
+  PRIVATE bf::sequencer
 )
 
 

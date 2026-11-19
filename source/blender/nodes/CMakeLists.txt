@@ -211,16 +211,12 @@ set(LIB
   bf_nodes_texture
   PRIVATE bf::extern::xxhash
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
   PRIVATE bf::intern::clog
   PRIVATE bf::dependencies::optional::gmp
   PRIVATE bf::dependencies::optional::bullet
+  PRIVATE bf::sequencer
 )
-
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
-endif()
 
 if(WITH_OPENSUBDIV)
   add_definitions(-DWITH_OPENSUBDIV)

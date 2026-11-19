@@ -126,13 +126,9 @@ void OBJECT_OT_metaball_add(wmOperatorType *ot);
 void OBJECT_OT_text_add(wmOperatorType *ot);
 void OBJECT_OT_armature_add(wmOperatorType *ot);
 void OBJECT_OT_empty_add(wmOperatorType *ot);
-void OBJECT_OT_lightprobe_add(wmOperatorType *ot);
 void OBJECT_OT_empty_image_add(wmOperatorType *ot);
 void OBJECT_OT_grease_pencil_add(wmOperatorType *ot);
-void OBJECT_OT_light_add(wmOperatorType *ot);
 void OBJECT_OT_effector_add(wmOperatorType *ot);
-void OBJECT_OT_camera_add(wmOperatorType *ot);
-void OBJECT_OT_speaker_add(wmOperatorType *ot);
 void OBJECT_OT_curves_random_add(wmOperatorType *ot);
 void OBJECT_OT_curves_empty_hair_add(wmOperatorType *ot);
 void OBJECT_OT_pointcloud_random_add(wmOperatorType *ot);
@@ -244,15 +240,6 @@ void OBJECT_OT_grease_pencil_dash_modifier_segment_move(wmOperatorType *ot);
 void OBJECT_OT_grease_pencil_time_modifier_segment_add(wmOperatorType *ot);
 void OBJECT_OT_grease_pencil_time_modifier_segment_remove(wmOperatorType *ot);
 void OBJECT_OT_grease_pencil_time_modifier_segment_move(wmOperatorType *ot);
-
-/* `object_shader_fx.cc` */
-
-void OBJECT_OT_shaderfx_add(wmOperatorType *ot);
-void OBJECT_OT_shaderfx_copy(wmOperatorType *ot);
-void OBJECT_OT_shaderfx_remove(wmOperatorType *ot);
-void OBJECT_OT_shaderfx_move_up(wmOperatorType *ot);
-void OBJECT_OT_shaderfx_move_down(wmOperatorType *ot);
-void OBJECT_OT_shaderfx_move_to_index(wmOperatorType *ot);
 
 /* `object_constraint.cc` */
 

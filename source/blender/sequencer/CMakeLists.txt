@@ -141,15 +141,8 @@ set(LIB
   PRIVATE bf::render
   PRIVATE bf::windowmanager
   bf_compositor
-  PRIVATE bf::dependencies::optional::audaspace
   PRIVATE bf::dependencies::optional::fftw3
 )
-
-if(WITH_AUDASPACE)
-  if(WITH_FFTW3)
-    add_definitions(-DWITH_CONVOLUTION)
-  endif()
-endif()
 
 blender_add_lib(bf_sequencer "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(bf::sequencer ALIAS bf_sequencer)

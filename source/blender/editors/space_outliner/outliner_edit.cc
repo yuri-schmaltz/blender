@@ -354,7 +354,6 @@ static void do_item_rename(ARegion *region,
       ELEM(tselem->type,
            TSE_SCENE_OBJECTS_BASE,
            TSE_GENERIC_LABEL,
-           TSE_GPENCIL_EFFECT_BASE,
            TSE_SHAPE_KEY_BASE))
   {
     BKE_report(reports, RPT_INFO, "Not an editable name");

@@ -109,10 +109,6 @@ if(WITH_IMAGE_WEBP)
   add_definitions(-DWITH_IMAGE_WEBP)
 endif()
 
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
-endif()
-
 blender_add_lib(bf_editor_space_file "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 
 # RNA_prototypes.hh dna_type_offsets.h

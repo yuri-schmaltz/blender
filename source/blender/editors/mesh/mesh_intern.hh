@@ -341,10 +341,6 @@ void MESH_OT_flip_quad_tessellation(wmOperatorType *ot);
 /** Called in `transform_ops.cc`, on each regeneration of key-maps. */
 wmKeyMap *point_normals_modal_keymap(wmKeyConfig *keyconf);
 
-#if defined(WITH_FREESTYLE)
-void MESH_OT_mark_freestyle_edge(wmOperatorType *ot);
-void MESH_OT_mark_freestyle_face(wmOperatorType *ot);
-#endif
 
 /* *** mesh_data.cc *** */
 

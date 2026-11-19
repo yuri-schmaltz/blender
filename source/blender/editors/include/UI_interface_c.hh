@@ -2680,12 +2680,6 @@ void template_path_builder(Layout *layout,
                            std::optional<StringRefNull> text);
 void template_modifiers(Layout *layout, bContext *C);
 void template_strip_modifiers(Layout *layout, bContext *C);
-void template_scene_compositor_effects(Layout *layout, bContext *C);
-
-/**
- * Check if the shader effect panels don't match the data and rebuild the panels if so.
- */
-void template_shader_fx(Layout *layout, bContext *C);
 /**
  * Check if the constraint panels don't match the data and rebuild the panels if so.
  */
@@ -2948,11 +2942,6 @@ void template_tree_interface(Layout *layout, const bContext *C, PointerRNA *ptr)
  * Draw all node buttons and socket default values with the same panel structure used by the node.
  */
 void template_node_inputs(Layout *layout, bContext *C, PointerRNA *ptr);
-
-/**
- * Draw the node group inputs for a compositor effect strip.
- */
-void template_compositor_strip_inputs(Layout *layout, bContext *C, PointerRNA *ptr);
 
 void template_collection_importer(Layout *layout, bContext *C);
 void template_collection_exporters(Layout *layout, bContext *C);
@@ -3339,8 +3328,6 @@ bool region_panels_fits_only_categories(const ARegion *region);
  * \return true if the region width changed.
  */
 bool panel_region_visible_width_ensure(ARegion *region);
-
-void register_scene_compositor_effects_panel(ARegionType *region_type);
 
 enum class ActivationButtonState : int8_t {
   Highlight,

@@ -2237,12 +2237,6 @@ void RNA_api_ui_layout(StructRNA *srna)
   RNA_def_function_flag(func, FUNC_USE_CONTEXT);
   RNA_def_function_ui_description(func, "Generates the UI layout for the strip modifier stack");
 
-  func = RNA_def_function(
-      srna, "template_scene_compositor_effects", "template_scene_compositor_effects");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT);
-  RNA_def_function_ui_description(
-      func, "Generates the UI layout for the scene compositor effects stack");
-
   func = RNA_def_function(srna, "template_collection_importer", "template_collection_importer");
   RNA_def_function_flag(func, FUNC_USE_CONTEXT);
   RNA_def_function_ui_description(func, "Generates the UI layout for the collection importer");
@@ -2259,10 +2253,6 @@ void RNA_api_ui_layout(StructRNA *srna)
                   true,
                   "",
                   "Add panels for bone constraints instead of object constraints");
-
-  func = RNA_def_function(srna, "template_shaderfx", "template_shader_fx");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT);
-  RNA_def_function_ui_description(func, "Generates the panels for the shader effect stack");
 
   func = RNA_def_function(
       srna, "template_greasepencil_color", "template_greasepencil_color_preview");
@@ -2781,14 +2771,6 @@ void RNA_api_ui_layout(StructRNA *srna)
   RNA_def_function_ui_description(func, "Show a node settings and input socket values");
   RNA_def_function_flag(func, FUNC_USE_CONTEXT);
   parm = RNA_def_pointer(func, "node", "Node", "Node", "Display inputs of this node");
-  RNA_def_parameter_flags(parm, PROP_NEVER_NULL, PARM_REQUIRED | PARM_RNAPTR);
-
-  func = RNA_def_function(
-      srna, "template_compositor_strip_inputs", "template_compositor_strip_inputs");
-  RNA_def_function_ui_description(
-      func, "Show the compositor node group input values for a compositor effect strip");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT);
-  parm = RNA_def_pointer(func, "strip", "Strip", "Strip", "Compositor effect strip");
   RNA_def_parameter_flags(parm, PROP_NEVER_NULL, PARM_REQUIRED | PARM_RNAPTR);
 
   func = RNA_def_function(srna, "template_asset_shelf_popover", "rna_uiTemplateAssetShelfPopover");

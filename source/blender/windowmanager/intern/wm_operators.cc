@@ -4433,8 +4433,6 @@ static void gesture_circle_modal_keymap(wmKeyConfig *keyconf)
   /* Assign map to operators. */
   WM_modalkeymap_assign(keymap, "VIEW3D_OT_select_circle");
   WM_modalkeymap_assign(keymap, "UV_OT_select_circle");
-  WM_modalkeymap_assign(keymap, "SEQUENCER_OT_select_circle");
-  WM_modalkeymap_assign(keymap, "CLIP_OT_select_circle");
   WM_modalkeymap_assign(keymap, "MASK_OT_select_circle");
   WM_modalkeymap_assign(keymap, "NODE_OT_select_circle");
   WM_modalkeymap_assign(keymap, "GRAPH_OT_select_circle");
@@ -4511,13 +4509,8 @@ static void gesture_box_modal_keymap(wmKeyConfig *keyconf)
 #if 0 /* Template. */
   WM_modalkeymap_assign(keymap, "SCREEN_OT_box_select");
 #endif
-  WM_modalkeymap_assign(keymap, "SEQUENCER_OT_select_box");
-  WM_modalkeymap_assign(keymap, "SEQUENCER_OT_box_blade");
-  WM_modalkeymap_assign(keymap, "SEQUENCER_OT_view_ghost_border");
   WM_modalkeymap_assign(keymap, "UV_OT_select_box");
   WM_modalkeymap_assign(keymap, "UV_OT_custom_region_set");
-  WM_modalkeymap_assign(keymap, "CLIP_OT_select_box");
-  WM_modalkeymap_assign(keymap, "CLIP_OT_graph_select_box");
   WM_modalkeymap_assign(keymap, "MASK_OT_select_box");
   WM_modalkeymap_assign(keymap, "PAINT_OT_mask_box_gesture");
   WM_modalkeymap_assign(keymap, "SCULPT_OT_face_set_box_gesture");
@@ -4557,11 +4550,9 @@ static void gesture_lasso_modal_keymap(wmKeyConfig *keyconf)
   WM_modalkeymap_assign(keymap, "SCULPT_OT_face_set_lasso_gesture");
   WM_modalkeymap_assign(keymap, "SCULPT_OT_trim_lasso_gesture");
   WM_modalkeymap_assign(keymap, "ACTION_OT_select_lasso");
-  WM_modalkeymap_assign(keymap, "CLIP_OT_select_lasso");
   WM_modalkeymap_assign(keymap, "GRAPH_OT_select_lasso");
   WM_modalkeymap_assign(keymap, "NODE_OT_select_lasso");
   WM_modalkeymap_assign(keymap, "UV_OT_select_lasso");
-  WM_modalkeymap_assign(keymap, "SEQUENCER_OT_select_lasso");
   WM_modalkeymap_assign(keymap, "PAINT_OT_hide_show_lasso_gesture");
   WM_modalkeymap_assign(keymap, "GREASE_PENCIL_OT_erase_lasso");
 }

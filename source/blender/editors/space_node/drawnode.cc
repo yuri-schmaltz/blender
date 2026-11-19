@@ -1463,13 +1463,13 @@ static void std_node_socket_draw(
     }
     case SOCK_SOUND: {
       if (optional_label) {
-        template_id(layout, C, ptr, "default_value", nullptr, "SOUND_OT_open", nullptr);
+        template_id(layout, C, ptr, "default_value", nullptr, nullptr, nullptr);
       }
       else {
         /* 0.3 is consistent with image sockets. */
         ui::Layout *row = &layout->split(0.3f, false);
         row->label(label, ICON_NONE);
-        template_id(row, C, ptr, "default_value", nullptr, "SOUND_OT_open", nullptr);
+        template_id(row, C, ptr, "default_value", nullptr, nullptr, nullptr);
       }
       break;
     }

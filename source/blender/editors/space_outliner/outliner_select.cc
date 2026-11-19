@@ -15,7 +15,6 @@
 #include "DNA_object_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_sequence_types.h"
-#include "DNA_shader_fx_types.h"
 
 #include "BLI_listbase.hh"
 #include "BLI_utildefines.hh"
@@ -34,7 +33,6 @@
 #include "BKE_object.hh"
 #include "BKE_particle.h"
 #include "BKE_report.hh"
-#include "BKE_shader_fx.hh"
 
 #include "DEG_depsgraph.hh"
 #include "DEG_depsgraph_build.hh"
@@ -1425,15 +1423,6 @@ static void outliner_set_properties_tab(bContext *C, TreeElement *te, TreeStoreE
         }
         break;
       case TSE_LINKED_NODE_TREE:
-        break;
-      case TSE_GPENCIL_EFFECT_BASE:
-      case TSE_GPENCIL_EFFECT:
-        ptr = RNA_id_pointer_create(tselem->id);
-        context = BCONTEXT_SHADERFX;
-
-        if (tselem->type != TSE_GPENCIL_EFFECT_BASE) {
-          BKE_shaderfx_panel_expand(static_cast<ShaderFxData *>(te->directdata));
-        }
         break;
       case TSE_BONE: {
         bArmature *arm = id_cast<bArmature *>(tselem->id);

@@ -738,44 +738,6 @@ class SystemPanel:
     bl_context = "system"
 
 
-class USERPREF_PT_system_sound(SystemPanel, CenterAlignMixIn, Panel):
-    bl_label = "Sound"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw_centered(self, context, layout):
-        prefs = context.preferences
-        system = prefs.system
-
-        layout.prop(system, "audio_device", expand=False)
-
-        sub = layout.column()
-        sub.active = system.audio_device not in {'SOUND_NONE', 'NONE', 'None', ''}
-        sub.prop(system, "audio_channels", text="Channels")
-        sub.prop(system, "audio_mixing_buffer", text="Mixing Buffer")
-        sub.prop(system, "audio_sample_rate", text="Sample Rate")
-        sub.prop(system, "audio_sample_format", text="Sample Format")
-
-
-class USERPREF_PT_system_cycles_devices(SystemPanel, CenterAlignMixIn, Panel):
-    bl_label = "Cycles Render Devices"
-
-    def draw_centered(self, context, layout):
-        prefs = context.preferences
-
-        col = layout.column()
-        col.use_property_split = False
-
-        if bpy.app.build_options.cycles:
-            addon = prefs.addons.get("cycles")
-            if addon is None:
-                layout.label(text="Enable Cycles Render Engine add-on to use Cycles", icon='STATUS_INFO')
-            else:
-                addon.preferences.draw_impl(col, context)
-            del addon
-        else:
-            layout.label(text="Cycles is disabled in this build", icon='STATUS_INFO')
-
-
 class USERPREF_PT_system_display_graphics(SystemPanel, CenterAlignMixIn, Panel):
     bl_label = "Display Graphics"
 
@@ -3002,7 +2964,6 @@ class USERPREF_PT_developer_tools(Panel):
                 ({"property": "override_auto_resync"}, ("blender/blender/issues/83811", "#83811")),
                 ({"property": "use_all_linked_data_direct"}, None),
                 ({"property": "use_recompute_usercount_on_save_debug"}, None),
-                ({"property": "use_cycles_debug"}, None),
                 ({"property": "show_asset_debug_info"}, None),
                 ({"property": "use_asset_indexing"}, None),
                 ({"property": "use_viewport_debug"}, None),
@@ -3140,13 +3101,11 @@ classes = (
     USERPREF_PT_animation_fcurves,
     USERPREF_PT_animation_timeline_advanced,
 
-    USERPREF_PT_system_cycles_devices,
     USERPREF_PT_system_display_graphics,
     USERPREF_PT_system_os_settings,
     USERPREF_PT_system_network,
     USERPREF_PT_system_memory,
     USERPREF_PT_system_video_sequencer,
-    USERPREF_PT_system_sound,
 
     USERPREF_MT_interface_theme_presets,
     USERPREF_PT_theme,

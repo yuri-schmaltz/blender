@@ -79,7 +79,6 @@
 #include "BKE_node.hh"
 #include "BKE_node_runtime.hh"
 #include "BKE_pointcache.h"
-#include "BKE_shader_fx.hh"
 #include "BKE_shrinkwrap.hh"
 
 #include "RNA_access.hh"
@@ -790,13 +789,6 @@ void DepsgraphRelationBuilder::build_object(Object *object)
     BuilderWalkUserData data;
     data.builder = this;
     BKE_grease_pencil_modifiers_foreach_ID_link(object, modifier_walk, &data);
-  }
-
-  /* Shader FX. */
-  if (object->shader_fx.first() != nullptr) {
-    BuilderWalkUserData data;
-    data.builder = this;
-    BKE_shaderfx_foreach_ID_link(object, modifier_walk, &data);
   }
 
   /* Constraints. */
@@ -2654,24 +2646,6 @@ void DepsgraphRelationBuilder::build_object_data_geometry(Object *object)
   add_relation(ComponentKey(&object->id, NodeType::GEOMETRY),
                OperationKey(&object->id, NodeType::INSTANCING, OperationCode::INSTANCE_GEOMETRY),
                "Transform -> Instance Geometry");
-  /* Shader FX. */
-  if (object->shader_fx.first() != nullptr) {
-    ModifierUpdateDepsgraphContext ctx = {};
-    ctx.scene = scene_;
-    ctx.object = object;
-    for (ShaderFxData &fx : object->shader_fx) {
-      const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx.type));
-      if (fxi->update_depsgraph) {
-        DepsNodeHandle handle = create_node_handle(obdata_ubereval_key);
-        ctx.node = reinterpret_cast<blender::DepsNodeHandle *>(&handle);
-        fxi->update_depsgraph(&fx, &ctx);
-      }
-      if (BKE_shaderfx_depends_ontime(&fx)) {
-        TimeSourceKey time_src_key;
-        add_relation(time_src_key, obdata_ubereval_key, "Time Source");
-      }
-    }
-  }
   /* Materials. */
   build_materials(&object->id, object->mat, object->totcol);
   /* Geometry collision. */

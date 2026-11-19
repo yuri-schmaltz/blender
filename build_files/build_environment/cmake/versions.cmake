@@ -49,15 +49,6 @@ set(ZLIB_HOMEPAGE https://zlib.net)
 set(ZLIB_LICENSE SPDX:Zlib)
 set(ZLIB_COPYRIGHT "Copyright (C) 1995-2024 Jean-loup Gailly and Mark Adler")
 
-set(OPENAL_VERSION 1.23.1)
-set(OPENAL_URI https://github.com/kcat/openal-soft/releases/download/${OPENAL_VERSION}/openal-soft-${OPENAL_VERSION}.tar.bz2)
-set(OPENAL_HASH 58a73698288d2787451b61f8f4431513)
-set(OPENAL_HASH_TYPE MD5)
-set(OPENAL_FILE openal-soft-${OPENAL_VERSION}.tar.bz2)
-set(OPENAL_NAME OpenAL)
-set(OPENAL_HOMEPAGE https://openal-soft.org/)
-set(OPENAL_LICENSE SPDX:LGPL-2.1-or-later)
-set(OPENAL_COPYRIGHT [=[
 Copyright (c) 2015, Archontis Politis.
 Copyright (c) 2019, Christopher Robinson.
 ]=])
@@ -342,17 +333,7 @@ Copyright © 1991-1997 Silicon Graphics, Inc.
 ]=])
 
 # TODO: the URI has been changed to use the github generated releases, change this back to
-# https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/releases/download/v${OSL_VERSION}/OSL-${OSL_VERSION}.tar.gz
 # once stable release tarballs become available again upstream
-set(OSL_VERSION 1.15.6.0)
-set(OSL_NAME "Open Shading Language")
-set(OSL_URI https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/archive/refs/tags/v${OSL_VERSION}.tar.gz)
-set(OSL_HASH 85b71407ad28c464a7ec5c9dcb33ac67f9e98b92495568549d4b9c138c91a579)
-set(OSL_HASH_TYPE SHA256)
-set(OSL_FILE OpenShadingLanguage-${OSL_VERSION}.tar.gz)
-set(OSL_HOMEPAGE https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/)
-set(OSL_LICENSE SPDX:BSD-3-Clause)
-set(OSL_COPYRIGHT "Copyright (c) 2009-present Contributors to the Open Shading Language project.")
 
 set(MANIFOLD_VERSION v3.5.2)
 set(MANIFOLD_NAME "Manifold")
@@ -364,15 +345,6 @@ set(MANIFOLD_HOMEPAGE https://github.com/elalish/manifold)
 set(MANIFOLD_LICENSE SPDX:Apache-2.0)
 set(MANIFOLD_COPYRIGHT "Copyright 2021-2026 The Manifold Authors.")
 
-set(RUBBERBAND_VERSION 4.0.0)
-set(RUBBERBAND_NAME "Rubber Band Library")
-set(RUBBERBAND_URI https://breakfastquay.com/files/releases/rubberband-${RUBBERBAND_VERSION}.tar.bz2)
-set(RUBBERBAND_HASH 93bf3159eb91048e76eba35cf1bf766f)
-set(RUBBERBAND_HASH_TYPE MD5)
-set(RUBBERBAND_FILE rubberband-${RUBBERBAND_VERSION}.tar.bz2)
-set(RUBBERBAND_HOMEPAGE https://breakfastquay.com/rubberband/)
-set(RUBBERBAND_LICENSE SPDX:GPL-2.0-or-later)
-set(RUBBERBAND_COPYRIGHT "Copyright (c) 2025 Particular Programs Ltd")
 
 # NOTE: When updating the python version, it's required to check the versions of
 # it wants to use in PCbuild/get_externals.bat for the following dependencies:
@@ -507,82 +479,20 @@ set(NUMPY_HOMEPAGE https://numpy.org/)
 set(NUMPY_LICENSE SPDX:BSD-3-Clause)
 set(NUMPY_COPYRIGHT "Copyright (c) 2005-2022, NumPy Developers. All rights reserved.")
 
-set(LAME_VERSION 3.100)
-set(LAME_URI http://downloads.sourceforge.net/project/lame/lame/3.100/lame-${LAME_VERSION}.tar.gz)
-set(LAME_HASH 83e260acbe4389b54fe08e0bdbf7cddb)
-set(LAME_HASH_TYPE MD5)
-set(LAME_FILE lame-${LAME_VERSION}.tar.gz)
-set(LAME_CPE "cpe:2.3:a:lame_project:lame:${LAME_VERSION}:*:*:*:*:*:*:*")
-set(LAME_NAME LAME)
-set(LAME_HOMEPAGE https://lame.sourceforge.io/)
-set(LAME_LICENSE SPDX:LGPL-2.1-or-later)
-set(LAME_COPYRIGHT [=[
 Copyrights (c) 1999-2011 by The LAME Project.
 Copyrights (c) 1999,2000,2001 by Mark Taylor.
 Copyrights (c) 1998 by Michael Cheng.
 Copyrights (c) 1995,1996,1997 by Michael Hipp: mpglib.
 ]=])
 
-set(OGG_VERSION 1.3.5)
-set(OGG_URI http://downloads.xiph.org/releases/ogg/libogg-${OGG_VERSION}.tar.gz)
-set(OGG_HASH 0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664)
-set(OGG_HASH_TYPE SHA256)
-set(OGG_FILE libogg-${OGG_VERSION}.tar.gz)
-set(OGG_HOMEPAGE https://xiph.org/ogg/)
-set(OGG_LICENSE SPDX:BSD-3-Clause)
-set(OGG_COPYRIGHT "COPYRIGHT (C) 1994-2019 by the Xiph.Org Foundation https://www.xiph.org/")
 
-set(VORBIS_VERSION 1.3.7)
-set(VORBIS_URI http://downloads.xiph.org/releases/vorbis/libvorbis-${VORBIS_VERSION}.tar.gz)
-set(VORBIS_HASH 0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab)
-set(VORBIS_HASH_TYPE SHA256)
-set(VORBIS_FILE libvorbis-${VORBIS_VERSION}.tar.gz)
-set(VORBIS_CPE "cpe:2.3:a:xiph.org:libvorbis:${VORBIS_VERSION}:*:*:*:*:*:*:*")
-set(VORBIS_HOMEPAGE https://xiph.org/vorbis/)
-set(VORBIS_LICENSE SPDX:BSD-3-Clause)
-set(VORBIS_COPYRIGHT "Copyright (c) 2002-2020 Xiph.org Foundation")
 
-set(THEORA_VERSION 1.1.1)
-set(THEORA_URI http://downloads.xiph.org/releases/theora/libtheora-${THEORA_VERSION}.tar.bz2)
-set(THEORA_HASH b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc)
-set(THEORA_HASH_TYPE SHA256)
-set(THEORA_FILE libtheora-${THEORA_VERSION}.tar.bz2)
-set(THEORA_CPE "cpe:2.3:a:xiph:theora:${THEORA_VERSION}:-:*:*:*:*:*:*")
-set(THEORA_HOMEPAGE https://xiph.org/theora/)
-set(THEORA_LICENSE SPDX:BSD-3-Clause)
-set(THEORA_COPYRIGHT "Copyright (C) 2002-2009 Xiph.org Foundation")
 
-set(FLAC_VERSION 1.5.0)
-set(FLAC_URI http://downloads.xiph.org/releases/flac/flac-${FLAC_VERSION}.tar.xz)
-set(FLAC_HASH f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920 )
-set(FLAC_HASH_TYPE SHA256)
-set(FLAC_FILE flac-${FLAC_VERSION}.tar.xz)
-set(FLAC_CPE "cpe:2.3:a:flac_project:flac:${FLAC_VERSION}:*:*:*:*:*:*:*")
-set(FLAC_HOMEPAGE https://xiph.org/flac/)
-set(FLAC_LICENSE SPDX:GPL-2.0-or-later)
-set(FLAC_COPYRIGHT [=[
 Copyright (C) 2001-2009  Josh Coalson.
 Copyright (C) 2011-2016  Xiph.Org Foundation.
 ]=])
 
-set(VPX_VERSION 1.15.2)
-set(VPX_URI https://github.com/webmproject/libvpx/archive/v${VPX_VERSION}/libvpx-v${VPX_VERSION}.tar.gz)
-set(VPX_HASH 26fcd3db88045dee380e581862a6ef106f49b74b6396ee95c2993a260b4636aa)
-set(VPX_HASH_TYPE SHA256)
-set(VPX_FILE libvpx-v${VPX_VERSION}.tar.gz)
-set(VPX_CPE "cpe:2.3:a:webmproject:libvpx:${VPX_VERSION}:*:*:*:*:*:*:*")
-set(VPX_HOMEPAGE https://github.com/webmproject/libvpx)
-set(VPX_LICENSE SPDX:BSD-3-Clause)
-set(VPX_COPYRIGHT "Copyright (c) 2010, The WebM Project authors. All rights reserved.")
 
-set(OPUS_VERSION 1.3.1)
-set(OPUS_URI https://archive.mozilla.org/pub/opus/opus-${OPUS_VERSION}.tar.gz)
-set(OPUS_HASH 65b58e1e25b2a114157014736a3d9dfeaad8d41be1c8179866f144a2fb44ff9d)
-set(OPUS_HASH_TYPE SHA256)
-set(OPUS_FILE opus-${OPUS_VERSION}.tar.gz)
-set(OPUS_HOMEPAGE https://opus-codec.org/)
-set(OPUS_LICENSE SPDX:BSD-3-Clause)
-set(OPUS_COPYRIGHT [=[
 Copyright 2001-2023
 Xiph.Org, Skype Limited, Octasic,
 Jean-Marc Valin, Timothy B. Terriberry,
@@ -590,23 +500,7 @@ CSIRO, Gregory Maxwell, Mark Borgerding,
 Erik de Castro Lopo, Mozilla, Amazon
 ]=])
 
-set(X264_VERSION 35fe20d1ba49918ec739a5b068c208ca82f977f7)
-set(X264_URI https://code.videolan.org/videolan/x264/-/archive/${X264_VERSION}/x264-${X264_VERSION}.tar.gz)
-set(X264_HASH bb4f7da03936b5a030ed5827133b58eb3f701d7e5dce32cca4ba6df93797d42e)
-set(X264_HASH_TYPE SHA256)
-set(X264_FILE x264-${X264_VERSION}.tar.gz)
-set(X264_HOMEPAGE https://www.videolan.org/developers/x264.html)
-set(X264_LICENSE SPDX:GPL-2.0-or-later)
-set(X264_COPYRIGHT "Copyright (C) 2003-2021 x264 project")
 
-set(X265_VERSION 4.1)
-set(X265_URI https://bitbucket.org/multicoreware/x265_git/downloads/x265_${X265_VERSION}.tar.gz)
-set(X265_HASH a31699c6a89806b74b0151e5e6a7df65de4b49050482fe5ebf8a4379d7af8f29)
-set(X265_HASH_TYPE SHA256)
-set(X265_FILE x265-${X265_VERSION}.tar.gz)
-set(X265_HOMEPAGE https://www.videolan.org/developers/x265.html)
-set(X265_LICENSE SPDX:GPL-2.0-or-later)
-set(X265_COPYRIGHT "Copyright (C) 2013-2020 MulticoreWare, Inc")
 
 set(OPENJPEG_VERSION 2.5.3)
 set(OPENJPEG_SHORT_VERSION 2.5)
@@ -644,36 +538,8 @@ Copyright (c) 2019, Kakadu Software Pty Ltd, Australia
 Copyright (c) 2019, The University of New South Wales, Australia
 ]=])
 
-set(FFMPEG_VERSION 8.1)
-set(FFMPEG_URI http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2)
-set(FFMPEG_HASH c07039598df7d64d3c8b42c4e25b1959fc908621c6f6c2946881133f3b27eda2)
-set(FFMPEG_HASH_TYPE SHA256)
-set(FFMPEG_FILE ffmpeg-${FFMPEG_VERSION}.tar.bz2)
-set(FFMPEG_CPE "cpe:2.3:a:ffmpeg:ffmpeg:${FFMPEG_VERSION}:*:*:*:*:*:*:*")
-set(FFMPEG_NAME FFmpeg)
-set(FFMPEG_HOMEPAGE https://ffmpeg.org/)
-set(FFMPEG_LICENSE SPDX:LGPL-2.1-or-later)
-set(FFMPEG_COPYRIGHT "Copyright (c) 2000-2017 the FFMPEG developers")
 
-set(FFNVCODEC_VERSION n12.1.14.0)
-set(FFNVCODEC_URI https://github.com/FFmpeg/nv-codec-headers/archive/${FFNVCODEC_VERSION}.tar.gz)
-set(FFNVCODEC_HASH 2fefaa227d2a3b4170797796425a59d1dd2ed5fd231db9b4244468ba327acd0b)
-set(FFNVCODEC_HASH_TYPE SHA256)
-set(FFNVCODEC_FILE nv-codec-headers-${FFNVCODEC_VERSION}.tar.gz)
-set(FFNVCODEC_NAME ffnvcodec)
-set(FFNVCODEC_HOMEPAGE https://github.com/FFmpeg/nv-codec-headers)
-set(FFNVCODEC_LICENSE SPDX:MIT)
-set(FFNVCODEC_COPYRIGHT "Copyright (c) 2010-2026 NVIDIA Corporation")
 
-set(AMF_VERSION 1.5.2)
-set(AMF_URI https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/v${AMF_VERSION}.tar.gz)
-set(AMF_HASH 8a70b6dc85261e6e6e57769bd81ac1e09c0a4c96bbd5e358ffbc2dee51e8e50a)
-set(AMF_HASH_TYPE SHA256)
-set(AMF_FILE AMF-v${AMF_VERSION}.tar.gz)
-set(AMF_NAME AMF)
-set(AMF_HOMEPAGE https://github.com/GPUOpen-LibrariesAndSDKs/AMF)
-set(AMF_LICENSE SPDX:MIT)
-set(AMF_COPYRIGHT "Copyright (c) 2017-2026 Advanced Micro Devices, Inc.")
 
 set(FFTW_VERSION 3.3.10)
 set(FFTW_NAME FFTW)
@@ -688,16 +554,6 @@ Copyright (c) 2003, 2007-14 Matteo Frigo.
 Copyright (c) 2003, 2007-14 Massachusetts Institute of Technology
 ]=])
 
-set(SNDFILE_VERSION 1.2.2)
-set(SNDFILE_NAME libsndfile)
-set(SNDFILE_URI https://github.com/libsndfile/libsndfile/releases/download/1.2.2/libsndfile-${SNDFILE_VERSION}.tar.xz)
-set(SNDFILE_HASH 04e2e6f726da7c5dc87f8cf72f250d04)
-set(SNDFILE_HASH_TYPE MD5)
-set(SNDFILE_FILE libsndfile-${SNDFILE_VERSION}.tar.xz)
-set(SNDFILE_CPE "cpe:2.3:a:libsndfile_project:libsndfile:${SNDFILE_VERSION}:*:*:*:*:*:*:*")
-set(SNDFILE_HOMEPAGE http://libsndfile.github.io/libsndfile/)
-set(SNDFILE_LICENSE SPDX:LGPL-2.1-or-later)
-set(SNDFILE_COPYRIGHT "Copyright (C) 2011-2016 Erik de Castro Lopo <erikd@mega-nerd.com>")
 
 set(WEBP_VERSION 1.6.0)
 set(WEBP_URI https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${WEBP_VERSION}.tar.gz)
@@ -1057,16 +913,6 @@ set(BROTLI_HOMEPAGE https://github.com/google/brotli)
 set(BROTLI_LICENSE SPDX:MIT)
 set(BROTLI_COPYRIGHT "Copyright (c) 2009, 2010, 2013-2016 by the Brotli Authors.")
 
-set(OPENPGL_VERSION v0.7.1)
-set(OPENPGL_SHORT_VERSION 0.7.1)
-set(OPENPGL_URI https://github.com/OpenPathGuidingLibrary/openpgl/archive/refs/tags/${OPENPGL_VERSION}.tar.gz)
-set(OPENPGL_HASH d62d24241232a526491328f341df9add274fc84ae9818470d3edb5ae6141ac63)
-set(OPENPGL_HASH_TYPE SHA256)
-set(OPENPGL_FILE openpgl-${OPENPGL_VERSION}.tar.gz)
-set(OPENPGL_NAME Open PGL)
-set(OPENPGL_HOMEPAGE http://www.openpgl.org/)
-set(OPENPGL_LICENSE SPDX:Apache-2.0)
-set(OPENPGL_COPYRIGHT "Copyright 2020 Intel Corporation.")
 
 set(DPCPP_VERSION v7.1.0)
 set(DPCPP_URI https://github.com/intel/llvm/archive/${DPCPP_VERSION}.tar.gz)
@@ -1502,14 +1348,6 @@ set(EIGEN_HOMEPAGE http://eigen.tuxfamily.org)
 set(EIGEN_LICENSE SPDX:MPL-2.0)
 set(EIGEN_COPYRIGHT "Copyright (C) 2008-2010 Gael Guennebaud <gael.guennebaud@inria.fr>. Copyright (C) 2006-2008 Benoit Jacob <jacob.benoit.1@gmail.com")
 
-set(CERES_VERSION 0c70ed3a1a2d6ba47c06c7e8b3b040880bc474db) # Latest main on 2025-12-05
-set(CERES_URI https://github.com/ceres-solver/ceres-solver/archive/${CERES_VERSION}.tar.gz)
-set(CERES_HASH bf0bcc78fae884e59dd893693e52510da7cc6866a7444fdae9ba8f19eae266cd)
-set(CERES_HASH_TYPE SHA256)
-set(CERES_FILE ceres-${CERES_VERSION}.tar.gz)
-set(CERES_HOMEPAGE http://ceres-solver.org/)
-set(CERES_LICENSE SPDX:BSD-3-Clause)
-set(CERES_COPYRIGHT "Copyright 2023 Google Inc. All rights reserved.")
 
 set(DRACO_VERSION 1.5.7)
 set(DRACO_URI https://github.com/google/draco/archive/refs/tags/${DRACO_VERSION}.zip)
@@ -1549,26 +1387,9 @@ set(JOLT_HOMEPAGE https://github.com/jrouwe/JoltPhysics)
 set(JOLT_LICENSE SPDX:MIT)
 set(JOLT_COPYRIGHT "Copyright 2021 Jorrit Rouwe")
 
-# Using the same RapidJSON git commit revision as the OpenTimelineIO submodule (src/deps/rapidjson in the repo). Keep in sync.
-set(RAPIDJSON_VERSION 24b5e7a8b27f42fa16b96fc70aade9106cf7102f) # Latest master on 2026-09-08
-set(RAPIDJSON_URI https://github.com/Tencent/rapidjson/archive/${RAPIDJSON_VERSION}.tar.gz)
-set(RAPIDJSON_HASH 2d2601a82d2d3b7e143a3c8d43ef616671391034bc46891a9816b79cf2d3e7a8)
-set(RAPIDJSON_HASH_TYPE SHA256)
-set(RAPIDJSON_FILE rapidjson-${RAPIDJSON_VERSION}.tar.gz)
-set(RAPIDJSON_HOMEPAGE http://rapidjson.org)
-set(RAPIDJSON_LICENSE SPDX:MIT)
-set(RAPIDJSON_COPYRIGHT "Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.")
 
 # Using the latest main as the current latest stable (v0.18.1) lacks CMake improvements regarding config target files
 # install location and pybind11, can switch back to stable on next upgrade if released.
-set(OPENTIMELINEIO_VERSION 31e3101e750be2aa992274ac02c0679077872e57) # Latest main on 2026-09-09
-set(OPENTIMELINEIO_URI https://github.com/AcademySoftwareFoundation/OpenTimelineIO/archive/${OPENTIMELINEIO_VERSION}.tar.gz)
-set(OPENTIMELINEIO_HASH e24df04cc0b4bc266d3859c212f7d97e5198f99d49ea889d57f8fb21d8e350e1)
-set(OPENTIMELINEIO_HASH_TYPE SHA256)
-set(OPENTIMELINEIO_FILE OpenTimelineIO-${OPENTIMELINEIO_VERSION}.tar.gz)
-set(OPENTIMELINEIO_HOMEPAGE https://github.com/AcademySoftwareFoundation/OpenTimelineIO)
-set(OPENTIMELINEIO_LICENSE SPDX:Apache-2.0)
-set(OPENTIMELINEIO_COPYRIGHT "Copyright Contributors to the OpenTimelineIO project.")
 
 set(KTX_VERSION 4.4.2)
 set(KTX_URI https://github.com/KhronosGroup/KTX-Software/archive/refs/tags/v${KTX_VERSION}.tar.gz)

@@ -391,8 +391,6 @@ def main():
     report = EEVEEReport("EEVEE", args.outdir, args.oiiotool, variation=args.gpu_backend, blocklist=blocklist)
     if args.gpu_backend == "vulkan":
         report.set_compare_engine('eevee', 'opengl')
-    else:
-        report.set_compare_engine('cycles', 'CPU')
 
     report.set_pixelated(True)
     report.set_reference_dir("eevee_renders")

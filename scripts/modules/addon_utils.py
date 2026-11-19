@@ -41,11 +41,9 @@ _stale_filename = ".~stale~"
 # NOTE: these add-ons will *not* be included in `bpy.context.preferences.addons`,
 # therefore they cannot have saved preferences. Ideally this would be supported,
 # which could be part of an improvement to store preferences for disabled add-ons.
-# This is the reason we can't include "cycles".
 # See #71486 and follow up discussion on #151863.
 _addons_hidden_core = {
     "bl_pkg",
-    "io_anim_bvh",
     "io_curve_svg",
     "io_mesh_uv_layout",
     "io_scene_fbx",

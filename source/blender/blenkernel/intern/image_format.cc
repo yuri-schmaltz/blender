@@ -489,11 +489,6 @@ char BKE_imtype_from_arg(const char *imtype_arg)
   if (STREQ(imtype_arg, "MULTILAYER")) {
     return R_IMF_IMTYPE_MULTILAYER;
   }
-#ifdef WITH_FFMPEG
-  if (STREQ(imtype_arg, "FFMPEG")) {
-    return R_IMF_IMTYPE_FFMPEG;
-  }
-#endif
 #ifdef WITH_IMAGE_CINEON
   if (STREQ(imtype_arg, "CINEON")) {
     return R_IMF_IMTYPE_CINEON;

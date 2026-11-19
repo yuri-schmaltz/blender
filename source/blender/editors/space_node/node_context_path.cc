@@ -244,15 +244,6 @@ static void get_context_path_node_shader(const bContext &C,
             snode, path, *RNA_World, scene->world, snode.nodetree);
       }
     }
-#ifdef WITH_FREESTYLE
-    else if (snode.shaderfrom == SNODE_SHADER_LINESTYLE) {
-      ViewLayer *viewlayer = CTX_data_view_layer(&C);
-      FreestyleLineStyle *linestyle = BKE_linestyle_active_from_view_layer(viewlayer);
-      ui::context_path_add_generic(path, *RNA_ViewLayer, viewlayer);
-      Material *mat = BKE_object_material_get(object, object->actcol);
-      ui::context_path_add_generic(path, *RNA_Material, mat);
-    }
-#endif
     context_path_add_node_tree_and_node_groups(snode, path, true);
   }
 }

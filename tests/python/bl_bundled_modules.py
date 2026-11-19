@@ -37,7 +37,6 @@ import MaterialX
 import OpenImageIO
 import PyOpenColorIO
 import OpenEXR
-import opentimelineio
 
 # Test both old and new names, remove when all 4.4 libs have landed.
 try:

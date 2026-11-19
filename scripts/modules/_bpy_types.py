@@ -962,18 +962,6 @@ class Text(_types.ID):
         return mod
 
 
-class Sound(_types.ID):
-    __slots__ = ()
-
-    @property
-    def factory(self):
-        """
-        The aud.Factory object of the sound.
-        """
-        import aud
-        return aud._sound_from_pointer(self.as_pointer())
-
-
 class _RNAMeta(type):
     # TODO(campbell): move to C-API
     @property
@@ -1618,98 +1606,6 @@ class GeometryNode(NodeInternal):
 
 class RenderEngine(_StructRNA, metaclass=_RNAMeta):
     __slots__ = ()
-
-
-class HydraRenderEngine(RenderEngine):
-    __slots__ = ()
-
-    bl_use_shading_nodes_custom = False
-    bl_delegate_id = 'HdStormRendererPlugin'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.engine_ptr = None
-
-    def __del__(self):
-        if hasattr(self, 'engine_ptr'):
-            if self.engine_ptr:
-                import _bpy_hydra
-                _bpy_hydra.engine_free(self.engine_ptr)
-
-    def get_render_settings(self, engine_type):
-        """
-        Provide render settings for ``HdRenderDelegate``.
-
-        :param engine_type: Render mode.
-        :type engine_type: Literal['PREVIEW', 'FINAL', 'VIEWPORT']
-        :return: Mapping of render-delegate setting name to value.
-        :rtype: dict[str, Any]
-        """
-        return {}
-
-    # Final render.
-    def update(self, data, depsgraph):
-        """
-        :param data: Blend file data.
-        :type data: :class:`BlendData`
-        :param depsgraph: Evaluated dependency graph.
-        :type depsgraph: :class:`Depsgraph`
-        """
-        import _bpy_hydra
-
-        engine_type = 'PREVIEW' if self.is_preview else 'FINAL'
-        if not self.engine_ptr:
-            self.engine_ptr = _bpy_hydra.engine_create(self, engine_type, self.bl_delegate_id)
-        if not self.engine_ptr:
-            return
-
-        _bpy_hydra.engine_update(self.engine_ptr, depsgraph, None)
-
-        for key, val in self.get_render_settings('PREVIEW' if self.is_preview else 'FINAL').items():
-            _bpy_hydra.engine_set_render_setting(self.engine_ptr, key, val)
-
-    def render(self, depsgraph):
-        """
-        :param depsgraph: Evaluated dependency graph.
-        :type depsgraph: :class:`Depsgraph`
-        """
-        if not self.engine_ptr:
-            return
-
-        import _bpy_hydra
-        _bpy_hydra.engine_render(self.engine_ptr)
-
-    # Viewport render.
-    def view_update(self, context, depsgraph):
-        """
-        :param context: The context.
-        :type context: :class:`Context`
-        :param depsgraph: Evaluated dependency graph.
-        :type depsgraph: :class:`Depsgraph`
-        """
-        import _bpy_hydra
-        if not self.engine_ptr:
-            self.engine_ptr = _bpy_hydra.engine_create(self, 'VIEWPORT', self.bl_delegate_id)
-        if not self.engine_ptr:
-            return
-
-        _bpy_hydra.engine_update(self.engine_ptr, depsgraph, context)
-
-        for key, val in self.get_render_settings('VIEWPORT').items():
-            _bpy_hydra.engine_set_render_setting(self.engine_ptr, key, val)
-
-    def view_draw(self, context, depsgraph):
-        """
-        :param context: The context.
-        :type context: :class:`Context`
-        :param depsgraph: Evaluated dependency graph.
-        :type depsgraph: :class:`Depsgraph`
-        """
-        if not self.engine_ptr:
-            return
-
-        import _bpy_hydra
-        _bpy_hydra.engine_view_draw(self.engine_ptr, context)
 
 
 class GreasePencilDrawing(_StructRNA):

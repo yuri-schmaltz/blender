@@ -19,7 +19,6 @@
 #include "tree_display.hh"
 #include "tree_element_constraint.hh"
 #include "tree_element_defgroup.hh"
-#include "tree_element_gpencil_effect.hh"
 #include "tree_element_id_object.hh"
 #include "tree_element_modifier.hh"
 #include "tree_element_pose.hh"
@@ -47,7 +46,6 @@ void TreeElementIDObject::expand(SpaceOutliner & /*space_outliner*/) const
   expand_constraints();
   expand_modifiers();
   expand_gpencil_modifiers();
-  expand_gpencil_effects();
   expand_vertex_groups();
   expand_duplicated_group();
 }
@@ -99,14 +97,6 @@ void TreeElementIDObject::expand_gpencil_modifiers() const
     return;
   }
   add_element<TreeElementModifierBase>({}, object_);
-}
-
-void TreeElementIDObject::expand_gpencil_effects() const
-{
-  if (object_.shader_fx.is_empty()) {
-    return;
-  }
-  add_element<TreeElementGPencilEffectBase>({}, object_);
 }
 
 void TreeElementIDObject::expand_vertex_groups() const

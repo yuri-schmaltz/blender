@@ -1019,11 +1019,6 @@ static bool outliner_element_visible_get(const Main &bmain,
     else if ((type == TSE_DEFGROUP_BASE) && (exclude_filter & SO_FILTER_NO_OB_DEFGROUP)) {
       return false;
     }
-    else if ((type == TSE_GPENCIL_EFFECT_BASE) &&
-             (exclude_filter & SO_FILTER_NO_GREASE_PENCIL_EFFECTS))
-    {
-      return false;
-    }
     else if ((type == TSE_POSE_BASE) && (exclude_filter & SO_FILTER_NO_POSE_BONES)) {
       return false;
     }

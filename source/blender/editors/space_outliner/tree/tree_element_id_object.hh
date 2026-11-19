@@ -31,7 +31,6 @@ class TreeElementIDObject final : public TreeElementID {
   void expand_constraints() const;
   void expand_modifiers() const;
   void expand_gpencil_modifiers() const;
-  void expand_gpencil_effects() const;
   void expand_vertex_groups() const;
   void expand_duplicated_group() const;
 };

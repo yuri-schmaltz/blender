@@ -9,7 +9,6 @@ set(INC
   ../../modifiers
   ../../nodes
   ../../python
-  ../../shader_fx
 
   # RNA_prototypes.hh
   ${CMAKE_BINARY_DIR}/source/blender/makesrna
@@ -41,7 +40,6 @@ set(SRC
   object_relations.cc
   object_remesh.cc
   object_select.cc
-  object_shader_fx.cc
   object_shapekey.cc
   object_transform.cc
   object_utils.cc

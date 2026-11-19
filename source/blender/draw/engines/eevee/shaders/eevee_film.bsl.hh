@@ -1438,80 +1438,6 @@ void accumulate_comp([[resource_table]] Film &film,
   film.process_render_sample(texel_film, out_color, out_depth);
 }
 
-/* The combined pass is stored into its own 2D texture with a format of
- * SFLOAT_16_16_16_16. */
-struct ConvertCombined {
-  [[push_constant]] const int2 offset;
-  [[sampler(0)]] sampler2D input_tx;
-  [[image(0, write, SFLOAT_16_16_16_16)]] image2D output_img;
-};
-
-/* The depth pass is stored into its own 2D texture with a format of SFLOAT_32. */
-struct ConvertDepth {
-  [[push_constant]] const int2 offset;
-  [[sampler(0)]] sampler2DDepth input_tx;
-  [[image(0, write, SFLOAT_32)]] image2D output_img;
-};
-
-/* Value passes are stored in a slice of a 2D texture array with a format of
- * SFLOAT_16. */
-struct ConvertValue {
-  [[push_constant]] const int2 offset;
-  [[sampler(0)]] sampler2DArray input_tx;
-  [[image(0, write, SFLOAT_16)]] image2D output_img;
-};
-
-/* Color passes are stored in a slice of a 2D texture array with a format of
- * SFLOAT_16_16_16_16. */
-struct ConvertColor {
-  [[push_constant]] const int2 offset;
-  [[sampler(0)]] sampler2DArray input_tx;
-  [[image(0, write, SFLOAT_16_16_16_16)]] image2D output_img;
-};
-
-/* Cryptomatte passes are stored in a slice of a 2D texture array with a format of
- * SFLOAT_32_32_32_32. */
-struct ConvertCryptomatte {
-  [[push_constant]] const int2 offset;
-  [[sampler(0)]] sampler2DArray input_tx;
-  [[image(0, write, SFLOAT_32_32_32_32)]] image2D output_img;
-};
-
-/* Used by the Viewport Compositor to copy EEVEE passes to the compositor DRW passes textures. The
- * output passes covert the entire display extent even when border rendering because that's what
- * the compositor expects, so areas outside of the border are zeroed. */
-template<typename ResourceT, bool layered>
-[[compute, local_size(FILM_GROUP_SIZE, FILM_GROUP_SIZE)]]
-void pass_convert([[resource_table]] ResourceT &srt,
-                  [[global_invocation_id]] const uint3 global_id)
-{
-  int2 texel = int2(global_id.xy);
-  if (any(greaterThan(texel, imageSize(srt.output_img) - int2(1)))) {
-    return;
-  }
-  /* In case of border rendering, clear areas outside of the border. The offset is the lower left
-   * corner of the border. */
-  int2 input_bounds = textureSize(srt.input_tx, 0).xy - int2(1);
-  if (any(lessThan(texel, srt.offset)) || any(greaterThan(texel, srt.offset + input_bounds))) {
-    imageStoreFast(srt.output_img, texel, float4(0.0f));
-  }
-  else {
-    if constexpr (layered) {
-      imageStoreFast(
-          srt.output_img, texel, texelFetch(srt.input_tx, int3(texel - srt.offset, 0), 0));
-    }
-    else {
-      imageStoreFast(srt.output_img, texel, texelFetch(srt.input_tx, texel - srt.offset, 0));
-    }
-  }
-}
-
-template void pass_convert<ConvertCombined, false>(ConvertCombined &, const uint3);
-template void pass_convert<ConvertDepth, false>(ConvertDepth &, const uint3);
-template void pass_convert<ConvertValue, true>(ConvertValue &, const uint3);
-template void pass_convert<ConvertColor, true>(ConvertColor &, const uint3);
-template void pass_convert<ConvertCryptomatte, true>(ConvertCryptomatte &, const uint3);
-
 }  // namespace eevee::film
 
 PipelineCompute eevee_film_comp(eevee::film::accumulate_comp,
@@ -1532,14 +1458,3 @@ PipelineGraphic eevee_film_copy_frag(eevee::film::fullscreen_vert,
                                      eevee::film::FilmConstants{
                                          .use_panoramic = false,
                                      });
-
-PipelineCompute eevee_film_pass_convert_combined(
-    eevee::film::pass_convert<eevee::film::ConvertCombined, false>);
-PipelineCompute eevee_film_pass_convert_depth(
-    eevee::film::pass_convert<eevee::film::ConvertDepth, false>);
-PipelineCompute eevee_film_pass_convert_value(
-    eevee::film::pass_convert<eevee::film::ConvertValue, true>);
-PipelineCompute eevee_film_pass_convert_color(
-    eevee::film::pass_convert<eevee::film::ConvertColor, true>);
-PipelineCompute eevee_film_pass_convert_cryptomatte(
-    eevee::film::pass_convert<eevee::film::ConvertCryptomatte, true>);

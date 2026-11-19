@@ -12,7 +12,6 @@
 #include <optional>
 
 #include "DNA_anim_types.h"
-#include "DNA_camera_types.h"
 #include "DNA_collection_types.h"
 #include "DNA_curve_types.h"
 #include "DNA_gpencil_legacy_types.h"
@@ -28,7 +27,6 @@
 #include "DNA_object_types.h"
 #include "DNA_pointcloud_types.h"
 #include "DNA_scene_types.h"
-#include "DNA_speaker_types.h"
 #include "DNA_vfont_types.h"
 
 #include "BLI_array_utils.hh"
@@ -53,7 +51,6 @@
 #include "BKE_anonymous_attribute_id.hh"
 #include "BKE_armature.hh"
 #include "BKE_attribute.h"
-#include "BKE_camera.h"
 #include "BKE_collection.hh"
 #include "BKE_constraint.h"
 #include "BKE_context.hh"
@@ -79,8 +76,6 @@
 #include "BKE_lib_query.hh"
 #include "BKE_lib_remap.hh"
 #include "BKE_library.hh"
-#include "BKE_light.h"
-#include "BKE_lightprobe.h"
 #include "BKE_main.hh"
 #include "BKE_material.hh"
 #include "BKE_mball.hh"
@@ -88,7 +83,6 @@
 #include "BKE_mesh_runtime.hh"
 #include "BKE_mesh_wrapper.hh"
 #include "BKE_modifier.hh"
-#include "BKE_nla.hh"
 #include "BKE_node.hh"
 #include "BKE_object.hh"
 #include "BKE_object_types.hh"
@@ -182,25 +176,6 @@ static const EnumPropertyItem field_type_items[] = {
     {PFIELD_TURBULENCE, "TURBULENCE", ICON_FORCE_TURBULENCE, "Turbulence", ""},
     {PFIELD_DRAG, "DRAG", ICON_FORCE_DRAG, "Drag", ""},
     {PFIELD_FLUIDFLOW, "FLUID", ICON_FORCE_FLUIDFLOW, "Fluid Flow", ""},
-    {0, nullptr, 0, nullptr, nullptr},
-};
-
-static EnumPropertyItem lightprobe_type_items[] = {
-    {LIGHTPROBE_TYPE_SPHERE,
-     "SPHERE",
-     ICON_LIGHTPROBE_SPHERE,
-     "Sphere",
-     "Light probe that captures precise lighting from all directions at a single point in space"},
-    {LIGHTPROBE_TYPE_PLANE,
-     "PLANE",
-     ICON_LIGHTPROBE_PLANE,
-     "Plane",
-     "Light probe that captures incoming light from a single direction on a plane"},
-    {LIGHTPROBE_TYPE_VOLUME,
-     "VOLUME",
-     ICON_LIGHTPROBE_VOLUME,
-     "Volume",
-     "Light probe that captures low frequency lighting inside a volume"},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -1010,70 +985,6 @@ void OBJECT_OT_lattice_add_to_selected(wmOperatorType *ot)
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Add Probe Operator
- * \{ */
-
-/* for object add operator */
-static const char *get_lightprobe_defname(int type)
-{
-  switch (type) {
-    case LIGHTPROBE_TYPE_VOLUME:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Volume");
-    case LIGHTPROBE_TYPE_PLANE:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Plane");
-    case LIGHTPROBE_TYPE_SPHERE:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Sphere");
-    default:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "LightProbe");
-  }
-}
-
-static wmOperatorStatus lightprobe_add_exec(bContext *C, wmOperator *op)
-{
-  bool enter_editmode;
-  ushort local_view_bits;
-  float loc[3], rot[3];
-  WM_operator_view3d_unit_defaults(C, op);
-  add_generic_get_opts(C, op, 'Z', loc, rot, nullptr, &enter_editmode, &local_view_bits, nullptr);
-
-  eLightProbeType type = eLightProbeType(RNA_enum_get(op->ptr, "type"));
-  float radius = RNA_float_get(op->ptr, "radius");
-
-  Object *ob = add_type(
-      C, OB_LIGHTPROBE, get_lightprobe_defname(type), loc, rot, false, local_view_bits);
-  copy_v3_fl(ob->scale, radius);
-
-  LightProbe *probe = id_cast<LightProbe *>(ob->data);
-
-  BKE_lightprobe_type_set(probe, type);
-
-  return OPERATOR_FINISHED;
-}
-
-void OBJECT_OT_lightprobe_add(wmOperatorType *ot)
-{
-  /* identifiers */
-  ot->name = "Add Light Probe";
-  ot->description = "Add a light probe object";
-  ot->idname = "OBJECT_OT_lightprobe_add";
-
-  /* API callbacks. */
-  ot->exec = lightprobe_add_exec;
-  ot->poll = ED_operator_objectmode;
-
-  /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
-
-  /* properties */
-  ot->prop = RNA_def_enum(ot->srna, "type", lightprobe_type_items, 0, "Type", "");
-
-  add_unit_props_radius(ot);
-  add_generic_props(ot, true);
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Add Effector Operator
  * \{ */
 
@@ -1181,66 +1092,6 @@ void OBJECT_OT_effector_add(wmOperatorType *ot)
 
   add_unit_props_radius(ot);
   add_generic_props(ot, true);
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Add Camera Operator
- * \{ */
-
-static wmOperatorStatus object_camera_add_exec(bContext *C, wmOperator *op)
-{
-  View3D *v3d = CTX_wm_view3d(C);
-  Scene *scene = CTX_data_scene(C);
-
-  /* force view align for cameras */
-  RNA_enum_set(op->ptr, "align", ALIGN_VIEW);
-
-  ushort local_view_bits;
-  bool enter_editmode;
-  float loc[3], rot[3];
-  add_generic_get_opts(C, op, 'Z', loc, rot, nullptr, &enter_editmode, &local_view_bits, nullptr);
-
-  Object *ob = add_type(C, OB_CAMERA, nullptr, loc, rot, false, local_view_bits);
-
-  if (v3d) {
-    if (v3d->camera == nullptr) {
-      v3d->camera = ob;
-    }
-    if (v3d->scenelock && scene->camera == nullptr) {
-      scene->camera = ob;
-    }
-  }
-
-  Camera *cam = id_cast<Camera *>(ob->data);
-  cam->drawsize = v3d ? ED_view3d_grid_scale(scene, v3d, nullptr) :
-                        ED_scene_grid_scale(scene, nullptr);
-
-  return OPERATOR_FINISHED;
-}
-
-void OBJECT_OT_camera_add(wmOperatorType *ot)
-{
-  PropertyRNA *prop;
-
-  /* identifiers */
-  ot->name = "Add Camera";
-  ot->description = "Add a camera object to the scene";
-  ot->idname = "OBJECT_OT_camera_add";
-
-  /* API callbacks. */
-  ot->exec = object_camera_add_exec;
-  ot->poll = ED_operator_objectmode;
-
-  /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
-
-  add_generic_props(ot, true);
-
-  /* hide this for cameras, default */
-  prop = RNA_struct_type_find_property(ot->srna, "align");
-  RNA_def_property_flag(prop, PROP_HIDDEN);
 }
 
 /** \} */
@@ -1829,89 +1680,6 @@ void OBJECT_OT_grease_pencil_add(wmOperatorType *ot)
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Add Light Operator
- * \{ */
-
-static const char *get_light_defname(int type)
-{
-  switch (type) {
-    case LA_LOCAL:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Point");
-    case LA_SUN:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Sun");
-    case LA_SPOT:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Spot");
-    case LA_AREA:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Area");
-    default:
-      return CTX_DATA_(BLT_I18NCONTEXT_ID_LIGHT, "Light");
-  }
-}
-
-static wmOperatorStatus object_light_add_exec(bContext *C, wmOperator *op)
-{
-  Object *ob;
-  Light *la;
-  eLightType type = eLightType(RNA_enum_get(op->ptr, "type"));
-  ushort local_view_bits;
-  float loc[3], rot[3];
-
-  WM_operator_view3d_unit_defaults(C, op);
-  add_generic_get_opts(C, op, 'Z', loc, rot, nullptr, nullptr, &local_view_bits, nullptr);
-
-  ob = add_type(C, OB_LAMP, get_light_defname(type), loc, rot, false, local_view_bits);
-
-  float size = RNA_float_get(op->ptr, "radius");
-  /* Better defaults for light size. */
-  switch (type) {
-    case LA_LOCAL:
-    case LA_SPOT:
-      break;
-    case LA_AREA:
-      size *= 4.0f;
-      break;
-    default:
-      size *= 0.5f;
-      break;
-  }
-  BKE_object_obdata_size_init(ob, size);
-
-  la = id_cast<Light *>(ob->data);
-  la->type = type;
-
-  if (type == LA_SUN) {
-    la->energy = 1.0f;
-  }
-
-  return OPERATOR_FINISHED;
-}
-
-void OBJECT_OT_light_add(wmOperatorType *ot)
-{
-  /* identifiers */
-  ot->name = "Add Light";
-  ot->description = "Add a light object to the scene";
-  ot->idname = "OBJECT_OT_light_add";
-
-  /* API callbacks. */
-  ot->invoke = WM_menu_invoke;
-  ot->exec = object_light_add_exec;
-  ot->poll = ED_operator_objectmode;
-
-  /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
-
-  /* properties */
-  ot->prop = RNA_def_enum(ot->srna, "type", rna_enum_light_type_items, 0, "Type", "");
-  RNA_def_property_translation_context(ot->prop, BLT_I18NCONTEXT_ID_LIGHT);
-
-  add_unit_props_radius(ot);
-  add_generic_props(ot, false);
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Add Collection Instance Operator
  * \{ */
 
@@ -2234,65 +2002,6 @@ void OBJECT_OT_data_instance_add(wmOperatorType *ot)
   add_generic_props(ot, false);
 
   object_add_drop_xy_props(ot);
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Add Speaker Operator
- * \{ */
-
-static wmOperatorStatus object_speaker_add_exec(bContext *C, wmOperator *op)
-{
-  Main *bmain = CTX_data_main(C);
-  Scene *scene = CTX_data_scene(C);
-
-  ushort local_view_bits;
-  float loc[3], rot[3];
-  add_generic_get_opts(C, op, 'Z', loc, rot, nullptr, nullptr, &local_view_bits, nullptr);
-
-  Object *ob = add_type(C, OB_SPEAKER, nullptr, loc, rot, false, local_view_bits);
-  const bool is_liboverride = ID_IS_OVERRIDE_LIBRARY(ob);
-
-  /* To make it easier to start using this immediately in NLA, a default sound clip is created
-   * ready to be moved around to re-time the sound and/or make new sound clips. */
-  {
-    /* create new data for NLA hierarchy */
-    AnimData *adt = BKE_animdata_ensure_id(&ob->id);
-    NlaTrack *nlt = BKE_nlatrack_new_tail(&adt->nla_tracks, is_liboverride);
-    BKE_nlatrack_set_active(&adt->nla_tracks, nlt);
-    NlaStrip *strip = BKE_nla_add_soundstrip(bmain, scene, id_cast<Speaker *>(ob->data));
-    strip->start = scene->r.cfra;
-    strip->end += strip->start;
-
-    /* hook them up */
-    BKE_nlatrack_add_strip(nlt, strip, is_liboverride);
-
-    /* Auto-name the strip, and give the track an interesting name. */
-    STRNCPY_UTF8(nlt->name, DATA_("SoundTrack"));
-    BKE_nlastrip_validate_name(adt, strip);
-
-    WM_event_add_notifier(C, NC_ANIMATION | ND_NLA | NA_ADDED, nullptr);
-  }
-
-  return OPERATOR_FINISHED;
-}
-
-void OBJECT_OT_speaker_add(wmOperatorType *ot)
-{
-  /* identifiers */
-  ot->name = "Add Speaker";
-  ot->description = "Add a speaker object to the scene";
-  ot->idname = "OBJECT_OT_speaker_add";
-
-  /* API callbacks. */
-  ot->exec = object_speaker_add_exec;
-  ot->poll = ED_operator_objectmode;
-
-  /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
-
-  add_generic_props(ot, true);
 }
 
 /** \} */

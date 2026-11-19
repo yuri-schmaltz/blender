@@ -119,8 +119,6 @@ class TOPBAR_MT_editor_menus(Menu):
         layout.menu("TOPBAR_MT_file")
         layout.menu("TOPBAR_MT_edit")
 
-        layout.menu("TOPBAR_MT_render")
-
         if bpy.data.project:
             layout.menu("TOPBAR_MT_project")
 
@@ -267,18 +265,7 @@ class TOPBAR_MT_file_new(Menu):
             props.app_template = ""
 
         for d in paths:
-            icon = 'FILE_NEW'
-            # Set icon per template.
-            if d == "2D_Animation":
-                icon = 'GREASEPENCIL_LAYER_GROUP'
-            elif d == "Sculpting":
-                icon = 'SCULPTMODE_HLT'
-            elif d == "Storyboarding":
-                icon = 'GREASEPENCIL'
-            elif d == "VFX":
-                icon = 'TRACKER'
-            elif d == "Video_Editing":
-                icon = 'SEQUENCE'
+            icon = 'SCULPTMODE_HLT' if d == "Sculpting" else 'FILE_NEW'
             props = layout.operator("wm.read_homefile", text=bpy.path.display_name(iface_(d)), icon=icon)
             props.app_template = d
 
@@ -445,13 +432,6 @@ class TOPBAR_MT_file_import(Menu):
                 translate=False,
             )
 
-        if bpy.app.build_options.opentimelineio:
-            self.layout.operator(
-                "wm.otio_import",
-                text=FileHandler.label_with_extensions("IO_FH_otio"),
-                translate=False,
-            )
-
 
 class TOPBAR_MT_file_export(Menu):
     bl_idname = "TOPBAR_MT_file_export"
@@ -506,13 +486,6 @@ class TOPBAR_MT_file_export(Menu):
                 text=FileHandler.label_with_extensions("IO_FH_stl"),
                 translate=False,
             )
-        if bpy.app.build_options.opentimelineio:
-            self.layout.operator(
-                "wm.otio_export",
-                text=FileHandler.label_with_extensions("IO_FH_otio"),
-                translate=False,
-            )
-
 
 class TOPBAR_MT_file_external_data(Menu):
     bl_label = "External Data"
@@ -560,50 +533,6 @@ class TOPBAR_MT_file_previews(Menu):
 
         layout.operator("wm.previews_clear", text="Clear Data-Block Previews...")
         layout.operator("wm.previews_batch_clear", text="Batch-Clear Previews...")
-
-
-class TOPBAR_MT_render(Menu):
-    bl_label = "Render"
-
-    def draw(self, context):
-        layout = self.layout
-
-        rd = context.scene.render
-        scene = context.scene
-        seq_scene = context.sequencer_scene
-        strips = getattr(context, "strips", ())
-
-        can_render_seq = seq_scene and seq_scene.render.use_sequencer and strips
-
-        layout.operator("render.render", text="Render Image", icon='RENDER_STILL').use_viewport = True
-        props = layout.operator("render.render", text="Render Animation", icon='RENDER_ANIMATION')
-        props.animation = True
-        props.use_viewport = True
-
-        layout.separator()
-
-        if can_render_seq and (seq_scene != scene):
-            props = layout.operator("render.render", text="Render Sequencer Image", icon='RENDER_STILL')
-            props.use_viewport = True
-            props.use_sequencer_scene = True
-
-            props = layout.operator("render.render", text="Render Sequencer Animation", icon='RENDER_ANIMATION')
-            props.animation = True
-            props.use_viewport = True
-            props.use_sequencer_scene = True
-
-            layout.separator()
-
-        layout.operator("sound.mixdown", text="Render Audio...")
-
-        layout.separator()
-
-        layout.operator("render.view_show", text="View Render")
-        layout.operator("render.play_rendered_anim", text="View Animation")
-
-        layout.separator()
-
-        layout.prop(rd, "use_lock_interface", text="Lock Interface")
 
 
 class TOPBAR_MT_edit(Menu):
@@ -975,7 +904,6 @@ classes = (
     TOPBAR_MT_file_cleanup,
     TOPBAR_MT_file_previews,
     TOPBAR_MT_edit,
-    TOPBAR_MT_render,
     TOPBAR_MT_project,
     TOPBAR_MT_window,
     TOPBAR_MT_help,

@@ -535,7 +535,7 @@ static void draw_property_for_socket(DrawGroupInputsContext &ctx,
     case SOCK_SOUND: {
       PropertyRNA *prop = RNA_struct_find_property(socket_props_ptr, "value");
       if (prop && RNA_property_type(prop) == PROP_POINTER) {
-        template_id(&row, &ctx.C, socket_props_ptr, "value", nullptr, "SOUND_OT_open", nullptr);
+        template_id(&row, &ctx.C, socket_props_ptr, "value", nullptr, nullptr, nullptr);
       }
       else {
         /* #template_id only supports pointer properties currently. Node tools store

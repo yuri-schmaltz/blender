@@ -15,7 +15,6 @@ _modules = [
     "anim",
     "assets",
     "bone_selection_sets",
-    "clip",
     "connect_to_output",
     "console",
     "constraint",
@@ -34,8 +33,6 @@ _modules = [
     "presets",
     "render",
     "rigidbody",
-    "screen_play_rendered_anim",
-    "sequencer",
     "spreadsheet",
     "userpref",
     "uvcalc_follow_active",
@@ -48,9 +45,6 @@ _modules = [
 ]
 
 import bpy
-
-if bpy.app.build_options.freestyle:
-    _modules.append("freestyle")
 
 __import__(name=__name__, fromlist=_modules)
 _namespace = globals()

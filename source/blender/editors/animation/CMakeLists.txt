@@ -54,8 +54,8 @@ set(LIB
   PRIVATE bf::intern::clog
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::nodes
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
+  PRIVATE bf::sequencer
 )
 
 if(WITH_PYTHON)

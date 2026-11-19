@@ -44,7 +44,6 @@
 #include "DNA_pointcloud_types.h"
 #include "DNA_rigidbody_types.h"
 #include "DNA_scene_types.h"
-#include "DNA_shader_fx_types.h"
 #include "DNA_view3d_types.h"
 
 #include "BLI_bounds.hh"
@@ -217,13 +216,6 @@ static void object_copy_data(Main *bmain,
     ob_dst->iuser = MEM_dupalloc(ob_src->iuser);
   }
 
-  ob_dst->shader_fx.clear_no_delete();
-  for (ShaderFxData &fx : ob_src->shader_fx) {
-    ShaderFxData *nfx = BKE_shaderfx_new(fx.type);
-    STRNCPY(nfx->name, fx.name);
-    BKE_shaderfx_copydata_ex(&fx, nfx, flag_subdata);
-    BLI_addtail(&ob_dst->shader_fx, nfx);
-  }
 
   if (ob_src->pose) {
     copy_object_pose(ob_dst, ob_src, flag_subdata);
@@ -358,16 +350,6 @@ static void library_foreach_gpencil_modifiersForeachIDLink(
       data, BKE_lib_query_foreachid_process(data, id_pointer, cb_flag));
 }
 
-static void library_foreach_shaderfxForeachIDLink(void *user_data,
-                                                  Object * /*object*/,
-                                                  ID **id_pointer,
-                                                  const LibraryForeachIDCallbackFlag cb_flag)
-{
-  LibraryForeachIDData *data = static_cast<LibraryForeachIDData *>(user_data);
-  BKE_LIB_FOREACHID_PROCESS_FUNCTION_CALL(
-      data, BKE_lib_query_foreachid_process(data, id_pointer, cb_flag));
-}
-
 static void library_foreach_constraintObjectLooper(bConstraint * /*con*/,
                                                    ID **id_pointer,
                                                    bool is_reference,
@@ -458,8 +440,6 @@ static void object_foreach_id(ID *id, LibraryForeachIDData *data)
       data,
       BKE_constraints_id_loop(
           &object->constraints, library_foreach_constraintObjectLooper, flag, data));
-  BKE_LIB_FOREACHID_PROCESS_FUNCTION_CALL(
-      data, BKE_shaderfx_foreach_ID_link(object, library_foreach_shaderfxForeachIDLink, data));
 
   for (ParticleSystem &psys : object->particlesystem) {
     BKE_LIB_FOREACHID_PROCESS_FUNCTION_CALL(
@@ -672,13 +652,6 @@ static void object_foreach_working_space_color(ID *id,
   Object *ob = id_cast<Object *>(id);
 
   fn.single(ob->color);
-
-  for (ShaderFxData &fx : ob->shader_fx) {
-    const ShaderFxTypeInfo *fxi = BKE_shaderfx_get_info(ShaderFxType(fx.type));
-    if (fxi && fxi->foreach_working_space_color) {
-      fxi->foreach_working_space_color(&fx, fn);
-    }
-  }
 
   for (ModifierData &md : ob->modifiers) {
     const ModifierTypeInfo *mti = BKE_modifier_get_info(md.type);

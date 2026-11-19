@@ -37,10 +37,6 @@ set(LIB
 )
 
 
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
-endif()
-
 if(WITH_EXPERIMENTAL_FEATURES)
   add_definitions(-DWITH_SIMULATION_DATABLOCK)
 endif()

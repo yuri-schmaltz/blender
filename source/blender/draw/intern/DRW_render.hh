@@ -137,19 +137,6 @@ struct DrawEngine {
 
 /* Viewport. */
 
-/**
- * Returns a TextureFromPool stored in the given view data for the pass identified by the given
- * pass name. Engines should call this function for each of the passes needed by the viewport
- * compositor in every redraw, then it should allocate the texture and write the pass data to it.
- * The texture should cover the entire viewport.
- */
-draw::TextureFromPool &DRW_viewport_pass_texture_get(const char *pass_name);
-
-/**
- * Returns true if the pass with the given name exists.
- */
-bool DRW_viewport_pass_texture_exists(const char *pass_name);
-
 void DRW_viewport_request_redraw();
 
 void DRW_render_to_image(
@@ -461,8 +448,6 @@ struct DRWContext {
   bool is_painting() const;
   /** True if current viewport is drawn during transforming operator. */
   bool is_transforming() const;
-  /** True if viewport compositor is enabled when drawing with this context. */
-  bool is_viewport_compositor_used() const;
 };
 
 /** \} */

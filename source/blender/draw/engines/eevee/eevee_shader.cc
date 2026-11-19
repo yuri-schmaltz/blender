@@ -132,12 +132,7 @@ ShaderGroups ShaderModule::static_shaders_load(const ShaderGroups request_bits,
                                        FILM_COMP,
                                        FILM_COMP_PANORAMIC,
                                        FILM_CRYPTOMATTE_POST,
-                                       FILM_FRAG,
-                                       FILM_PASS_CONVERT_COMBINED,
-                                       FILM_PASS_CONVERT_DEPTH,
-                                       FILM_PASS_CONVERT_VALUE,
-                                       FILM_PASS_CONVERT_COLOR,
-                                       FILM_PASS_CONVERT_CRYPTOMATTE};
+                                       FILM_FRAG};
     request(FILM_SHADERS, AS_SPAN(shader_list));
   }
   {
@@ -344,16 +339,6 @@ const char *ShaderModule::static_shader_create_info_name_get(eShaderType shader_
       return "eevee_film_cryptomatte_post";
     case FILM_FRAG:
       return "eevee_film_frag";
-    case FILM_PASS_CONVERT_COMBINED:
-      return "eevee_film_pass_convert_combined";
-    case FILM_PASS_CONVERT_DEPTH:
-      return "eevee_film_pass_convert_depth";
-    case FILM_PASS_CONVERT_VALUE:
-      return "eevee_film_pass_convert_value";
-    case FILM_PASS_CONVERT_COLOR:
-      return "eevee_film_pass_convert_color";
-    case FILM_PASS_CONVERT_CRYPTOMATTE:
-      return "eevee_film_pass_convert_cryptomatte";
     case DEFERRED_COMBINE:
       return "eevee_deferred_combine";
     case DEFERRED_LIGHT_SINGLE:

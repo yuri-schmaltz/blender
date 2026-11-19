@@ -92,7 +92,6 @@ set(SRC
   intern/draw_view_c.cc
   intern/draw_view_data.cc
   intern/draw_volume.cc
-  engines/compositor/compositor_engine.cc
   engines/image/image_drawing_mode_image_space.cc
   engines/image/image_drawing_mode_screen_space.cc
   engines/image/image_engine.cc
@@ -146,7 +145,6 @@ set(SRC
   engines/gpencil/gpencil_draw_data.cc
   engines/gpencil/gpencil_engine_c.cc
   engines/gpencil/gpencil_render.cc
-  engines/gpencil/gpencil_shader_fx.cc
   engines/select/select_engine.cc
   engines/select/select_instance.cc
   engines/overlay/overlay_armature.cc
@@ -195,7 +193,6 @@ set(SRC
   intern/draw_view_c.hh
   intern/draw_view_data.hh
   intern/mesh_extractors/extract_mesh.hh
-  engines/compositor/compositor_engine.h
   engines/eevee/eevee_ambient_occlusion.hh
   engines/eevee/eevee_camera.hh
   engines/eevee/eevee_cryptomatte.hh
@@ -666,7 +663,6 @@ set(SHADER_SRC_GPENCIL
   engines/gpencil/shaders/gpencil_blend_mode.bsl.hh
   engines/gpencil/shaders/gpencil_layer_blend.bsl.hh
   engines/gpencil/shaders/gpencil_depth_merge.bsl.hh
-  engines/gpencil/shaders/gpencil_vfx.bsl.hh
 
   engines/gpencil/gpencil_defines.hh
   engines/gpencil/gpencil_shader_shared.hh

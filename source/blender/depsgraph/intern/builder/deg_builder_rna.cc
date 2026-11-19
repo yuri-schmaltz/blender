@@ -283,7 +283,6 @@ RNANodeIdentifier RNANodeQuery::construct_node_identifier(const PointerRNA *ptr,
            RNA_struct_is_a(ptr->type, RNA_MeshUVLoop) ||
            RNA_struct_is_a(ptr->type, RNA_MeshLoopColor) ||
            RNA_struct_is_a(ptr->type, RNA_VertexGroupElement) ||
-           RNA_struct_is_a(ptr->type, RNA_ShaderFx) ||
            (prop &&
             RNA_property_flag(const_cast<PropertyRNA *>(prop)) & PROP_FORCE_GEOMETRY_EVAL) != 0)
   {

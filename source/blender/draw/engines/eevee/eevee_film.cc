@@ -16,7 +16,6 @@
 #include "BLI_rect.hh"
 #include "BLI_set.hh"
 
-#include "BKE_compositor.hh"
 #include "BKE_scene.hh"
 
 #include "GPU_framebuffer.hh"
@@ -36,7 +35,7 @@ namespace blender::eevee {
 /** \name Arbitrary Output Variables
  * \{ */
 
-void Film::init_aovs(const Set<std::string> &passes_used_by_viewport_compositor)
+void Film::init_aovs()
 {
   Vector<ViewLayerAOV *> aovs;
 
@@ -56,19 +55,6 @@ void Film::init_aovs(const Set<std::string> &passes_used_by_viewport_compositor)
         aovs.append(aov);
         aovs_info.display_id = 0;
         aovs_info.display_is_value = (aov->type == AOV_TYPE_VALUE);
-      }
-    }
-
-    if (inst_.is_viewport_compositor_used) {
-      for (ViewLayerAOV &aov : inst_.view_layer->aovs) {
-        /* Already added as a display pass. No need to add again. */
-        if (!aovs.is_empty() && aovs.last() == &aov) {
-          continue;
-        }
-
-        if (passes_used_by_viewport_compositor.contains(aov.name)) {
-          aovs.append(&aov);
-        }
       }
     }
   }
@@ -258,33 +244,6 @@ static eViewLayerEEVEEPassType enabled_passes(const ViewLayer *view_layer)
   return result;
 }
 
-/* Get all pass types used by the viewport compositor from the set of all needed passes. */
-static eViewLayerEEVEEPassType get_viewport_compositor_enabled_passes(
-    const Set<std::string> &viewport_compositor_needed_passes, const ViewLayer *view_layer)
-{
-  const eViewLayerEEVEEPassType scene_enabled_passes = enabled_passes(view_layer);
-
-  /* Go over all possible pass types, check if their possible pass names exist in the viewport
-   * compositor needed passes, and if true, mark them as needed. */
-  eViewLayerEEVEEPassType viewport_compositor_enabled_passes = eViewLayerEEVEEPassType(0);
-  for (const int i : IndexRange(EEVEE_RENDER_PASS_MAX_BIT + 1)) {
-    /* Mask by the scene enabled passes, because some pass types like EEVEE_RENDER_PASS_UNUSED_8
-     * have no corresponding pass names, so they will assert later. */
-    eViewLayerEEVEEPassType pass_type = eViewLayerEEVEEPassType(scene_enabled_passes & (1 << i));
-    if (pass_type == 0) {
-      continue;
-    }
-
-    for (const std::string &pass_name : Film::pass_to_render_pass_names(pass_type, view_layer)) {
-      if (viewport_compositor_needed_passes.contains(pass_name)) {
-        viewport_compositor_enabled_passes |= pass_type;
-      }
-    }
-  }
-
-  return viewport_compositor_enabled_passes;
-}
-
 /* Light passes are stored pre-divided by their matching Color pass, so Color must be enabled
  * whenever Light is (#161352). */
 static eViewLayerEEVEEPassType with_light_pass_color_dependencies(eViewLayerEEVEEPassType passes)
@@ -318,28 +277,15 @@ void Film::init(const int2 &extent, const rcti *output_rect)
 
   this->depth = DepthState{0.0f, DRW_STATE_DEPTH_GREATER_EQUAL};
 
-  /* Compute the passes needed by the viewport compositor. */
-  Set<std::string> passes_used_by_viewport_compositor;
-  if (inst_.is_viewport_compositor_used) {
-    passes_used_by_viewport_compositor = bke::compositor::get_used_passes(
-        scene, inst_.view_layer, bke::compositor::ExecutionMode::Preview);
-    viewport_compositor_enabled_passes_ = get_viewport_compositor_enabled_passes(
-        passes_used_by_viewport_compositor, inst_.view_layer);
-  }
-  else {
-    viewport_compositor_enabled_passes_ = eViewLayerEEVEEPassType(0);
-  }
-
   enabled_categories_ = PassCategory(0);
-  init_aovs(passes_used_by_viewport_compositor);
+  init_aovs();
 
   {
     /* Enable passes that need to be rendered. */
     if (inst_.is_viewport()) {
       /* Viewport Case. */
       eViewLayerEEVEEPassType enabled_passes = eViewLayerEEVEEPassType(
-                                                   inst_.v3d->shading.render_pass) |
-                                               viewport_compositor_enabled_passes_;
+          inst_.v3d->shading.render_pass);
 
       if (inst_.overlays_enabled() || inst_.gpencil_engine_enabled()) {
         /* Overlays and Grease Pencil needs the depth for correct compositing.
@@ -664,7 +610,7 @@ void Film::sync()
 
   const int cryptomatte_layer_count = cryptomatte_layer_len_get();
   const bool is_cryptomatte_pass_enabled = cryptomatte_layer_count > 0;
-  const bool do_cryptomatte_sorting = !inst_.is_viewport() || inst_.is_viewport_compositor_used;
+  const bool do_cryptomatte_sorting = !inst_.is_viewport();
   cryptomatte_post_ps_.init();
   if (is_cryptomatte_pass_enabled && do_cryptomatte_sorting) {
     cryptomatte_post_ps_.state_set(DRW_STATE_NO_DRAW);
@@ -1038,110 +984,6 @@ gpu::Texture *Film::get_pass_texture(eViewLayerEEVEEPassType pass_type, int laye
 
 /* Gets the appropriate shader to write the given pass type. This is because passes of different
  * types are stored in different textures types and formats. */
-static eShaderType get_write_pass_shader_type(eViewLayerEEVEEPassType pass_type)
-{
-  switch (pass_type) {
-    case EEVEE_RENDER_PASS_COMBINED:
-      return FILM_PASS_CONVERT_COMBINED;
-    case EEVEE_RENDER_PASS_DEPTH:
-      return FILM_PASS_CONVERT_DEPTH;
-    default:
-      break;
-  }
-
-  switch (Film::pass_storage_type(pass_type)) {
-    case PASS_STORAGE_VALUE:
-    case PASS_STORAGE_DENOISING_DEPTH:
-      return FILM_PASS_CONVERT_VALUE;
-    case PASS_STORAGE_COLOR:
-      return FILM_PASS_CONVERT_COLOR;
-    case PASS_STORAGE_CRYPTOMATTE:
-      return FILM_PASS_CONVERT_CRYPTOMATTE;
-  }
-
-  return FILM_PASS_CONVERT_VALUE;
-}
-
-/* Gets the appropriate shader to write the given AOV pass. */
-static eShaderType get_aov_write_pass_shader_type(const ViewLayerAOV *aov)
-{
-  switch (aov->type) {
-    case AOV_TYPE_VALUE:
-      return FILM_PASS_CONVERT_VALUE;
-    case AOV_TYPE_COLOR:
-      return FILM_PASS_CONVERT_COLOR;
-  }
-
-  return FILM_PASS_CONVERT_VALUE;
-}
-
-void Film::write_viewport_compositor_passes()
-{
-  this->cryptomatte_sort();
-
-  /* Write standard passes. */
-  for (const int i : IndexRange(EEVEE_RENDER_PASS_MAX_BIT + 1)) {
-    const eViewLayerEEVEEPassType pass_type = eViewLayerEEVEEPassType(
-        viewport_compositor_enabled_passes_ & (1 << i));
-    if (pass_type == 0) {
-      continue;
-    }
-
-    Vector<std::string> pass_names = Film::pass_to_render_pass_names(pass_type, inst_.view_layer);
-    for (const int64_t pass_offset : IndexRange(pass_names.size())) {
-      gpu::Texture *pass_texture = this->get_pass_texture(pass_type, pass_offset);
-      if (!pass_texture) {
-        continue;
-      }
-
-      /* Allocate passes that spans the entire display extent, even when border rendering, then
-       * copy the border region while zeroing the rest. That's because the compositor doesn't have
-       * a distinction between display and data windows at the moment, so it expects passes to have
-       * the extent of the viewport. Furthermore, we still do not support passes from Cycles and
-       * external engines, so the viewport size assumption holds at the compositor side to support
-       * all cases for now. */
-      const char *pass_name = pass_names[pass_offset].c_str();
-      draw::TextureFromPool &output_pass_texture = DRW_viewport_pass_texture_get(pass_name);
-      output_pass_texture.acquire_2d(this->display_extent, GPU_texture_format(pass_texture));
-
-      PassSimple write_pass_ps = {"Film.WriteViewportCompositorPass"};
-      const eShaderType write_shader_type = get_write_pass_shader_type(pass_type);
-      write_pass_ps.shader_set(inst_.shaders.static_shader_get(write_shader_type));
-      write_pass_ps.push_constant("offset", data_.offset);
-      write_pass_ps.bind_texture("input_tx", pass_texture);
-      write_pass_ps.bind_image("output_img", output_pass_texture);
-      write_pass_ps.barrier(GPU_BARRIER_TEXTURE_FETCH);
-      write_pass_ps.dispatch(math::divide_ceil(this->display_extent, int2(FILM_GROUP_SIZE)));
-      inst_.manager->submit(write_pass_ps);
-    }
-  }
-
-  /* Write AOV passes. */
-  for (ViewLayerAOV &aov : inst_.view_layer->aovs) {
-    if ((aov.flag & AOV_CONFLICT) != 0) {
-      continue;
-    }
-    gpu::Texture *pass_texture = this->get_aov_texture(&aov);
-    if (!pass_texture) {
-      continue;
-    }
-
-    /* See above comment regarding the allocation extent. */
-    draw::TextureFromPool &output_pass_texture = DRW_viewport_pass_texture_get(aov.name);
-    output_pass_texture.acquire_2d(this->display_extent, GPU_texture_format(pass_texture));
-
-    PassSimple write_pass_ps = {"Film.WriteViewportCompositorPass"};
-    const eShaderType write_shader_type = get_aov_write_pass_shader_type(&aov);
-    write_pass_ps.shader_set(inst_.shaders.static_shader_get(write_shader_type));
-    write_pass_ps.push_constant("offset", data_.offset);
-    write_pass_ps.bind_texture("input_tx", pass_texture);
-    write_pass_ps.bind_image("output_img", output_pass_texture);
-    write_pass_ps.barrier(GPU_BARRIER_TEXTURE_FETCH);
-    write_pass_ps.dispatch(math::divide_ceil(this->display_extent, int2(FILM_GROUP_SIZE)));
-    inst_.manager->submit(write_pass_ps);
-  }
-}
-
 /** \} */
 
 }  // namespace blender::eevee

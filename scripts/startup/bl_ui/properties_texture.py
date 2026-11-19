@@ -10,7 +10,6 @@ from bpy.types import (
 )
 from bpy.types import (
     Brush,
-    FreestyleLineStyle,
     ParticleSettings,
     Texture,
 )
@@ -746,19 +745,6 @@ class TEXTURE_PT_mapping(TextureSlotPanel, Panel):
 
             col.separator()
 
-            if isinstance(idblock, FreestyleLineStyle):
-                col = flow.column()
-                col.prop(tex, "mapping", text="Projection")
-
-                col.separator()
-
-                col = flow.column()
-                col.prop(tex, "mapping_x", text="Mapping X")
-                col.prop(tex, "mapping_y", text="Y")
-                col.prop(tex, "mapping_z", text="Z")
-
-                col.separator()
-
             col = flow.column(align=True)
             col.column().prop(tex, "offset")
 
@@ -830,11 +816,6 @@ class TEXTURE_PT_influence(TextureSlotPanel, Panel):
             factor_but(col, "use_map_kink_amp", "kink_amp_factor", "Kink Amplitude")
             factor_but(col, "use_map_kink_freq", "kink_freq_factor", "Kink Frequency")
             factor_but(col, "use_map_rough", "rough_factor", "Rough")
-
-        elif isinstance(idblock, FreestyleLineStyle):
-            col = flow.column()
-            factor_but(col, "use_map_color_diffuse", "diffuse_color_factor", "Color")
-            factor_but(col, "use_map_alpha", "alpha_factor", "Alpha")
 
         if not isinstance(idblock, ParticleSettings):
             col = flow.column()

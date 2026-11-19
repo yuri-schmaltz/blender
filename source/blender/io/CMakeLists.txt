@@ -38,6 +38,3 @@ if(WITH_USD)
   add_subdirectory(usd)
 endif()
 
-if(WITH_OPENTIMELINEIO)
-  add_subdirectory(otio)
-endif()

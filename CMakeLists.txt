@@ -391,19 +391,11 @@ mark_as_advanced(WITH_HEADLESS)
 
 option(WITH_QUADRIFLOW "Build with QuadriFlow remesher support" ON)
 
-option(WITH_AUDASPACE "Build with Audaspace (base Blender audio library)" ON)
-option(WITH_SYSTEM_AUDASPACE "Build with external Audaspace library installed on the system" OFF)
 option(WITH_RUBBERBAND "\
-Build with Rubber Band for audio time-stretching and pitch-scaling (used by Audaspace)"
+Build with Rubber Band for audio time-stretching and pitch-scaling"
   ON
 )
-mark_as_advanced(WITH_AUDASPACE)
-mark_as_advanced(WITH_SYSTEM_AUDASPACE)
 mark_as_advanced(WITH_RUBBERBAND)
-
-set_and_warn_dependency(WITH_AUDASPACE WITH_SYSTEM_AUDASPACE OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_RUBBERBAND OFF)
-set_and_warn_incompatible(WITH_SYSTEM_AUDASPACE WITH_RUBBERBAND OFF)
 
 if(WITH_GHOST_X11)
   option(WITH_X11_XINPUT "Enable X11 Xinput (tablet support and Unicode input)" ON)
@@ -582,8 +574,8 @@ Copy the official Blender Authors copyright.txt into the Blender install directo
 )
 mark_as_advanced(WITH_INSTALL_COPYRIGHT)
 
-if((WITH_AUDASPACE AND NOT WITH_SYSTEM_AUDASPACE) OR WITH_MOD_FLUID)
-  option(WITH_PYTHON_NUMPY "Include NumPy in Blender (used by Audaspace and Mantaflow)" ON)
+if(WITH_MOD_FLUID)
+  option(WITH_PYTHON_NUMPY "Include NumPy in Blender (used by Mantaflow)" ON)
 endif()
 
 if(WIN32 OR APPLE)
@@ -1342,12 +1334,6 @@ endif()
 # turned off.
 set_and_warn_dependency(WITH_COMPILER_SIMD WITH_CPU_CHECK OFF)
 
-set_and_warn_dependency(WITH_AUDASPACE WITH_OPENAL OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_COREAUDIO OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_JACK OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_PULSEAUDIO OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_SDL_AUDIO OFF)
-set_and_warn_dependency(WITH_AUDASPACE WITH_WASAPI OFF)
 
 # python module, needs some different options
 if(WITH_PYTHON_MODULE AND WITH_PYTHON_INSTALL)
@@ -1419,18 +1405,6 @@ endif()
 if(WITH_BUILDINFO)
   find_package(Git)
   set_and_warn_library_found("Git" GIT_FOUND WITH_BUILDINFO)
-endif()
-
-if(WITH_AUDASPACE)
-  if(NOT WITH_SYSTEM_AUDASPACE)
-    set(AUDASPACE_C_INCLUDE_DIRS
-      "${CMAKE_SOURCE_DIR}/extern/audaspace/include"
-      "${CMAKE_BINARY_DIR}/extern/audaspace"
-    )
-    set(AUDASPACE_PY_INCLUDE_DIRS
-      "${CMAKE_SOURCE_DIR}/extern/audaspace/bindings"
-    )
-  endif()
 endif()
 
 # Auto-enable CUDA dynload if toolkit is not found.
@@ -2634,7 +2608,6 @@ if(FIRST_RUN)
   info_cfg_option(WITH_IMAGE_OPENJPEG)
 
   info_cfg_text("Audio:")
-  info_cfg_option(WITH_AUDASPACE)
   info_cfg_option(WITH_RUBBERBAND)
   info_cfg_option(WITH_CODEC_FFMPEG)
   info_cfg_option(WITH_CODEC_SNDFILE)

@@ -332,19 +332,6 @@ static bool buttons_context_path_modifier(ButsContextPath *path)
   return false;
 }
 
-static bool buttons_context_path_shaderfx(ButsContextPath *path)
-{
-  if (buttons_context_path_object(path)) {
-    Object *ob = static_cast<Object *>(path->ptr[path->len - 1].data);
-
-    if (ob && ob->type == OB_GREASE_PENCIL) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 static bool buttons_context_path_material(ButsContextPath *path)
 {
   PointerRNA *ptr = &path->ptr[path->len - 1];
@@ -605,29 +592,6 @@ static bool buttons_context_path_compositor(ButsContextPath *path)
   return false;
 }
 
-#ifdef WITH_FREESTYLE
-static bool buttons_context_linestyle_pinnable(const bContext *C, ViewLayer *view_layer)
-{
-  wmWindow *window = CTX_wm_window(C);
-  Scene *scene = WM_window_get_active_scene(window);
-
-  /* if Freestyle is disabled in the scene */
-  if ((scene->r.mode & R_EDGE_FRS) == 0) {
-    return false;
-  }
-  /* if Freestyle is not in the Parameter Editor mode */
-  FreestyleConfig *config = &view_layer->freestyle_config;
-  if (config->mode != FREESTYLE_CONTROL_EDITOR_MODE) {
-    return false;
-  }
-  /* if the scene has already been pinned */
-  SpaceProperties *sbuts = CTX_wm_space_properties(C);
-  if (sbuts->pinid && sbuts->pinid == &scene->id) {
-    return false;
-  }
-  return true;
-}
-#endif
 
 static bool buttons_context_path(
     const bContext *C, SpaceProperties *sbuts, ButsContextPath *path, int mainb, int flag)
@@ -689,14 +653,6 @@ static bool buttons_context_path(
       found = buttons_context_path_scene(path);
       break;
     case BCONTEXT_VIEW_LAYER:
-#ifdef WITH_FREESTYLE
-      if (buttons_context_linestyle_pinnable(C, view_layer)) {
-        found = buttons_context_path_linestyle(path, window);
-        if (found) {
-          break;
-        }
-      }
-#endif
       found = buttons_context_path_view_layer(path, window);
       break;
     case BCONTEXT_WORLD:
@@ -715,9 +671,6 @@ static bool buttons_context_path(
       break;
     case BCONTEXT_MODIFIER:
       found = buttons_context_path_modifier(path);
-      break;
-    case BCONTEXT_SHADERFX:
-      found = buttons_context_path_shaderfx(path);
       break;
     case BCONTEXT_DATA:
       found = buttons_context_path_data(path, -1);

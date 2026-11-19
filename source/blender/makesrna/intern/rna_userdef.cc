@@ -1309,12 +1309,10 @@ static const EnumPropertyItem *rna_userdef_audio_device_itemf(bContext * /*C*/,
     RNA_enum_item_add(&item, &totitem, &new_item);
   }
 
-#  if !defined(NDEBUG) || !defined(WITH_AUDASPACE)
   if (i == 0) {
     EnumPropertyItem new_item = {i, "SOUND_NONE", 0, "No Sound", ""};
     RNA_enum_item_add(&item, &totitem, &new_item);
   }
-#  endif
 
   /* may be unused */
   UNUSED_VARS(index, audio_device_items);
@@ -6686,13 +6684,6 @@ static void rna_def_userdef_system(BlenderRNA *brna)
   RNA_def_property_flag(prop, PROP_CONTEXT_UPDATE);
   RNA_def_property_update(prop, 0, "rna_UserDef_audio_update");
 
-#  ifdef WITH_CYCLES
-  prop = RNA_def_property(srna, "legacy_compute_device_type", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "compute_device_type");
-  RNA_def_property_clear_flag(prop, PROP_EDITABLE);
-  RNA_def_property_flag(prop, PROP_HIDDEN);
-  RNA_def_property_ui_text(prop, "Legacy Compute Device Type", "For backwards compatibility only");
-#  endif
 
   /* Registration and Unregistration */
 

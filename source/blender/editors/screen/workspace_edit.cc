@@ -403,6 +403,9 @@ static wmOperatorStatus workspace_append_activate_exec(bContext *C, wmOperator *
   if (idname[0] == '\0' || filepath[0] == '\0') {
     return OPERATOR_CANCELLED;
   }
+  if (STREQ(filepath, BLO_EMBEDDED_STARTUP_BLEND) && !BLO_startup_workspace_is_available(idname)) {
+    return OPERATOR_CANCELLED;
+  }
 
   WorkSpace *appended_workspace = nullptr;
   /* NOTE: Need to check `filepath`, in the rare case where the usual source of work-spaces
@@ -558,6 +561,9 @@ static void workspace_add_menu(bContext * /*C*/, ui::Layout *layout, void *templ
     bool has_title = false;
 
     for (WorkSpace &workspace : builtin_config->workspaces) {
+      if (!app_template && !BLO_startup_workspace_is_available(workspace.id.name + 2)) {
+        continue;
+      }
       if (startup_config &&
           BLI_findstring(&startup_config->workspaces, workspace.id.name, offsetof(ID, name)))
       {

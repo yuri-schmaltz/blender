@@ -176,10 +176,6 @@ if(WITH_MATERIALX)
   endif()
 endif()
 
-if(WITH_FREESTYLE)
-  add_definitions(-DWITH_FREESTYLE)
-endif()
-
 blender_add_lib(bf_nodes_shader "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(bf::nodes::shader ALIAS bf_nodes_shader)
 

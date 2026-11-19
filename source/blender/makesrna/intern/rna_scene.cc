@@ -355,11 +355,7 @@ static const EnumPropertyItem rna_enum_media_type_image_items[] = {
 #define R_IMF_ENUM_AVIF \
   {R_IMF_IMTYPE_AVIF, "AVIF", 0, "AVIF (.avif)", "Output image in AVIF format"},
 
-#ifdef WITH_FFMPEG
-#  define R_IMF_ENUM_FFMPEG {R_IMF_IMTYPE_FFMPEG, "FFMPEG", ICON_FILE_MOVIE, "FFmpeg Video", ""},
-#else
 #  define R_IMF_ENUM_FFMPEG
-#endif
 
 #define IMAGE_TYPE_ITEMS_IMAGE \
   /* DDS save not supported yet R_IMF_ENUM_DDS */ \
@@ -798,9 +794,6 @@ static const EnumPropertyItem eevee_resolution_scale_items[] = {
 #  include "SEQ_sequencer.hh"
 #  include "SEQ_sound.hh"
 
-#  ifdef WITH_FREESTYLE
-#    include "FRS_freestyle.h"
-#  endif
 
 #  ifdef WITH_ALEMBIC
 #    include "ABC_alembic.h"
@@ -1331,11 +1324,6 @@ static std::optional<std::string> rna_SceneGpencil_path(const PointerRNA * /*ptr
   return "grease_pencil_settings";
 }
 
-static std::optional<std::string> rna_SceneHydra_path(const PointerRNA * /*ptr*/)
-{
-  return "hydra";
-}
-
 static bool rna_RenderSettings_stereoViews_skip(CollectionPropertyIterator *iter, void * /*data*/)
 {
   ListBaseIterator *internal = &iter->internal.listbase;
@@ -1792,20 +1780,6 @@ static void rna_SceneRender_file_ext_get(PointerRNA *ptr, char *value)
   strcpy(value, ext_num ? ext_array[0] : "");
 }
 
-#  ifdef WITH_FFMPEG
-static void rna_FFmpegSettings_lossless_output_set(PointerRNA *ptr, bool value)
-{
-  Scene *scene = (Scene *)ptr->owner_id;
-  RenderData *rd = &scene->r;
-
-  if (value) {
-    rd->ffcodecdata.flags |= FFMPEG_LOSSLESS_OUTPUT;
-  }
-  else {
-    rd->ffcodecdata.flags &= ~FFMPEG_LOSSLESS_OUTPUT;
-  }
-}
-#  endif
 
 static int rna_RenderSettings_active_view_index_get(PointerRNA *ptr)
 {
@@ -2014,13 +1988,6 @@ void rna_Scene_compositor_update(Main * /*bmain*/, Scene * /*scene*/, PointerRNA
   Scene *scene = id_cast<Scene *>(ptr->owner_id);
   DEG_id_tag_update(&scene->id, ID_RECALC_COMPOSITOR);
   WM_main_add_notifier(NC_SCENE | ND_COMPO_RESULT, scene);
-}
-
-void rna_Scene_use_view_map_cache_update(Main * /*bmain*/, Scene * /*scene*/, PointerRNA * /*ptr*/)
-{
-#  ifdef WITH_FREESTYLE
-  FRS_free_view_map_cache();
-#  endif
 }
 
 void rna_ViewLayer_name_set(PointerRNA *ptr, const char *value)
@@ -3155,30 +3122,6 @@ static std::optional<std::string> rna_FFmpegSettings_path(const PointerRNA * /*p
   return "render.ffmpeg";
 }
 
-#  ifdef WITH_FFMPEG
-/* FFMpeg Codec setting update hook. */
-static void rna_FFmpegSettings_codec_update(Main * /*bmain*/, Scene * /*scene*/, PointerRNA *ptr)
-{
-  FFMpegCodecData *codec_data = (FFMpegCodecData *)ptr->data;
-  if (!MOV_codec_supports_crf(codec_data->codec_id_get())) {
-    /* Constant Rate Factor (CRF) setting is only available for some codecs. Change encoder quality
-     * mode to CBR for others. */
-    codec_data->constant_rate_factor = FFM_CRF_NONE;
-  }
-
-  /* Ensure valid color depth when changing the codec. */
-  const ID *id = ptr->owner_id;
-  const bool is_render = (id && GS(id->name) == ID_SCE);
-  if (is_render) {
-    Scene *scene = (Scene *)ptr->owner_id;
-    const eImageFormatDepth valid_depths = BKE_imtype_valid_depths_with_video(
-        scene->r.im_format.imtype, id);
-    if ((scene->r.im_format.depth & valid_depths) == 0) {
-      scene->r.im_format.depth = BKE_imtype_first_valid_depth(valid_depths);
-    }
-  }
-}
-#  endif
 
 static std::optional<std::string> rna_SceneCompositorEffect_path(const PointerRNA *ptr)
 {
@@ -6202,8 +6145,7 @@ void rna_def_freestyle_settings(BlenderRNA *brna)
       prop,
       "View Map Cache",
       "Keep the computed view map and avoid recalculating it if mesh geometry is unchanged");
-  RNA_def_property_update(
-      prop, NC_SCENE | ND_RENDER_OPTIONS, "rna_Scene_use_view_map_cache_update");
+  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
 
   prop = RNA_def_property(srna, "as_render_pass", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "flags", FREESTYLE_AS_RENDER_PASS);
@@ -6893,109 +6835,6 @@ static void rna_def_scene_ffmpeg_settings(BlenderRNA *brna)
   StructRNA *srna;
   PropertyRNA *prop;
 
-#  ifdef WITH_FFMPEG
-  /* Container types */
-  static const EnumPropertyItem ffmpeg_format_items[] = {
-      {FFMPEG_MPEG4, "MPEG4", 0, "MPEG-4", ""},
-      {FFMPEG_MKV, "MKV", 0, "Matroska", ""},
-      {FFMPEG_WEBM, "WEBM", 0, "WebM", ""},
-      /* Legacy containers. */
-      RNA_ENUM_ITEM_SEPR,
-      {FFMPEG_AVI, "AVI", 0, "AVI", ""},
-      {FFMPEG_DV, "DV", 0, "DV", ""},
-      {FFMPEG_FLV, "FLASH", 0, "Flash", ""},
-      {FFMPEG_MPEG1, "MPEG1", 0, "MPEG-1", ""},
-      {FFMPEG_MPEG2, "MPEG2", 0, "MPEG-2", ""},
-      {FFMPEG_OGG, "OGG", 0, "Ogg", ""},
-      {FFMPEG_MOV, "QUICKTIME", 0, "QuickTime", ""},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  static const EnumPropertyItem ffmpeg_codec_items[] = {
-      {FFMPEG_CODEC_ID_NONE,
-       "NONE",
-       0,
-       "No Video",
-       "Disables video output, for audio-only renders"},
-      {FFMPEG_CODEC_ID_AV1, "AV1", 0, "AV1", ""},
-      {FFMPEG_CODEC_ID_H264, "H264", 0, "H.264", ""},
-      {FFMPEG_CODEC_ID_H265, "H265", 0, "H.265 / HEVC", ""},
-      {FFMPEG_CODEC_ID_VP9, "WEBM", 0, "WebM / VP9", ""},
-      /* Legacy / rare codecs. */
-      RNA_ENUM_ITEM_SEPR,
-      {FFMPEG_CODEC_ID_DNXHD, "DNXHD", 0, "DNxHD", ""},
-      {FFMPEG_CODEC_ID_DVVIDEO, "DV", 0, "DV", ""},
-      {FFMPEG_CODEC_ID_FFV1, "FFV1", 0, "FFmpeg video codec #1", ""},
-      {FFMPEG_CODEC_ID_FLV1, "FLASH", 0, "Flash Video", ""},
-      {FFMPEG_CODEC_ID_HUFFYUV, "HUFFYUV", 0, "HuffYUV", ""},
-      {FFMPEG_CODEC_ID_MPEG1VIDEO, "MPEG1", 0, "MPEG-1", ""},
-      {FFMPEG_CODEC_ID_MPEG2VIDEO, "MPEG2", 0, "MPEG-2", ""},
-      {FFMPEG_CODEC_ID_MPEG4, "MPEG4", 0, "MPEG-4 (divx)", ""},
-      {FFMPEG_CODEC_ID_PNG, "PNG", 0, "PNG", ""},
-      {FFMPEG_CODEC_ID_PRORES, "PRORES", 0, "ProRes", ""},
-      {FFMPEG_CODEC_ID_QTRLE, "QTRLE", 0, "QuickTime Animation", ""},
-      {FFMPEG_CODEC_ID_THEORA, "THEORA", 0, "Theora", ""},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  /* Recommendations come from the FFmpeg wiki, https://trac.ffmpeg.org/wiki/Encode/VP9.
-   * The label for BEST has been changed to "Slowest" so that it fits the "Encoding Speed"
-   * property label in the UI. */
-  static const EnumPropertyItem ffmpeg_preset_items[] = {
-      {FFM_PRESET_BEST,
-       "BEST",
-       0,
-       "Slowest",
-       "Recommended if you have lots of time and want the best compression efficiency"},
-      {FFM_PRESET_GOOD, "GOOD", 0, "Good", "The default and recommended for most applications"},
-      {FFM_PRESET_REALTIME, "REALTIME", 0, "Realtime", "Recommended for fast encoding"},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  static const EnumPropertyItem ffmpeg_prores_profiles_items[] = {
-      {FFM_PRORES_PROFILE_422_PROXY, "422_PROXY", 0, "ProRes 422 Proxy", ""},
-      {FFM_PRORES_PROFILE_422_LT, "422_LT", 0, "ProRes 422 LT", ""},
-      {FFM_PRORES_PROFILE_422_STD, "422_STD", 0, "ProRes 422", ""},
-      {FFM_PRORES_PROFILE_422_HQ, "422_HQ", 0, "ProRes 422 HQ", ""},
-      {FFM_PRORES_PROFILE_4444, "4444", 0, "ProRes 4444", ""},
-      {FFM_PRORES_PROFILE_4444_XQ, "4444_XQ", 0, "ProRes 4444 XQ", ""},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  static const EnumPropertyItem ffmpeg_crf_items[] = {
-      {FFM_CRF_NONE,
-       "NONE",
-       0,
-       "Constant Bitrate",
-       "Configure constant bit rate, rather than constant output quality"},
-      {FFM_CRF_LOSSLESS, "LOSSLESS", 0, "Lossless", ""},
-      {FFM_CRF_PERC_LOSSLESS, "PERC_LOSSLESS", 0, "Perceptually Lossless", ""},
-      {FFM_CRF_HIGH, "HIGH", 0, "High Quality", ""},
-      {FFM_CRF_MEDIUM, "MEDIUM", 0, "Medium Quality", ""},
-      {FFM_CRF_LOW, "LOW", 0, "Low Quality", ""},
-      {FFM_CRF_VERYLOW, "VERYLOW", 0, "Very Low Quality", ""},
-      {FFM_CRF_LOWEST, "LOWEST", 0, "Lowest Quality", ""},
-      {FFM_CRF_CUSTOM, "CUSTOM", 0, "Custom Quality", "Set a custom Constant Rate Factor (CRF)."},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  static const EnumPropertyItem ffmpeg_audio_codec_items[] = {
-      {FFMPEG_CODEC_ID_NONE,
-       "NONE",
-       0,
-       "No Audio",
-       "Disables audio output, for video-only renders"},
-      {FFMPEG_CODEC_ID_AAC, "AAC", 0, "AAC", ""},
-      {FFMPEG_CODEC_ID_AC3, "AC3", 0, "AC3", ""},
-      {FFMPEG_CODEC_ID_FLAC, "FLAC", 0, "FLAC", ""},
-      {FFMPEG_CODEC_ID_MP2, "MP2", 0, "MP2", ""},
-      {FFMPEG_CODEC_ID_MP3, "MP3", 0, "MP3", ""},
-      {FFMPEG_CODEC_ID_OPUS, "OPUS", 0, "Opus", ""},
-      {FFMPEG_CODEC_ID_PCM_S16LE, "PCM", 0, "PCM", ""},
-      {FFMPEG_CODEC_ID_VORBIS, "VORBIS", 0, "Vorbis", ""},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-#  endif
 
   static const EnumPropertyItem audio_channel_items[] = {
       {FFM_CHANNELS_MONO, "MONO", 0, "Mono", "Set audio channels to mono"},
@@ -7019,163 +6858,6 @@ static void rna_def_scene_ffmpeg_settings(BlenderRNA *brna)
   RNA_def_struct_path_func(srna, "rna_FFmpegSettings_path");
   RNA_def_struct_ui_text(srna, "FFmpeg Settings", "FFmpeg related settings for the scene");
 
-#  ifdef WITH_FFMPEG
-  prop = RNA_def_property(srna, "format", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "type");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_format_items);
-  RNA_def_property_enum_default(prop, FFMPEG_MKV);
-  RNA_def_property_ui_text(prop, "Container", "Output file container");
-
-  prop = RNA_def_property(srna, "codec", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "codec");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_codec_items);
-  RNA_def_property_enum_default(prop, FFMPEG_CODEC_ID_H264);
-  RNA_def_property_ui_text(prop, "Video Codec", "FFmpeg codec to use for video output");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, "rna_FFmpegSettings_codec_update");
-
-  prop = RNA_def_property(srna, "video_bitrate", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "video_bitrate");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_ui_text(prop, "Bitrate", "Video bitrate (kbit/s)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "minrate", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "rc_min_rate");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_ui_text(prop, "Min Rate", "Rate control: min rate (kbit/s)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "maxrate", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "rc_max_rate");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_ui_text(prop, "Max Rate", "Rate control: max rate (kbit/s)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "muxrate", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "mux_rate");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 100000000);
-  RNA_def_property_ui_text(prop, "Mux Rate", "Mux rate (bits/second)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "gopsize", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "gop_size");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 500);
-  RNA_def_property_int_default(prop, 25);
-  RNA_def_property_ui_text(prop,
-                           "Keyframe Interval",
-                           "Distance between key frames, also known as GOP size; "
-                           "influences file size and seekability");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "max_b_frames", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "max_b_frames");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 16);
-  RNA_def_property_ui_text(
-      prop,
-      "Max B-Frames",
-      "Maximum number of B-frames between non-B-frames; influences file size and seekability");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "use_max_b_frames", PROP_BOOLEAN, PROP_NONE);
-  RNA_def_property_boolean_sdna(prop, nullptr, "flags", FFMPEG_USE_MAX_B_FRAMES);
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_ui_text(prop, "Use Max B-Frames", "Set a maximum number of B-frames");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "buffersize", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "rc_buffer_size");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 2000);
-  RNA_def_property_ui_text(prop, "Buffersize", "Rate control: buffer size (kb)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "packetsize", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "mux_packet_size");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 16384);
-  RNA_def_property_ui_text(prop, "Mux Packet Size", "Mux packet size (byte)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "constant_rate_factor", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_sdna(prop, nullptr, "constant_rate_factor");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_crf_items);
-  RNA_def_property_enum_default(prop, FFM_CRF_MEDIUM);
-  RNA_def_property_ui_text(
-      prop,
-      "Output Quality",
-      "Constant Rate Factor (CRF); tradeoff between video quality and file size");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "custom_constant_rate_factor", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "custom_constant_rate_factor");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0, 63);
-  RNA_def_property_ui_text(
-      prop,
-      "CRF",
-      "A smaller Constant Rate Factor (CRF) results in better video quality but larger file size. "
-      "The range of allowed CRF values is dependent on the codec.");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "ffmpeg_preset", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "ffmpeg_preset");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_preset_items);
-  RNA_def_property_enum_default(prop, FFM_PRESET_GOOD);
-  RNA_def_property_ui_text(
-      prop, "Encoding Speed", "Tradeoff between encoding speed and compression ratio");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "ffmpeg_prores_profile", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "ffmpeg_prores_profile");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_prores_profiles_items);
-  RNA_def_property_enum_default(prop, FFM_PRORES_PROFILE_422_STD);
-  RNA_def_property_ui_text(prop, "Profile", "ProRes Profile");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "use_autosplit", PROP_BOOLEAN, PROP_NONE);
-  RNA_def_property_boolean_sdna(prop, nullptr, "flags", FFMPEG_AUTOSPLIT_OUTPUT);
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_ui_text(prop, "Autosplit Output", "Autosplit output at 2GB boundary");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "use_lossless_output", PROP_BOOLEAN, PROP_NONE);
-  RNA_def_property_boolean_sdna(prop, nullptr, "flags", FFMPEG_LOSSLESS_OUTPUT);
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_boolean_funcs(prop, nullptr, "rna_FFmpegSettings_lossless_output_set");
-  RNA_def_property_ui_text(prop, "Lossless Output", "Use lossless output for video streams");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  /* FFMPEG Audio. */
-  prop = RNA_def_property(srna, "audio_codec", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "audio_codec");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_enum_items(prop, ffmpeg_audio_codec_items);
-  RNA_def_property_ui_text(prop, "Audio Codec", "FFmpeg audio codec to use");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "audio_bitrate", PROP_INT, PROP_NONE);
-  RNA_def_property_int_sdna(prop, nullptr, "audio_bitrate");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 32, 2048);
-  RNA_def_property_ui_text(prop, "Bitrate", "Audio bitrate (kb/s)");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-
-  prop = RNA_def_property(srna, "audio_volume", PROP_FLOAT, PROP_NONE);
-  RNA_def_property_float_sdna(prop, nullptr, "audio_volume");
-  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
-  RNA_def_property_range(prop, 0.0f, 1.0f);
-  RNA_def_property_ui_text(prop, "Volume", "Audio volume");
-  RNA_def_property_translation_context(prop, BLT_I18NCONTEXT_ID_SOUND);
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-#  endif
 
   /* the following two "ffmpeg" settings are general audio settings */
   prop = RNA_def_property(srna, "audio_mixrate", PROP_INT, PROP_NONE);
@@ -9243,36 +8925,6 @@ static void rna_def_compositor_effects(BlenderRNA *brna, PropertyRNA *cprop)
   RNA_def_property_update(prop, NC_SCENE | ND_COMPO_RESULT, "rna_Scene_compositor_update");
 }
 
-static void rna_def_scene_hydra(BlenderRNA *brna)
-{
-  StructRNA *srna;
-  PropertyRNA *prop;
-
-  static const EnumPropertyItem hydra_export_method_items[] = {
-      {SCE_HYDRA_EXPORT_HYDRA,
-       "HYDRA",
-       0,
-       "Hydra",
-       "Fast interactive editing through native Hydra integration"},
-      {SCE_HYDRA_EXPORT_USD,
-       "USD",
-       0,
-       "USD",
-       "Export scene through USD file, for accurate comparison with USD file export"},
-      {0, nullptr, 0, nullptr, nullptr},
-  };
-
-  srna = RNA_def_struct(brna, "SceneHydra", nullptr);
-  RNA_def_struct_path_func(srna, "rna_SceneHydra_path");
-  RNA_def_struct_ui_text(srna, "Scene Hydra", "Scene Hydra render engine settings");
-
-  prop = RNA_def_property(srna, "export_method", PROP_ENUM, PROP_NONE);
-  RNA_def_property_enum_items(prop, hydra_export_method_items);
-  RNA_def_property_ui_text(
-      prop, "Export Method", "How to export the Blender scene to the Hydra render engine");
-  RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
-}
-
 void RNA_def_scene(BlenderRNA *brna)
 {
   StructRNA *srna;
@@ -9883,11 +9535,6 @@ void RNA_def_scene(BlenderRNA *brna)
   RNA_def_property_struct_type(prop, "SceneGpencil");
   RNA_def_property_ui_text(prop, "Grease Pencil", "Grease Pencil settings for the scene");
 
-  /* Hydra */
-  prop = RNA_def_property(srna, "hydra", PROP_POINTER, PROP_NONE);
-  RNA_def_property_struct_type(prop, "SceneHydra");
-  RNA_def_property_ui_text(prop, "Hydra", "Hydra settings for the scene");
-
   /* Nestled Data. */
   /* *** Non-Animated *** */
   RNA_define_animate_sdna(false);
@@ -9906,7 +9553,6 @@ void RNA_def_scene(BlenderRNA *brna)
   rna_def_scene_display(brna);
   rna_def_raytrace_eevee(brna);
   rna_def_scene_eevee(brna);
-  rna_def_scene_hydra(brna);
   rna_def_view_layer_aov(brna);
   rna_def_view_layer_lightgroup(brna);
   rna_def_view_layer_eevee(brna);

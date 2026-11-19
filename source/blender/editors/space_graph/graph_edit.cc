@@ -13,9 +13,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifdef WITH_AUDASPACE
-#  include "BKE_sound.hh"
-#endif
 
 #include "MEM_guardedalloc.h"
 
@@ -1092,126 +1089,6 @@ void GRAPH_OT_samples_to_keys(wmOperatorType *ot)
   ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
 }
 
-#ifdef WITH_AUDASPACE
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Sound to Samples Operator
- *
- * This operator converts the given sound to samples on the selected F-Curves.
- * \{ */
-
-/* ------------------- */
-
-/* Custom data storage passed to the F-Sample-ing function,
- * which provides the necessary info for baking the sound.
- */
-struct tSoundBakeInfo {
-  float *samples;
-  int length;
-  int cfra;
-};
-
-/* ------------------- */
-
-/* Sampling callback used to determine the value from the sound to
- * save in the F-Curve at the specified frame.
- */
-static float fcurve_samplingcb_sound(FCurve * /*fcu*/, void *data, float evaltime)
-{
-  tSoundBakeInfo *sbi = static_cast<tSoundBakeInfo *>(data);
-
-  int position = evaltime - sbi->cfra;
-  if ((position < 0) || (position >= sbi->length)) {
-    return 0.0f;
-  }
-
-  return sbi->samples[position];
-}
-
-/* ------------------- */
-
-static wmOperatorStatus graphkeys_sound_to_samples_exec(bContext *C, wmOperator *op)
-{
-  bAnimContext ac;
-  ListBaseT<bAnimListElem> anim_data = {nullptr, nullptr};
-  int filter;
-
-  tSoundBakeInfo sbi;
-  Scene *scene = nullptr;
-  int start, end;
-
-  char filepath[FILE_MAX];
-
-  /* Get editor data. */
-  if (ANIM_animdata_get_context(C, &ac) == 0) {
-    return OPERATOR_CANCELLED;
-  }
-
-  RNA_string_get(op->ptr, "filepath", filepath);
-
-  if (!BLI_is_file(filepath)) {
-    BKE_reportf(op->reports, RPT_ERROR, "File not found '%s'", filepath);
-    return OPERATOR_CANCELLED;
-  }
-
-  scene = ac.scene; /* Current scene. */
-
-  /* Store necessary data for the baking steps. */
-  sbi.samples = bke::sound_read_file_buffer(filepath,
-                                            RNA_float_get(op->ptr, "low"),
-                                            RNA_float_get(op->ptr, "high"),
-                                            RNA_float_get(op->ptr, "attack"),
-                                            RNA_float_get(op->ptr, "release"),
-                                            RNA_float_get(op->ptr, "threshold"),
-                                            RNA_boolean_get(op->ptr, "use_accumulate"),
-                                            RNA_boolean_get(op->ptr, "use_additive"),
-                                            RNA_boolean_get(op->ptr, "use_square"),
-                                            RNA_float_get(op->ptr, "sthreshold"),
-                                            scene->frames_per_second(),
-                                            0,
-                                            &sbi.length);
-
-  if (sbi.samples == nullptr) {
-    BKE_report(op->reports, RPT_ERROR, "Unsupported audio format");
-    return OPERATOR_CANCELLED;
-  }
-
-  /* Determine extents of the baking. */
-  sbi.cfra = start = scene->r.cfra;
-  end = scene->r.cfra + sbi.length - 1;
-
-  /* Filter anim channels. */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_CURVE_VISIBLE | ANIMFILTER_FCURVESONLY |
-            ANIMFILTER_SEL | ANIMFILTER_FOREDIT | ANIMFILTER_NODUPLIS);
-  ANIM_animdata_filter(
-      &ac, &anim_data, eAnimFilter_Flags(filter), ac.data, eAnimCont_Types(ac.datatype));
-
-  /* Loop through all selected F-Curves, replacing its data with the sound samples. */
-  for (bAnimListElem &ale : anim_data) {
-    FCurve *fcu = static_cast<FCurve *>(ale.key_data);
-
-    /* Sample the sound. */
-    fcurve_store_samples(fcu, &sbi, start, end, fcurve_samplingcb_sound);
-
-    ale.update |= ANIM_UPDATE_DEFAULT;
-  }
-
-  /* Free sample data. */
-  MEM_delete(sbi.samples);
-
-  /* Validate keyframes after editing. */
-  ANIM_animdata_update(&ac, &anim_data);
-  ANIM_animdata_freelist(&anim_data);
-
-  /* Set notifier that 'keyframes' have changed. */
-  WM_event_add_notifier(C, NC_ANIMATION | ND_KEYFRAME | NA_EDITED, nullptr);
-
-  return OPERATOR_FINISHED;
-}
-
-#else /* WITH_AUDASPACE */
 
 static wmOperatorStatus graphkeys_sound_to_samples_exec(bContext * /*C*/, wmOperator *op)
 {
@@ -1220,7 +1097,6 @@ static wmOperatorStatus graphkeys_sound_to_samples_exec(bContext * /*C*/, wmOper
   return OPERATOR_CANCELLED;
 }
 
-#endif /* WITH_AUDASPACE */
 
 static wmOperatorStatus graphkeys_sound_to_samples_invoke(bContext *C,
                                                           wmOperator *op,

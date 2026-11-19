@@ -90,12 +90,10 @@ set(SRC
   templates/interface_template_project_splash.cc
   templates/interface_template_recent_files.cc
   templates/interface_template_running_jobs.cc
-  templates/interface_template_scene_compositor_effects.cc
   templates/interface_template_scopes.cc
   templates/interface_template_search.cc
   templates/interface_template_search_menu.cc
   templates/interface_template_search_operator.cc
-  templates/interface_template_shader_fx.cc
   templates/interface_template_status.cc
   templates/interface_template_strip_modifiers.cc
   templates/interface_templates.cc
@@ -147,9 +145,9 @@ set(LIB
   PRIVATE bf::animrig
   PRIVATE bf::nodes
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
   PRIVATE bf::extern::md4c
+  PRIVATE bf::sequencer
 )
 
 if(WITH_INTERNATIONAL)

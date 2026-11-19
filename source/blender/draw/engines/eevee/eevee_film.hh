@@ -31,7 +31,6 @@
 #include <string>
 
 #include "BLI_math_vector.hh"
-#include "BLI_set.hh"
 
 #include "DNA_scene_types.h"
 #include "DRW_render.hh"
@@ -109,9 +108,6 @@ class Film {
   int2 display_extent = int2(-1);
 
   eViewLayerEEVEEPassType enabled_passes_ = eViewLayerEEVEEPassType(0);
-  /* Store the pass types needed by the viewport compositor separately, because some passes might
-   * be enabled but not used by the viewport compositor, so they needn't be written. */
-  eViewLayerEEVEEPassType viewport_compositor_enabled_passes_ = eViewLayerEEVEEPassType(0);
   PassCategory enabled_categories_ = PassCategory(0);
   bool use_reprojection_ = false;
   bool is_valid_render_extent_ = true;
@@ -146,8 +142,6 @@ class Film {
 
   gpu::Texture *get_pass_texture(eViewLayerEEVEEPassType pass_type, int layer_offset);
   gpu::Texture *get_aov_texture(ViewLayerAOV *aov);
-
-  void write_viewport_compositor_passes();
 
   /**
    * Returns the extent rendered by one shading view, including overscan: a square cubemap face
@@ -401,7 +395,7 @@ class Film {
   void update_sample_table();
 
  private:
-  void init_aovs(const Set<std::string> &passes_used_by_viewport_compositor);
+  void init_aovs();
   void sync_mist();
 
   void init_pass(PassSimple &pass, gpu::Shader *sh);

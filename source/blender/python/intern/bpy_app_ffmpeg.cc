@@ -17,15 +17,6 @@
 
 namespace blender {
 
-#ifdef WITH_FFMPEG
-extern "C" {
-#  include <libavcodec/avcodec.h>
-#  include <libavdevice/avdevice.h>
-#  include <libavformat/avformat.h>
-#  include <libavutil/avutil.h>
-#  include <libswscale/swscale.h>
-}
-#endif
 
 static PyTypeObject BlenderAppFFmpegType;
 
@@ -60,9 +51,6 @@ static PyObject *make_ffmpeg_info()
   PyObject *ffmpeg_info;
   int pos = 0;
 
-#ifdef WITH_FFMPEG
-  int curversion;
-#endif
 
   ffmpeg_info = PyStructSequence_New(&BlenderAppFFmpegType);
   if (ffmpeg_info == nullptr) {
@@ -72,35 +60,17 @@ static PyObject *make_ffmpeg_info()
 #if 0 /* UNUSED */
 #  define SetIntItem(flag) PyStructSequence_SET_ITEM(ffmpeg_info, pos++, PyLong_FromLong(flag))
 #endif
-#ifndef WITH_FFMPEG
 #  define SetStrItem(str) PyStructSequence_SET_ITEM(ffmpeg_info, pos++, PyUnicode_FromString(str))
-#endif
 #define SetObjItem(obj) PyStructSequence_SET_ITEM(ffmpeg_info, pos++, obj)
 
-#ifdef WITH_FFMPEG
-#  define FFMPEG_LIB_VERSION(lib) \
-    { \
-      curversion = lib##_version(); \
-      SetObjItem( \
-          PyC_Tuple_Pack_I32({curversion >> 16, (curversion >> 8) % 256, curversion % 256})); \
-      SetObjItem(PyUnicode_FromFormat( \
-          "%2d, %2d, %2d", curversion >> 16, (curversion >> 8) % 256, curversion % 256)); \
-    } \
-    (void)0
-#else
 #  define FFMPEG_LIB_VERSION(lib) \
     { \
       SetStrItem("Unknown"); \
       SetStrItem("Unknown"); \
     } \
     (void)0
-#endif
 
-#ifdef WITH_FFMPEG
-  SetObjItem(PyBool_FromLong(1));
-#else
   SetObjItem(PyBool_FromLong(0));
-#endif
 
   FFMPEG_LIB_VERSION(avcodec);
   FFMPEG_LIB_VERSION(avdevice);

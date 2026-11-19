@@ -1875,6 +1875,39 @@ void BKE_screen_area_blend_read_after_liblink(BlendLibReader *reader, ID *parent
 
     regions_remove_invalid(space_type, regionbase);
   }
+
+  if (area->spacetype == SPACE_EMPTY && ELEM(area->butspacetype, SPACE_CLIP, SPACE_SEQ)) {
+    SpaceType *viewport_type = BKE_spacetype_from_id(SPACE_VIEW3D);
+    if (!viewport_type) {
+      return;
+    }
+
+    /* Replace unsupported media editors while retaining the rest of the screen layout. */
+    BLI_assert(area->regionbase.is_empty());
+    if (SpaceLink *unsupported_space = area->spacedata.first()) {
+      BLI_assert(unsupported_space->spacetype == SPACE_EMPTY);
+      BLI_freelinkN(&area->spacedata, unsupported_space);
+    }
+
+    SpaceLink *viewport = nullptr;
+    for (SpaceLink &space : area->spacedata) {
+      if (space.spacetype == SPACE_VIEW3D && !space.regionbase.is_empty()) {
+        viewport = &space;
+        break;
+      }
+    }
+    if (viewport) {
+      BLI_remlink(&area->spacedata, viewport);
+    }
+    else {
+      viewport = viewport_type->create(area, nullptr);
+    }
+    BLI_addhead(&area->spacedata, viewport);
+    area->regionbase = viewport->regionbase;
+    viewport->regionbase.clear_no_delete();
+    area->spacetype = SPACE_VIEW3D;
+    area->butspacetype = SPACE_EMPTY;
+  }
 }
 
 /** \} */

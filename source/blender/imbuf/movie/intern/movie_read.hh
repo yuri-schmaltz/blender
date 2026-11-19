@@ -20,14 +20,6 @@ struct AVFrame;
 struct AVPacket;
 struct SwsContext;
 
-#ifdef WITH_FFMPEG
-
-extern "C" {
-#  include <libavutil/pixfmt.h>
-#  include <libavutil/rational.h>
-}
-
-#endif
 
 namespace blender {
 
@@ -53,38 +45,6 @@ struct MovieReader {
 
   bool keep_original_colorspace = false;
 
-#ifdef WITH_FFMPEG
-  AVFormatContext *format_ctx = nullptr;
-  AVCodecContext *codec_ctx = nullptr;
-  const AVCodec *codec = nullptr;
-  AVFrame *frame_rgb = nullptr;
-  AVFrame *frame_deinterlaced = nullptr;
-  SwsContext *sws_ctx = nullptr;
-  int video_stream_index = 0;
-
-  AVFrame *frame = nullptr;
-  bool frame_complete = false;
-  AVFrame *frame_backup = nullptr;
-  bool frame_backup_complete = false;
-
-  AVFrame *frame_sw = nullptr;
-  AVPixelFormat src_pix_fmt = AV_PIX_FMT_NONE;
-
-  int64_t cur_pts = 0;
-  int64_t cur_key_frame_pts = 0;
-  AVPacket *cur_packet = nullptr;
-
-  AVRational frame_rate = {1, 1};
-
-  bool is_float = false;
-
-  /* When set, never seek within the video, and only ever decode one frame.
-   * This is a workaround for some Ogg files that have full audio but only
-   * one frame of "album art" as a video stream in non-Theora format.
-   * ffmpeg crashes/aborts when trying to seek within them
-   * (https://trac.ffmpeg.org/ticket/10755). */
-  bool never_seek_decode_one_frame = false;
-#endif
 
   char proxy_dir[768] = {};
 

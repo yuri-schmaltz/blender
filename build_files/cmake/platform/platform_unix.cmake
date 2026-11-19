@@ -106,7 +106,6 @@ if(DEFINED LIBDIR)
   set(openjph_ROOT ${LIBDIR}/openjph)
   # OpenEXR deps end
   set(absl_ROOT ${LIBDIR}/abseil)
-  set(Ceres_ROOT ${LIBDIR}/ceres)
   set(Eigen3_ROOT ${LIBDIR}/eigen)
   set(meshoptimizer_ROOT ${LIBDIR}/meshoptimizer)
   set(draco_ROOT ${LIBDIR}/draco)
@@ -283,11 +282,6 @@ if(WITH_IMAGE_OPENJPEG)
   set_and_warn_library_found("OpenJPEG" OPENJPEG_FOUND WITH_IMAGE_OPENJPEG)
 endif()
 
-if(WITH_OPENAL)
-  find_package_wrapper(OpenAL)
-  set_and_warn_library_found("OpenAL" OPENAL_FOUND WITH_OPENAL)
-endif()
-
 if(WITH_SDL)
   find_package_wrapper(SDL3)
   set_and_warn_library_found("SDL" SDL3_FOUND WITH_SDL)
@@ -295,45 +289,6 @@ endif()
 add_bundled_libraries(sdl/lib)
 
 # Codecs
-if(WITH_CODEC_SNDFILE)
-  find_package_wrapper(SndFile)
-  set_and_warn_library_found("libsndfile" SNDFILE_FOUND WITH_CODEC_SNDFILE)
-endif()
-
-if(WITH_CODEC_FFMPEG)
-  if(DEFINED LIBDIR)
-    set(FFMPEG_ROOT_DIR ${LIBDIR}/ffmpeg)
-    # Override FFMPEG components to also include static library dependencies
-    # included with precompiled libraries, and to ensure correct link order.
-    set(FFMPEG_FIND_COMPONENTS
-      avformat avdevice avfilter avcodec avutil swresample swscale
-      sndfile
-      FLAC
-      mp3lame
-      opus
-      theora theoradec theoraenc
-      vorbis vorbisenc vorbisfile ogg
-      vpx
-      x264
-    )
-    if(EXISTS ${LIBDIR}/ffmpeg/lib/libx265.a)
-      list(APPEND FFMPEG_FIND_COMPONENTS x265)
-    endif()
-    if(EXISTS ${LIBDIR}/ffmpeg/lib/libaom.a)
-      list(APPEND FFMPEG_FIND_COMPONENTS aom)
-    endif()
-    if(EXISTS ${LIBDIR}/ffmpeg/lib/libxvidcore.a)
-      list(APPEND FFMPEG_FIND_COMPONENTS xvidcore)
-    endif()
-  elseif(FFMPEG)
-    # Old cache variable used for root dir, convert to new standard.
-    set(FFMPEG_ROOT_DIR ${FFMPEG})
-  endif()
-  find_package(FFmpeg)
-
-  set_and_warn_library_found("FFmpeg" FFMPEG_FOUND WITH_CODEC_FFMPEG)
-endif()
-
 if(WITH_FFTW3)
   find_package_wrapper(Fftw3)
   set_and_warn_library_found("fftw3" FFTW3_FOUND WITH_FFTW3)
@@ -350,35 +305,10 @@ if(WITH_INPUT_NDOF)
   endif()
 endif()
 
-if(WITH_CYCLES AND WITH_CYCLES_OSL)
-  if(DEFINED LIBDIR)
-    set(CYCLES_OSL ${LIBDIR}/osl CACHE PATH "Path to OpenShadingLanguage installation")
-    if(EXISTS ${CYCLES_OSL} AND NOT OSL_ROOT)
-      set(OSL_ROOT ${CYCLES_OSL})
-    endif()
-  endif()
-  find_package_wrapper(OSL 1.13.4)
-  set_and_warn_library_found("OSL" OSL_FOUND WITH_CYCLES_OSL)
-endif()
 if(DEFINED OSL_DIR)
   mark_as_advanced(OSL_DIR)
 endif()
 
-add_bundled_libraries(osl/lib)
-
-if(WITH_CYCLES AND DEFINED LIBDIR)
-  set(CYCLES_LEVEL_ZERO ${LIBDIR}/level-zero CACHE PATH "Path to Level Zero installation")
-  mark_as_advanced(CYCLES_LEVEL_ZERO)
-  if(EXISTS ${CYCLES_LEVEL_ZERO} AND NOT LEVEL_ZERO_ROOT_DIR)
-    set(LEVEL_ZERO_ROOT_DIR ${CYCLES_LEVEL_ZERO})
-  endif()
-
-  set(CYCLES_SYCL ${LIBDIR}/dpcpp CACHE PATH "Path to oneAPI DPC++ compiler")
-  mark_as_advanced(CYCLES_SYCL)
-  if(EXISTS ${CYCLES_SYCL} AND NOT SYCL_ROOT_DIR)
-    set(SYCL_ROOT_DIR ${CYCLES_SYCL})
-  endif()
-endif()
 
 # add_bundled_libraries for SYCL, but custom since we need to filter the files.
 if(DEFINED LIBDIR)
@@ -426,7 +356,6 @@ endif()
 if(WITH_USD)
   find_package_wrapper(USD)
   set_and_warn_library_found("USD" USD_FOUND WITH_USD)
-  set_and_warn_library_found("Hydra" USD_FOUND WITH_HYDRA)
 endif()
 add_bundled_libraries(usd/lib)
 
@@ -555,32 +484,6 @@ if(WITH_MANIFOLD)
   mark_as_advanced(manifold_DIR)
 endif()
 
-if(WITH_RUBBERBAND)
-  if(DEFINED LIBDIR)
-    find_package_wrapper(Rubberband)
-  else()
-    # Use system libs
-    find_package(PkgConfig)
-    pkg_check_modules(RUBBERBAND rubberband)
-  endif()
-  set_and_warn_library_found("Rubberband" RUBBERBAND_FOUND WITH_RUBBERBAND)
-endif()
-
-if(WITH_CYCLES AND WITH_CYCLES_PATH_GUIDING)
-  find_package_wrapper(openpgl)
-  mark_as_advanced(openpgl_DIR)
-  if(openpgl_FOUND)
-    get_target_property(OPENPGL_LIBRARIES openpgl::openpgl LOCATION)
-    get_target_property(OPENPGL_INCLUDE_DIR openpgl::openpgl INTERFACE_INCLUDE_DIRECTORIES)
-    if(FIRST_RUN)
-      message(STATUS "Found OpenPGL: ${OPENPGL_LIBRARIES}")
-    endif()
-  else()
-    set(WITH_CYCLES_PATH_GUIDING OFF)
-    message(STATUS "OpenPGL not found, disabling WITH_CYCLES_PATH_GUIDING")
-  endif()
-endif()
-
 if(WITH_TRACY)
   find_package_wrapper(Tracy REQUIRED)
   mark_as_advanced(Tracy_DIR)
@@ -603,22 +506,6 @@ if(WITH_JOLT)
 endif()
 add_bundled_libraries(jolt/lib)
 
-if(WITH_OPENTIMELINEIO)
-  if(WITH_LIBS_PRECOMPILED OR WITH_STRICT_BUILD_OPTIONS)
-    find_package_wrapper(OpenTimelineIO REQUIRED)
-  else()
-    # This isn't a common system library, so disable if it's not found.
-    find_package_wrapper(OpenTimelineIO)
-    if(TARGET OTIO::opentimelineio)
-      set(OPENTIMELINEIO_FOUND TRUE)
-    endif()
-    set_and_warn_library_found("OpenTimelineIO" OPENTIMELINEIO_FOUND WITH_OPENTIMELINEIO)
-  endif()
-  if(DEFINED OpenTimelineIO_DIR)
-    mark_as_advanced(OpenTimelineIO_DIR)
-  endif()
-endif()
-add_bundled_libraries(opentimelineio/lib)
 
 if(DEFINED LIBDIR)
   without_system_libs_end()
@@ -687,13 +574,6 @@ endif()
 find_package_wrapper(Eigen3 REQUIRED)
 mark_as_advanced(Eigen3_DIR)
 
-if(WITH_LIBMV)
-  find_package_wrapper(Ceres REQUIRED)
-  mark_as_advanced(Ceres_DIR)
-  # Dep of Ceres
-  mark_as_advanced(absl_DIR)
-endif()
-add_bundled_libraries(ceres/lib)
 
 if(WITH_DRACO)
   if(WITH_LIBS_PRECOMPILED OR WITH_STRICT_BUILD_OPTIONS)
@@ -745,32 +625,6 @@ if(WITH_KTX)
   endif()
 endif()
 add_bundled_libraries(ktx/lib)
-
-# Jack is intended to use the system library.
-if(WITH_JACK)
-  find_package_wrapper(Jack)
-  set_and_warn_library_found("JACK" JACK_FOUND WITH_JACK)
-endif()
-
-# Pulse is intended to use the system library.
-if(WITH_PULSEAUDIO)
-  find_package_wrapper(Pulse)
-  set_and_warn_library_found("PulseAudio" PULSE_FOUND WITH_PULSEAUDIO)
-endif()
-
-# PipeWire is intended to use the system library.
-if(WITH_PIPEWIRE)
-  find_package(PkgConfig)
-  pkg_check_modules(PIPEWIRE libpipewire-0.3>=1.1.0)
-  set_and_warn_library_found("PipeWire" PIPEWIRE_FOUND WITH_PIPEWIRE)
-endif()
-
-# Audio IO
-if(WITH_SYSTEM_AUDASPACE)
-  find_package_wrapper(Audaspace)
-  set(AUDASPACE_FOUND ${AUDASPACE_FOUND} AND ${AUDASPACE_C_FOUND})
-  set_and_warn_library_found("External Audaspace" AUDASPACE_FOUND WITH_SYSTEM_AUDASPACE)
-endif()
 
 # Reading desktop settings (the light/dark theme preference) from the XDG desktop portal.
 # Only the headers are needed when `WITH_GHOST_DBUS_DYNLOAD` is enabled, `libdbus` itself is

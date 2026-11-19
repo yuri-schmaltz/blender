@@ -16,7 +16,6 @@ tabs_attr_infos = (
     ("show_properties_output", "Output", 'OUTPUT'),
     ("show_properties_scene", "Scene", 'SCENE_DATA'),
     ("show_properties_view_layer", "View Layer", 'RENDERLAYERS'),
-    ("show_properties_compositor", "Compositor & Effects", 'NODE_COMPOSITING'),
     ("show_properties_world", "World", 'WORLD'),
     ("show_properties_collection", "Collection", 'GROUP'),
     ("show_properties_object", "Object", 'OBJECT_DATA'),
@@ -30,8 +29,6 @@ tabs_attr_infos = (
     ("show_properties_bone_constraints", "Bone Constraints", 'CONSTRAINT_BONE'),
     ("show_properties_material", "Material", 'MATERIAL'),
     ("show_properties_texture", "Texture", 'TEXTURE'),
-    ("show_properties_strip", "Strip", 'SEQ_STRIP'),
-    ("show_properties_strip_modifier", "Strip Modifiers", 'SEQ_STRIP_MODIFIER'),
 )
 
 

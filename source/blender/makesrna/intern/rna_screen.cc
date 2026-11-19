@@ -144,7 +144,9 @@ static void rna_Area_type_set(PointerRNA *ptr, int value)
 
   ScrArea *area = static_cast<ScrArea *>(ptr->data);
   /* Empty areas are locked. */
-  if ((value == SPACE_EMPTY) || (area->spacetype == SPACE_EMPTY)) {
+  if ((value == SPACE_EMPTY) || (area->spacetype == SPACE_EMPTY) ||
+      (ELEM(value, SPACE_CLIP, SPACE_SEQ) && !BKE_spacetype_exists(value)))
+  {
     return;
   }
 
@@ -216,6 +218,9 @@ static const EnumPropertyItem *rna_Area_ui_type_itemf(bContext *C,
 
   for (; item_from->identifier; item_from++) {
     if (ELEM(item_from->value, SPACE_TOPBAR, SPACE_STATUSBAR)) {
+      continue;
+    }
+    if (ELEM(item_from->value, SPACE_CLIP, SPACE_SEQ) && item_from->value != area->spacetype) {
       continue;
     }
 

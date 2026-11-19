@@ -17,7 +17,6 @@ Blender Convenience Targets
    * lite:          Disable non essential features for a smaller binary and faster build.
    * release:       Complete build with all options enabled including CUDA and Optix, matching the releases on blender.org
    * headless:      Build without an interface (renderfarm or server automation).
-   * cycles:        Build Cycles standalone only, without Blender.
    * bpy:           Build as a python module which can be loaded from python directly.
    * developer:     Enable faster builds, error checking and tests, recommended for developers.
    * ninja:         Use ninja build tool for faster builds.
@@ -304,10 +303,6 @@ ifneq "$(filter release, $(MAKECMDGOALS))" ""
 	BUILD_DIR:=$(BUILD_DIR)_release
 	CMAKE_CONFIG_ARGS:=-C"$(BLENDER_DIR)/build_files/cmake/config/blender_release.cmake" $(CMAKE_CONFIG_ARGS)
 endif
-ifneq "$(filter cycles, $(MAKECMDGOALS))" ""
-	BUILD_DIR:=$(BUILD_DIR)_cycles
-	CMAKE_CONFIG_ARGS:=-C"$(BLENDER_DIR)/build_files/cmake/config/cycles_standalone.cmake" $(CMAKE_CONFIG_ARGS)
-endif
 ifneq "$(filter headless, $(MAKECMDGOALS))" ""
 	BUILD_DIR:=$(BUILD_DIR)_headless
 	CMAKE_CONFIG_ARGS:=-C"$(BLENDER_DIR)/build_files/cmake/config/blender_headless.cmake" $(CMAKE_CONFIG_ARGS)
@@ -433,7 +428,6 @@ debug: all
 full: all
 lite: all
 release: all
-cycles: all
 headless: all
 bpy: all
 developer: all
@@ -571,7 +565,6 @@ check_spelling_c: .FORCE
 	    --match=".*\.(c|cc|cpp|cxx|h|hh|hpp|hxx|inl|m|mm)$$" \
 	    $(CHECK_SPELLING_EXTRA_ARGS) \
 	    "$(BLENDER_DIR)/source" \
-	    "$(BLENDER_DIR)/intern/cycles" \
 	    "$(BLENDER_DIR)/intern/guardedalloc" \
 	    "$(BLENDER_DIR)/intern/ghost"
 

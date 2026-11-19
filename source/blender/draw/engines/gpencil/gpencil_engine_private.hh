@@ -11,7 +11,6 @@
 #include "BLI_bitmap.hh"
 #include "BLI_memblock.hh"
 
-#include "DNA_shader_fx_types.h"
 #include "DRW_render.hh"
 
 #include "BKE_grease_pencil.hh"
@@ -84,15 +83,6 @@ struct LightPool {
   int light_used;
 };
 
-/* Temporary gpencil FX reflection used by the gpencil::Instance. */
-struct tVfx {
-  /** Single linked-list. */
-  struct tVfx *next = nullptr;
-  ::std::unique_ptr<PassSimple> vfx_ps = ::std::make_unique<PassSimple>("vfx");
-  /* Frame-buffer reference since it may not be allocated yet. */
-  gpu::FrameBuffer **target_fb = nullptr;
-};
-
 /* Temporary gpencil layer reflection used by the gpencil::Instance. */
 struct tLayer {
   /** Single linked-list. */
@@ -119,10 +109,6 @@ struct tObject {
     tLayer *first, *last;
   } layers;
 
-  struct {
-    tVfx *first, *last;
-  } vfx;
-
   /* Distance to camera. Used for sorting. */
   float camera_z;
   /* Normal used for shading. Based on view angle. */
@@ -146,7 +132,6 @@ struct Instance final : public DrawEngine {
   /* Composite the object depth to the default depth buffer to occlude overlays. */
   PassSimple merge_depth_ps = {"merge_depth_ps"};
   /* Composite the object depth to the depth pass. */
-  PassSimple merge_depth_pass_ps = {"merge_depth_pass_ps"};
   /* Invert mask buffer content. */
   PassSimple mask_invert_ps = {"mask_invert_ps"};
 
@@ -167,7 +152,6 @@ struct Instance final : public DrawEngine {
   Texture smaa_search_tx = {"smaa_search_tx"};
 
   /* Stores the viewport compositor depth pass if needed. */
-  gpu::Texture *depth_pass_img = nullptr;
 
   /* Temp Textures (shared with other engines). */
   TextureFromPool depth_tx = {"depth_tx"};
@@ -188,8 +172,6 @@ struct Instance final : public DrawEngine {
 
   Framebuffer render_fb = {"render_fb"};
   Framebuffer gpencil_fb = {"gpencil_fb"};
-  Framebuffer combined_pass_fb = {"combined_pass_fb"};
-  Framebuffer gpencil_pass_fb = {"gpencil_pass_fb"};
   Framebuffer snapshot_fb = {"snapshot_fb"};
   Framebuffer layer_fb = {"layer_fb"};
   Framebuffer object_fb = {"object_fb"};
@@ -199,15 +181,12 @@ struct Instance final : public DrawEngine {
 
   /* NOTE: These do not preserve the PassSimple memory across frames.
    * If that becomes a bottleneck, these containers can be improved. */
-  using tVfx_Pool = draw::detail::SubPassVector<tVfx>;
   using tLayer_Pool = draw::detail::SubPassVector<tLayer>;
 
   /* tObject */
   struct BLI_memblock *gp_object_pool = BLI_memblock_create(sizeof(tObject));
   /* tLayer */
   tLayer_Pool *gp_layer_pool = new tLayer_Pool();
-  /* tVfx */
-  tVfx_Pool *gp_vfx_pool = new tVfx_Pool();
   /* MaterialPool */
   struct BLI_memblock *gp_material_pool = BLI_memblock_create(sizeof(MaterialPool));
   /* LightPool */
@@ -299,10 +278,6 @@ struct Instance final : public DrawEngine {
   bool use_layer_fb;
   bool use_object_fb;
   bool use_mask_fb;
-  /* The viewport compositor needs the combined pass, so we need to render to it. */
-  bool need_combined_pass;
-  /* The viewport compositor needs the grease pencil pass, so we need to render to it. */
-  bool need_grease_pencil_pass;
   /* Some blend mode needs to add negative values.
    * This is only supported if target texture is signed. Only switch for the `reveal_tex`. */
   bool use_signed_fb;
@@ -334,7 +309,6 @@ struct Instance final : public DrawEngine {
     BLI_memblock_destroy(gp_maskbit_pool, nullptr);
     BLI_memblock_destroy(gp_object_pool, nullptr);
     delete gp_layer_pool;
-    delete gp_vfx_pool;
   }
 
   void acquire_resources();
@@ -376,33 +350,6 @@ struct Instance final : public DrawEngine {
 
   void antialiasing_init();
   void antialiasing_draw(Manager &manager);
-
-  struct VfxFramebufferRef {
-    /* These may not be allocated yet, use address of future pointer. */
-    gpu::FrameBuffer **fb;
-    gpu::Texture **color_tx;
-    gpu::Texture **reveal_tx;
-  };
-
-  SwapChain<VfxFramebufferRef, 2> vfx_swapchain_;
-
-  PassSimple &vfx_pass_create(const char *name,
-                              DRWState state,
-                              gpu::Shader *sh,
-                              tObject *tgp_ob,
-                              GPUSamplerState sampler = GPUSamplerState::internal_sampler());
-
-  void vfx_blur_sync(BlurShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_colorize_sync(ColorizeShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_flip_sync(FlipShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_rim_sync(RimShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_pixelize_sync(PixelShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_shadow_sync(ShadowShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_glow_sync(GlowShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_wave_sync(WaveShaderFxData *fx, Object *ob, tObject *tgp_ob);
-  void vfx_swirl_sync(SwirlShaderFxData *fx, Object *ob, tObject *tgp_ob);
-
-  void vfx_sync(Object *ob, tObject *tgp_ob);
 
   static void material_pool_free(void *storage)
   {

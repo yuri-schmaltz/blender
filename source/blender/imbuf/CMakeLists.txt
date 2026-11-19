@@ -85,10 +85,10 @@ set(LIB
   PRIVATE bf::imbuf::opencolorio
   PRIVATE bf::extern::nanosvg
 
-  PRIVATE bf::sequencer
   PRIVATE bf::dependencies::zlib
   PRIVATE bf::dependencies::openimageio
   PRIVATE bf::dependencies::jpeg
+  PRIVATE bf::sequencer
 )
 
 if(WITH_IMAGE_OPENJPEG)

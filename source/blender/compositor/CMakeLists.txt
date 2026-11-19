@@ -47,7 +47,6 @@ set(SRC
   COM_render_context.hh
   COM_repeat_zone_operation.hh
   COM_result.hh
-  COM_scene_compositor_effects_operation.hh
   COM_scheduler.hh
   COM_shader_node.hh
   COM_shader_operation.hh
@@ -81,7 +80,6 @@ set(SRC
   intern/render_context.cc
   intern/repeat_zone_operation.cc
   intern/result.cc
-  intern/scene_compositor_effects_operation.cc
   intern/scheduler.cc
   intern/shader_node.cc
   intern/shader_operation.cc

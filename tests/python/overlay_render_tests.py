@@ -40,7 +40,6 @@ def get_arguments(
         "--no-window-focus",
         "--window-geometry",
         "0", "0", "128", "128",
-        "-noaudio",
         "--factory-startup",
         "--no-native-pixels",
         "--enable-autoexec",

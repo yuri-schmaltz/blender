@@ -850,62 +850,6 @@ class RENDER_PT_eevee_performance(RenderButtonsPanel, Panel):
         layout.prop(rd, "anisotropic_filter")
 
 
-class CompositorPerformanceButtonsPanel:
-    bl_label = "Compositor"
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        rd = scene.render
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column()
-        row = col.row()
-        row.prop(rd, "compositor_device", text="Device", expand=True)
-        if rd.compositor_device == 'GPU':
-            col.prop(rd, "compositor_precision", text="Precision")
-
-
-class CompositorDenoisePerformanceButtonsPanel:
-    bl_label = "Denoise Nodes"
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        rd = scene.render
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column()
-        row = col.row()
-        row.prop(rd, "compositor_denoise_device", text="Denoising Device", expand=True)
-        col.prop(rd, "compositor_denoise_preview_quality", text="Preview Quality")
-        col.prop(rd, "compositor_denoise_final_quality", text="Final Quality")
-
-
-class RENDER_PT_eevee_performance_compositor(RenderButtonsPanel, CompositorPerformanceButtonsPanel, Panel):
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "RENDER_PT_eevee_performance"
-    COMPAT_ENGINES = {
-        'BLENDER_EEVEE',
-        'BLENDER_WORKBENCH',
-    }
-
-
-class RENDER_PT_eevee_performance_compositor_denoise_settings(
-        RenderButtonsPanel, CompositorDenoisePerformanceButtonsPanel, Panel,
-):
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "RENDER_PT_eevee_performance_compositor"
-    COMPAT_ENGINES = {
-        'BLENDER_EEVEE',
-        'BLENDER_WORKBENCH',
-    }
-
-
 class RENDER_PT_eevee_performance_memory(RenderButtonsPanel, Panel):
     bl_label = "Memory"
     bl_parent_id = "RENDER_PT_eevee_performance"
@@ -1229,8 +1173,6 @@ classes = (
     RENDER_PT_eevee_performance,
     RENDER_PT_eevee_performance_memory,
     RENDER_PT_eevee_performance_viewport,
-    RENDER_PT_eevee_performance_compositor,
-    RENDER_PT_eevee_performance_compositor_denoise_settings,
 
 
     RENDER_PT_gpencil,

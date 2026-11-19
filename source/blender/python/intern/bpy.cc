@@ -59,9 +59,6 @@
 #include "../generic/idprop_py_ui_api.hh"
 #include "bpy_msgbus.hh"
 
-#ifdef WITH_FREESTYLE
-#  include "BPy_Freestyle.h"
-#endif
 
 namespace blender {
 
@@ -779,9 +776,6 @@ void BPy_init_modules(bContext *C)
   /* stand alone utility modules not related to blender directly */
   IDProp_Init_Types(); /* not actually a submodule, just types */
   IDPropertyUIData_Init_Types();
-#ifdef WITH_FREESTYLE
-  Freestyle_Init();
-#endif
 
   mod = PyModule_New("_bpy");
 

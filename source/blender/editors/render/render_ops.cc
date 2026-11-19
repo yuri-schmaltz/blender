@@ -52,34 +52,11 @@ void ED_operatortypes_render()
   WM_operatortype_append(SCENE_OT_render_view_add);
   WM_operatortype_append(SCENE_OT_render_view_remove);
 
-#ifdef WITH_FREESTYLE
-  WM_operatortype_append(SCENE_OT_freestyle_module_add);
-  WM_operatortype_append(SCENE_OT_freestyle_module_remove);
-  WM_operatortype_append(SCENE_OT_freestyle_module_move);
-  WM_operatortype_append(SCENE_OT_freestyle_lineset_add);
-  WM_operatortype_append(SCENE_OT_freestyle_lineset_copy);
-  WM_operatortype_append(SCENE_OT_freestyle_lineset_paste);
-  WM_operatortype_append(SCENE_OT_freestyle_lineset_remove);
-  WM_operatortype_append(SCENE_OT_freestyle_lineset_move);
-  WM_operatortype_append(SCENE_OT_freestyle_linestyle_new);
-  WM_operatortype_append(SCENE_OT_freestyle_color_modifier_add);
-  WM_operatortype_append(SCENE_OT_freestyle_alpha_modifier_add);
-  WM_operatortype_append(SCENE_OT_freestyle_thickness_modifier_add);
-  WM_operatortype_append(SCENE_OT_freestyle_geometry_modifier_add);
-  WM_operatortype_append(SCENE_OT_freestyle_modifier_remove);
-  WM_operatortype_append(SCENE_OT_freestyle_modifier_move);
-  WM_operatortype_append(SCENE_OT_freestyle_modifier_copy);
-  WM_operatortype_append(SCENE_OT_freestyle_stroke_material_create);
-#endif
 
   WM_operatortype_append(TEXTURE_OT_slot_copy);
   WM_operatortype_append(TEXTURE_OT_slot_paste);
   WM_operatortype_append(TEXTURE_OT_slot_move);
 
-#ifdef WITH_CYCLES
-  WM_operatortype_append(RENDER_OT_generate_texture_cache);
-  WM_operatortype_append(RENDER_OT_clear_texture_cache);
-#endif
 
   /* `render_internal.cc` */
   WM_operatortype_append(RENDER_OT_view_show);

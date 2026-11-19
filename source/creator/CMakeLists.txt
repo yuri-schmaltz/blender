@@ -27,9 +27,9 @@ set(LIB
   PRIVATE bf::intern::clog
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
   PRIVATE bf::dependencies::opencolorio
+  PRIVATE bf::sequencer
 )
 
 if(HAVE_FEENABLEEXCEPT)
@@ -53,16 +53,6 @@ if(WIN32)
   list(APPEND INC ../../intern/utfconv)
 endif()
 
-if(WITH_LIBMV)
-  list(APPEND INC ../../intern/libmv)
-  add_definitions(-DWITH_LIBMV)
-endif()
-
-if(WITH_CYCLES)
-  add_definitions(-DWITH_CYCLES)
-  list(APPEND INC ../../intern/cycles/blender)
-endif()
-
 if(WITH_OPENGL_BACKEND)
   add_definitions(-DWITH_OPENGL_BACKEND)
 endif()
@@ -73,10 +63,6 @@ endif()
 
 if(WITH_RENDERDOC)
   add_definitions(-DWITH_RENDERDOC)
-endif()
-
-if(WITH_CODEC_FFMPEG)
-  add_definitions(-DWITH_FFMPEG)
 endif()
 
 if(WITH_TBB OR WITH_TBB_MALLOC_PROXY)
@@ -126,11 +112,6 @@ endif()
 if(WITH_BINRELOC)
   list(APPEND INC ${BINRELOC_INCLUDE_DIRS})
   add_definitions(-DWITH_BINRELOC)
-endif()
-
-if(WITH_FREESTYLE)
-  list(APPEND INC ../blender/freestyle)
-  add_definitions(-DWITH_FREESTYLE)
 endif()
 
 if(WITH_XR_OPENXR)
@@ -463,13 +444,6 @@ endif()
 if(WITH_PYTHON)
   # install(CODE "message(\"copying blender scripts...\")")
 
-  # do not install freestyle dir if disabled
-  if(NOT WITH_FREESTYLE)
-    set(FREESTYLE_EXCLUDE_CONDITIONAL "freestyle/*")
-  else()
-    set(FREESTYLE_EXCLUDE_CONDITIONAL "_freestyle/*")  # Dummy, won't do anything.
-  endif()
-
   install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/scripts
     DESTINATION ${TARGETDIR_VER}
@@ -480,7 +454,6 @@ if(WITH_PYTHON)
     PATTERN ".arcconfig" EXCLUDE
     PATTERN "__pycache__" EXCLUDE
     PATTERN "site" EXCLUDE
-    PATTERN "${FREESTYLE_EXCLUDE_CONDITIONAL}" EXCLUDE
 
     # Exclude extensions development files.
     PATTERN "addons_core/bl_pkg/Makefile" EXCLUDE
@@ -501,7 +474,6 @@ if(WITH_PYTHON)
       DESTINATION ${TARGETDIR_SITE_PACKAGES}
     )
   endif()
-  unset(FREESTYLE_EXCLUDE_CONDITIONAL)
 
   # The glTF add-on's draco & meshopt bridge libraries, loaded at run-time by `io_scene_gltf2`.
   # Install beside their bundled dependencies, found via each target's RPATH (UNIX)
@@ -653,44 +625,6 @@ if(WIN32)
         ${LIBDIR}/opentimelineio/lib/opentime.dll
         ${LIBDIR}/opentimelineio/lib/opentimelineio.dll
       RELEASE
-    )
-  endif()
-  if(EXISTS ${LIBDIR}/opentimelineio/lib/opentime_d.dll) # 5.3+
-    windows_install_shared_manifest(
-      FILES
-        ${LIBDIR}/opentimelineio/lib/opentime_d.dll
-        ${LIBDIR}/opentimelineio/lib/opentimelineio_d.dll
-      DEBUG
-    )
-  endif()
-  if(EXISTS ${LIBDIR}/ceres/bin/ceres.dll) # 5.1+
-    windows_install_shared_manifest(
-      FILES
-        ${LIBDIR}/ceres/bin/ceres.dll
-      RELEASE
-    )
-    windows_install_shared_manifest(
-      FILES
-        ${LIBDIR}/ceres/bin/ceres-debug.dll
-      DEBUG
-    )
-  endif()
-  if(EXISTS ${LIBDIR}/osl/bin/oslquery.dll) # 4.1+
-    windows_install_shared_manifest(
-      FILES
-        ${LIBDIR}/osl/bin/oslquery.dll
-        ${LIBDIR}/osl/bin/oslcomp.dll
-        ${LIBDIR}/osl/bin/oslexec.dll
-        ${LIBDIR}/osl/bin/oslnoise.dll
-      RELEASE
-    )
-    windows_install_shared_manifest(
-      FILES
-        ${LIBDIR}/osl/bin/oslquery_d.dll
-        ${LIBDIR}/osl/bin/oslcomp_d.dll
-        ${LIBDIR}/osl/bin/oslexec_d.dll
-        ${LIBDIR}/osl/bin/oslnoise_d.dll
-      DEBUG
     )
   endif()
   if(EXISTS ${LIBDIR}/opencolorio/bin/opencolorio_2_4.dll) # 4.4
@@ -1463,23 +1397,6 @@ elseif(WIN32)
         CONFIGURATIONS Debug
       )
       install(
-        DIRECTORY ${LIBDIR}/opentimelineio/python/opentimelineio/
-        DESTINATION ${TARGETDIR_SITE_PACKAGES}/opentimelineio/
-        CONFIGURATIONS Release;RelWithDebInfo;MinSizeRel
-        PATTERN "__pycache__" EXCLUDE           # * any cache *
-        PATTERN "*.pyc" EXCLUDE                 # * any cache *
-        PATTERN "*.pyo" EXCLUDE                 # * any cache *
-        PATTERN "*_d.cp*" EXCLUDE                # * do not install debug libs *
-      )
-      install(
-        DIRECTORY ${LIBDIR}/opentimelineio/python/opentimelineio/
-        DESTINATION ${TARGETDIR_SITE_PACKAGES}/opentimelineio/
-        CONFIGURATIONS Debug
-        PATTERN "__pycache__" EXCLUDE           # * any cache *
-        PATTERN "*.pyc" EXCLUDE                 # * any cache *
-        PATTERN "*.pyo" EXCLUDE                 # * any cache *
-      )
-      install(
         DIRECTORY ${LIBDIR}/usd/lib/site-packages/
         DESTINATION ${TARGETDIR_SITE_PACKAGES}/
         CONFIGURATIONS Release;RelWithDebInfo;MinSizeRel
@@ -1682,18 +1599,6 @@ elseif(WIN32)
     list(APPEND LIB ${TBB_MALLOC_LIBRARIES})
   endif()
 
-  if(EXISTS ${LIBDIR}/sndfile/lib/sndfile.dll)
-    set(SNDFILE_DLL ${LIBDIR}/sndfile/lib/sndfile.dll)
-  else()
-    set(SNDFILE_DLL ${LIBDIR}/sndfile/lib/libsndfile-1.dll)
-  endif()
-
-  windows_install_shared_manifest(
-    FILES ${SNDFILE_DLL}
-    ALL
-  )
-  unset(SNDFILE_DLL)
-
   windows_install_shared_manifest(
     FILES ${LIBDIR}/shaderc/bin/shaderc_shared.dll
     ALL
@@ -1723,25 +1628,9 @@ elseif(WIN32)
   )
 
   windows_install_shared_manifest(
-    FILES
-      ${LIBDIR}/openal/lib/OpenAL32.dll
-    ALL
-  )
-
-  windows_install_shared_manifest(
     FILES ${LIBDIR}/sdl/bin/SDL3.dll
     ALL
   )
-
-  if(WITH_SYSTEM_AUDASPACE)
-    install(
-      FILES
-        ${LIBDIR}/audaspace/lib/audaspace.dll
-        ${LIBDIR}/audaspace/lib/audaspace-c.dll
-        ${LIBDIR}/audaspace/lib/audaspace-py.dll
-      DESTINATION "."
-    )
-  endif()
 
 
   if(NOT WITH_PYTHON_MODULE)
@@ -1766,13 +1655,6 @@ elseif(WIN32)
       DESTINATION ${TARGETDIR_EXE}
       RENAME blender_system_info.cmd
     )
-    if(WITH_CYCLES)
-      install(
-        FILES
-          ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_debug_cycles.cmd
-        DESTINATION ${TARGETDIR_EXE}
-      )
-    endif()
     install(
       FILES
         ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_debug_gpu.cmd
@@ -2154,20 +2036,6 @@ if((DEFINED LIBDIR) AND TARGETDIR_LIB AND WITH_MATERIALX)
     DIRECTORY ${LIBDIR}/materialx/libraries
     DESTINATION "${TARGETDIR_LIB}/materialx"
   )
-endif()
-
-if(WIN32)
-  if(WITH_CYCLES_DEVICE_HIPRT)
-    # Cycles does `find_package(HIPRT)` for its compilation purposes, and the variables defined by
-    # the FindHIPRT.cmake are only available in Cycles. In order to access HIPRT_VERSION need to
-    # find the package from here as well.
-    # For the strict compilation rely on Cycles to take care of set_and_warn_library_found().
-    find_package(HIPRT)
-    windows_install_shared_manifest(
-      FILES ${LIBDIR}/hiprt/bin/hiprt${HIPRT_VERSION}64.dll
-      ALL
-    )
-  endif()
 endif()
 
 # `vcpkg` substitutes our libraries with theirs, which will cause issues when you run

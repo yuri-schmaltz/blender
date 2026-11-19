@@ -1901,36 +1901,6 @@ bool rna_Object_modifiers_override_apply(Main *bmain,
   return true;
 }
 
-/* shader fx */
-static ShaderFxData *rna_Object_shaderfx_new(
-    Object *object, bContext *C, ReportList *reports, const char *name, int type)
-{
-  return ed::object::shaderfx_add(
-      reports, CTX_data_main(C), CTX_data_scene(C), object, name, type);
-}
-
-static void rna_Object_shaderfx_remove(Object *object,
-                                       bContext *C,
-                                       ReportList *reports,
-                                       PointerRNA *gmd_ptr)
-{
-  ShaderFxData *gmd = static_cast<ShaderFxData *>(gmd_ptr->data);
-  if (ed::object::shaderfx_remove(reports, CTX_data_main(C), object, gmd) == false) {
-    /* error is already set */
-    return;
-  }
-
-  gmd_ptr->invalidate();
-
-  WM_main_add_notifier(NC_OBJECT | ND_MODIFIER | NA_REMOVED, object);
-}
-
-static void rna_Object_shaderfx_clear(Object *object, bContext *C)
-{
-  ed::object::shaderfx_clear(CTX_data_main(C), object);
-  WM_main_add_notifier(NC_OBJECT | ND_MODIFIER | NA_REMOVED, object);
-}
-
 static void rna_Object_boundbox_get(PointerRNA *ptr, float *values)
 {
   Object *ob = reinterpret_cast<Object *>(ptr->owner_id);
@@ -2635,48 +2605,6 @@ static void rna_def_object_modifiers(BlenderRNA *brna, PropertyRNA *cprop)
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_ui_text(prop, "Active Modifier", "The active modifier in the list");
   RNA_def_property_update(prop, NC_OBJECT | ND_MODIFIER, nullptr);
-}
-
-/* object.shaderfxs */
-static void rna_def_object_shaderfxs(BlenderRNA *brna, PropertyRNA *cprop)
-{
-  StructRNA *srna;
-
-  FunctionRNA *func;
-  PropertyRNA *parm;
-
-  RNA_def_property_srna(cprop, "ObjectShaderFx");
-  srna = RNA_def_struct(brna, "ObjectShaderFx", nullptr);
-  RNA_def_struct_sdna(srna, "Object");
-  RNA_def_struct_ui_text(srna, "Object Shader Effects", "Collection of object effects");
-
-  /* add shader_fx */
-  func = RNA_def_function(srna, "new", "rna_Object_shaderfx_new");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT | FUNC_USE_REPORTS);
-  RNA_def_function_ui_description(func, "Add a new shader fx");
-  parm = RNA_def_string(func, "name", "Name", 0, "", "New name for the effect");
-  RNA_def_parameter_flags(parm, PropertyFlag(0), PARM_REQUIRED);
-  /* shader to add */
-  parm = RNA_def_enum(
-      func, "type", rna_enum_object_shaderfx_type_items, 1, "", "Effect type to add");
-  RNA_def_parameter_flags(parm, PropertyFlag(0), PARM_REQUIRED);
-  /* return type */
-  parm = RNA_def_pointer(func, "shader_fx", "ShaderFx", "", "Newly created effect");
-  RNA_def_function_return(func, parm);
-
-  /* remove shader_fx */
-  func = RNA_def_function(srna, "remove", "rna_Object_shaderfx_remove");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT | FUNC_USE_REPORTS);
-  RNA_def_function_ui_description(func, "Remove an existing effect from the object");
-  /* shader to remove */
-  parm = RNA_def_pointer(func, "shader_fx", "ShaderFx", "", "Effect to remove");
-  RNA_def_parameter_flags(parm, PROP_NEVER_NULL, PARM_REQUIRED | PARM_RNAPTR);
-  RNA_def_parameter_clear_flags(parm, PROP_THICK_WRAP, ParameterFlag(0));
-
-  /* clear all shader fx */
-  func = RNA_def_function(srna, "clear", "rna_Object_shaderfx_clear");
-  RNA_def_function_flag(func, FUNC_USE_CONTEXT);
-  RNA_def_function_ui_description(func, "Remove all effects from the object");
 }
 
 /* object.particle_systems */
@@ -3423,15 +3351,6 @@ static void rna_def_object(BlenderRNA *brna)
   RNA_def_property_override_funcs(prop, nullptr, nullptr, "rna_Object_modifiers_override_apply");
   RNA_def_property_override_flag(prop, PROPOVERRIDE_LIBRARY_INSERTION);
   rna_def_object_modifiers(brna, prop);
-
-  /* Shader FX. */
-  prop = RNA_def_property(srna, "shader_effects", PROP_COLLECTION, PROP_NONE);
-  RNA_def_property_collection_sdna(prop, nullptr, "shader_fx", nullptr);
-  RNA_def_property_struct_type(prop, "ShaderFx");
-  RNA_def_property_ui_text(prop, "Shader Effects", "Effects affecting display of object");
-  RNA_define_lib_overridable(false);
-  rna_def_object_shaderfxs(brna, prop);
-  RNA_define_lib_overridable(true);
 
   /* constraints */
   prop = RNA_def_property(srna, "constraints", PROP_COLLECTION, PROP_NONE);

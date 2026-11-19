@@ -35,7 +35,6 @@
 #include "RNA_types.hh"
 
 #include "bpy.hh"
-#include "bpy_audaspace.hh"
 #include "bpy_capi_utils.hh"
 #include "bpy_intern_string.hh"
 #include "bpy_path.hh"
@@ -55,9 +54,6 @@
 #include "BKE_main.hh"
 #include "BKE_text.h"
 
-#ifdef WITH_CYCLES
-#  include "CCL_api.h"
-#endif
 
 #include "BPY_extern.hh"
 #include "BPY_extern_python.hh"
@@ -310,18 +306,7 @@ void BPY_context_set(bContext *C)
 extern "C" PyObject *Manta_initPython();
 #endif
 
-#ifdef WITH_CYCLES
-/* Defined in `cycles` module. */
-static PyObject *CCL_initPython()
-{
-  return (PyObject *)CCL_python_module_init();
-}
-#endif
 
-#ifdef WITH_HYDRA
-/* Defined in `render_hydra` module. */
-PyObject *BPyInit_hydra();
-#endif
 
 static _inittab bpy_internal_modules[] = {
     {"mathutils", PyInit_mathutils},
@@ -343,17 +328,8 @@ static _inittab bpy_internal_modules[] = {
 #ifdef WITH_FLUID
     {"manta", Manta_initPython},
 #endif
-#ifdef WITH_AUDASPACE_PY
-    {"aud", BPyInit_audaspace},
-#endif
-#ifdef WITH_CYCLES
-    {"_cycles", CCL_initPython},
-#endif
     {"gpu", BPyInit_gpu},
     {"idprop", BPyInit_idprop},
-#ifdef WITH_HYDRA
-    {"_bpy_hydra", BPyInit_hydra},
-#endif
     {nullptr, nullptr},
 };
 

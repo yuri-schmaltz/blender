@@ -87,7 +87,6 @@ set(DEFSRC
   rna_screen.cc
   rna_sculpt_paint.cc
   rna_sequencer.cc
-  rna_shader_fx.cc
   rna_sound.cc
   rna_space.cc
   rna_speaker.cc
@@ -477,13 +476,11 @@ set(LIB
   bf_editor_render
   bf_editor_scene
   bf_editor_sculpt_paint
-  bf_editor_sound
   bf_editor_transform
   bf_editor_undo
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::dependencies::optional::openvdb
   PRIVATE bf::dependencies::optional::tbb
-  PRIVATE bf::dependencies::optional::audaspace
   PUBLIC bf::dependencies::fmt
   PRIVATE bf::nodes::shader
 )

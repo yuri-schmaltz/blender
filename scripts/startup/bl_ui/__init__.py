@@ -14,7 +14,6 @@ _modules = [
     "anim",
     "asset_shelf",
     "node_add_menu",
-    "node_add_menu_compositor",
     "node_add_menu_geometry",
     "node_add_menu_shader",
     "node_add_menu_texture",
@@ -35,7 +34,6 @@ _modules = [
     "properties_data_pointcloud",
     "properties_data_shaderfx",
     "properties_data_lightprobe",
-    "properties_data_speaker",
     "properties_data_volume",
     "properties_mask_common",
     "properties_material",
@@ -57,12 +55,9 @@ _modules = [
     "properties_output",
     "properties_view_layer",
     "properties_scene",
-    "properties_compositor",
     "properties_texture",
     "properties_world",
     "properties_collection",
-    "properties_strip",
-    "properties_strip_modifier",
     "generic_ui_list",
 
     # Generic Space Modules
@@ -71,7 +66,6 @@ _modules = [
     "space_toolsystem_common",
     "space_toolsystem_toolbar",
 
-    "space_clip",
     "space_console",
     "space_dopesheet",
     "space_filebrowser",
@@ -83,7 +77,6 @@ _modules = [
     "space_outliner",
     "space_project",
     "space_properties",
-    "space_sequencer",
     "space_spreadsheet",
     "space_statusbar",
     "space_text",
@@ -99,9 +92,6 @@ _modules = [
 ]
 
 import bpy
-
-if bpy.app.build_options.freestyle:
-    _modules.append("properties_freestyle")
 
 __import__(name=__name__, fromlist=_modules)
 _namespace = globals()

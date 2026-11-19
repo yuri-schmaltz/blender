@@ -123,8 +123,8 @@ set(LIB
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::nodes
   PRIVATE bf::render
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
+  PRIVATE bf::sequencer
 )
 
 blender_add_lib(bf_editor_transform "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")

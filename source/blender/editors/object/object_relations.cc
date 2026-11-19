@@ -1490,7 +1490,6 @@ enum {
   MAKE_LINKS_MODIFIERS = 6,
   MAKE_LINKS_CONSTRAINTS = 7,
   MAKE_LINKS_FONTS = 8,
-  MAKE_LINKS_SHADERFX = 9,
   MAKE_LINKS_LIGHT_LINKING = 10,
   MAKE_LINKS_SHADOW_LINKING = 11,
 };
@@ -1560,11 +1559,6 @@ static bool allow_make_links_data(const int type, Object *ob_src, Object *ob_dst
     case MAKE_LINKS_FONTS:
       if ((ob_src->data != ob_dst->data) && (ob_src->type == OB_FONT) && (ob_dst->type == OB_FONT))
       {
-        return true;
-      }
-      break;
-    case MAKE_LINKS_SHADERFX:
-      if ((ob_src->type == OB_GREASE_PENCIL) && (ob_dst->type == OB_GREASE_PENCIL)) {
         return true;
       }
       break;
@@ -1711,11 +1705,6 @@ static wmOperatorStatus make_links_data_exec(bContext *C, wmOperator *op)
                               ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY | ID_RECALC_ANIMATION);
             break;
           }
-          case MAKE_LINKS_SHADERFX:
-            shaderfx_link(ob_dst, ob_src);
-            DEG_id_tag_update(&ob_dst->id,
-                              ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY | ID_RECALC_ANIMATION);
-            break;
           case MAKE_LINKS_LIGHT_LINKING:
             BKE_light_linking_copy_receiver_collection(bmain, *ob_dst, *ob_src);
             break;
@@ -1794,11 +1783,6 @@ void OBJECT_OT_make_links_data(wmOperatorType *ot)
       RNA_ENUM_ITEM_SEPR,
       {MAKE_LINKS_MODIFIERS, "MODIFIERS", 0, "Copy Modifiers", "Replace Modifiers"},
       {MAKE_LINKS_CONSTRAINTS, "CONSTRAINTS", 0, "Copy Constraints", "Replace Constraints"},
-      {MAKE_LINKS_SHADERFX,
-       "EFFECTS",
-       0,
-       "Copy Grease Pencil Effects",
-       "Replace Grease Pencil Effects"},
       {MAKE_LINKS_LIGHT_LINKING,
        "LIGHT_LINKING",
        0,

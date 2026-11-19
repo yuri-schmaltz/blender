@@ -22,13 +22,13 @@
 #include "BLI_math_vector_c.hh"
 #include "BLI_math_vector_types.hh"
 #include "BLI_mempool.hh"
+#include "BLI_set.hh"
 #include "BLI_string.hh"
 #include "BLI_string_utf8.hh"
 #include "BLI_utildefines.hh"
 
 #include "DNA_camera_types.h"
 #include "DNA_curveprofile_types.h"
-#include "DNA_gpencil_legacy_types.h"
 #include "DNA_light_types.h"
 #include "DNA_mask_types.h"
 #include "DNA_material_types.h"
@@ -52,6 +52,7 @@
 #include "BKE_idprop.hh"
 #include "BKE_layer.hh"
 #include "BKE_lib_id.hh"
+#include "BKE_lib_remap.hh"
 #include "BKE_main.hh"
 #include "BKE_main_namemap.hh"
 #include "BKE_material.hh"
@@ -77,13 +78,7 @@ namespace blender {
 
 static bool blo_is_builtin_template(const char *app_template)
 {
-  /* For all builtin templates shipped with Blender. */
-  return (!app_template || STR_ELEM(app_template,
-                                    N_("2D_Animation"),
-                                    N_("Storyboarding"),
-                                    N_("Sculpting"),
-                                    N_("VFX"),
-                                    N_("Video_Editing")));
+  return !app_template || STREQ(app_template, N_("Sculpting"));
 }
 
 static void blo_update_defaults_screen(bScreen *screen,
@@ -307,24 +302,6 @@ static void blo_update_defaults_screen(bScreen *screen,
       }
     }
   }
-
-  /* 2D animation template. */
-  if (app_template && STREQ(app_template, "2D_Animation")) {
-    for (ScrArea &area : screen->areabase) {
-      if (area.spacetype == SPACE_ACTION) {
-        SpaceAction *saction = area.spacedata.first_as<SpaceAction>();
-        /* Enable Sliders. */
-        saction->flag |= SACTION_SLIDERS;
-      }
-      else if (area.spacetype == SPACE_VIEW3D) {
-        View3D *v3d = area.spacedata.first_as<View3D>();
-        /* Set Material Color by default. */
-        v3d->shading.color_type = V3D_SHADING_MATERIAL_COLOR;
-        /* Enable Annotations. */
-        v3d->flag2 |= V3D_SHOW_ANNOTATION;
-      }
-    }
-  }
 }
 
 void BLO_update_defaults_workspace(WorkSpace *workspace, const char *app_template)
@@ -339,11 +316,6 @@ void BLO_update_defaults_workspace(WorkSpace *workspace, const char *app_templat
     /* Clear all tools to use default options instead, ignore the tool saved in the file. */
     while (!workspace->tools.is_empty()) {
       BKE_workspace_tool_remove(workspace, workspace->tools.first());
-    }
-
-    /* For 2D animation template. */
-    if (STREQ(workspace->id.name + 2, "Drawing")) {
-      workspace->object_mode = OB_MODE_PAINT_GREASE_PENCIL;
     }
 
     /* For Sculpting template. */
@@ -362,57 +334,6 @@ void BLO_update_defaults_workspace(WorkSpace *workspace, const char *app_templat
         }
       }
     }
-  }
-  /* For Video Editing template. */
-  if (STRPREFIX(workspace->id.name + 2, "Video Editing")) {
-    for (WorkSpaceLayout &layout : workspace->layouts) {
-      bScreen *screen = layout.screen;
-      if (screen) {
-        for (ScrArea &area : screen->areabase) {
-          for (SpaceLink &sl : area.spacedata) {
-            if (sl.spacetype == SPACE_SEQ) {
-              if ((reinterpret_cast<SpaceSeq *>(&sl))->view == SEQ_VIEW_PREVIEW) {
-                continue;
-              }
-              ListBaseT<ARegion> *regionbase = (&sl == area.spacedata.first_) ? &area.regionbase :
-                                                                                &sl.regionbase;
-              ARegion *sidebar = BKE_region_find_in_listbase_by_type(regionbase, RGN_TYPE_UI);
-              sidebar->flag |= RGN_FLAG_HIDDEN;
-            }
-            else if (sl.spacetype == SPACE_PROPERTIES) {
-              reinterpret_cast<SpaceProperties *>(&sl)->visible_tabs &= ~(1
-                                                                          << BCONTEXT_COMPOSITOR);
-            }
-            else if (sl.spacetype == SPACE_FILE) {
-              SpaceFile *sfile = reinterpret_cast<SpaceFile *>(&sl);
-              if (sfile->params) {
-                sfile->params->filter |= FILE_TYPE_TEXT;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /* For General template. */
-  if (STRPREFIX(workspace->id.name + 2, "Layout")) {
-    for (WorkSpaceLayout &layout : workspace->layouts) {
-      bScreen *screen = layout.screen;
-      if (screen) {
-        for (ScrArea &area : screen->areabase) {
-          if (area.spacetype == SPACE_VIEW3D) {
-            View3D *v3d = area.spacedata.first_as<View3D>();
-            v3d->shading.use_compositor = V3D_SHADING_USE_COMPOSITOR_ALWAYS;
-          }
-        }
-      }
-    }
-  }
-
-  /* For Storyboarding template. */
-  if (STRPREFIX(workspace->id.name + 2, "Storyboarding")) {
-    workspace->flags |= WORKSPACE_USE_STRIP_SCENE_RANGE_FOR_PLAYBACK;
   }
 }
 
@@ -610,8 +531,53 @@ static void blo_update_defaults_scene(Main *bmain, Scene *scene)
   }
 }
 
+bool BLO_startup_workspace_is_available(const char *workspace_name)
+{
+  return !STR_ELEM(workspace_name, "Animation", "Compositing", "Rendering", "Shading", "Scripting");
+}
+
+static void blo_prune_general_startup(Main *bmain)
+{
+  for (WorkSpace &workspace : bmain->workspaces.items_mutable()) {
+    if (BLO_startup_workspace_is_available(workspace.id.name + 2)) {
+      continue;
+    }
+
+    /* The file reader still holds a pointer to the active screen. */
+    bool is_open = false;
+    for (wmWindowManager &wm : bmain->wm) {
+      for (wmWindow &win : wm.windows) {
+        is_open |= BKE_workspace_active_get(win.workspace_hook) == &workspace;
+      }
+    }
+    if (!is_open) {
+      BKE_workspace_remove(bmain, &workspace);
+    }
+  }
+
+  Set<ID *> ids_to_delete;
+  for (Object &object : bmain->objects) {
+    if (ELEM(object.type, OB_CAMERA, OB_LAMP)) {
+      ids_to_delete.add(&object.id);
+    }
+  }
+  for (Camera &camera : bmain->cameras) {
+    ids_to_delete.add(&camera.id);
+  }
+  for (Light &light : bmain->lights) {
+    ids_to_delete.add(&light.id);
+  }
+  if (!ids_to_delete.is_empty()) {
+    BKE_id_multi_delete(bmain, ids_to_delete, {.extra_remapping_flags = ID_REMAP_FORCE_UI_POINTERS});
+  }
+}
+
 void BLO_update_defaults_startup_blend(Main *bmain, const char *app_template)
 {
+  if (!app_template) {
+    blo_prune_general_startup(bmain);
+  }
+
   /* For all app templates. */
   for (WorkSpace &workspace : bmain->workspaces) {
     BLO_update_defaults_workspace(&workspace, app_template);
@@ -619,54 +585,6 @@ void BLO_update_defaults_startup_blend(Main *bmain, const char *app_template)
 
   /* Grease pencil materials and paint modes setup. */
   {
-    /* Rename and fix materials and enable default object lights on. */
-    if (app_template && STREQ(app_template, "2D_Animation")) {
-      Material *ma = nullptr;
-      do_versions_rename_id(bmain, ID_MA, "Black", "Solid Stroke");
-      do_versions_rename_id(bmain, ID_MA, "Red", "Squares Stroke");
-      do_versions_rename_id(bmain, ID_MA, "Grey", "Solid Fill");
-      do_versions_rename_id(bmain, ID_MA, "Black Dots", "Dots Stroke");
-
-      /* Dots Stroke. */
-      ma = static_cast<Material *>(
-          BLI_findstring(&bmain->materials, "Dots Stroke", offsetof(ID, name) + 2));
-      if (ma == nullptr) {
-        ma = BKE_gpencil_material_add(bmain, "Dots Stroke");
-      }
-      ma->gp_style->mode = GP_MATERIAL_MODE_DOT;
-
-      /* Squares Stroke. */
-      ma = static_cast<Material *>(
-          BLI_findstring(&bmain->materials, "Squares Stroke", offsetof(ID, name) + 2));
-      if (ma == nullptr) {
-        ma = BKE_gpencil_material_add(bmain, "Squares Stroke");
-      }
-      ma->gp_style->mode = GP_MATERIAL_MODE_SQUARE;
-
-      /* Change Solid Stroke settings. */
-      ma = static_cast<Material *>(
-          BLI_findstring(&bmain->materials, "Solid Stroke", offsetof(ID, name) + 2));
-      if (ma != nullptr) {
-        ma->gp_style->texture_offset[0] = -0.5f;
-        ma->gp_style->mix_factor = 0.5f;
-      }
-
-      /* Change Solid Fill settings. */
-      ma = static_cast<Material *>(
-          BLI_findstring(&bmain->materials, "Solid Fill", offsetof(ID, name) + 2));
-      if (ma != nullptr) {
-        ma->gp_style->flag &= ~GP_MATERIAL_STROKE_SHOW;
-        ma->gp_style->texture_offset[0] = -0.5f;
-        ma->gp_style->mix_factor = 0.5f;
-      }
-
-      Object *ob = static_cast<Object *>(
-          BLI_findstring(&bmain->objects, "Stroke", offsetof(ID, name) + 2));
-      if (ob && ob->type == OB_GPENCIL_LEGACY) {
-        ob->dtx |= OB_USE_GPENCIL_LIGHTS;
-      }
-    }
-
     /* Add library weak references to avoid duplicating materials from essentials. */
     const std::optional<std::string> assets_path = BKE_appdir_folder_id(BLENDER_SYSTEM_DATAFILES,
                                                                         "assets/brushes");
@@ -695,22 +613,6 @@ void BLO_update_defaults_startup_blend(Main *bmain, const char *app_template)
       /* Ensure Palette by default. */
       if (ts->gp_paint) {
         BKE_grease_pencil_palette_ensure(bmain, &scene);
-      }
-    }
-
-    if (app_template && (STR_ELEM(app_template, "2D_Animation", "Storyboarding"))) {
-      /* Since !153036, the base colors for stroke & fill were getting versioned to have 0% opacity
-       * if the stroke/fill was disabled. This meant that in a new file using the following App
-       * Templates, the "Solid Stroke" material wouldn't show anything when trying to draw a fill.
-       * This sets the fill to a mid grey to make sure users don't run into this issue. */
-
-      /* Change Solid Stroke settings. */
-      Material *ma = static_cast<Material *>(
-          BLI_findstring(&bmain->materials, "Solid Stroke", offsetof(ID, name) + 2));
-      if (ma != nullptr) {
-        /* Black Stroke and Grey Fill. */
-        copy_v4_fl4(ma->gp_style->stroke_rgba, 0.0f, 0.0f, 0.0f, 1.0f);
-        copy_v4_fl4(ma->gp_style->fill_rgba, 0.5f, 0.5f, 0.5f, 1.0f);
       }
     }
   }
@@ -751,49 +653,16 @@ void BLO_update_defaults_startup_blend(Main *bmain, const char *app_template)
   /* Scenes */
   for (Scene &scene : bmain->scenes) {
     blo_update_defaults_scene(bmain, &scene);
+    STRNCPY_UTF8(scene.view_settings.view_transform, "AgX");
 
-    if (app_template && STR_ELEM(app_template, "Video_Editing", "2D_Animation", "Storyboarding")) {
-      /* Filmic is too slow, use standard until it is optimized. */
-      STRNCPY_UTF8(scene.view_settings.view_transform, "Standard");
-      STRNCPY_UTF8(scene.view_settings.look, "None");
-    }
-    else {
-      /* Default to AgX view transform. */
-      STRNCPY_UTF8(scene.view_settings.view_transform, "AgX");
-    }
-
-    if (app_template && STREQ(app_template, "Video_Editing")) {
-      /* Pass: no extra tweaks needed. Keep the view settings configured above, and rely on the
-       * default state of enabled AV sync. */
-    }
-    else {
-      /* AV Sync break physics sim caching, disable until that is fixed. */
-      scene.audio.flag &= ~AUDIO_SYNC;
-      scene.flag &= ~SCE_FRAME_DROP;
-    }
-
-    /* Change default selection mode for Grease Pencil. */
-    if (app_template && STREQ(app_template, "2D_Animation")) {
-      ToolSettings *ts = scene.toolsettings;
-      ts->gpencil_selectmode_edit = GP_SELECTMODE_STROKE;
-    }
+    /* AV Sync breaks physics simulation caching. */
+    scene.audio.flag &= ~AUDIO_SYNC;
+    scene.flag &= ~SCE_FRAME_DROP;
   }
 
   /* Objects */
   do_versions_rename_id(bmain, ID_OB, "Lamp", "Light");
   do_versions_rename_id(bmain, ID_LA, "Lamp", "Light");
-
-  if (app_template && STREQ(app_template, "2D_Animation")) {
-    for (Object &object : bmain->objects) {
-      if (object.type == OB_GPENCIL_LEGACY) {
-        /* Set grease pencil object in drawing mode */
-        bGPdata *gpd = id_cast<bGPdata *>(object.data);
-        object.mode = OB_MODE_PAINT_GREASE_PENCIL;
-        gpd->flag |= GP_DATA_STROKE_PAINTMODE;
-        break;
-      }
-    }
-  }
 
   for (Object &object : bmain->objects) {
     const Object dob;

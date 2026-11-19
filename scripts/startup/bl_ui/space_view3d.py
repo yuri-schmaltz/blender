@@ -1577,30 +1577,6 @@ class VIEW3D_MT_view(Menu):
 
         layout.separator()
 
-        layout.operator("screen.animation_play", text="Play Animation")
-
-        layout.separator()
-
-        layout.operator(
-            "render.opengl",
-            text="Render Viewport Preview",
-            icon='RENDER_STILL',
-        )
-        layout.operator(
-            "render.opengl",
-            text="Render Playblast",
-            icon='RENDER_ANIMATION',
-        ).animation = True
-        props = layout.operator(
-            "render.opengl",
-            text="Render Playblast on Keyframes",
-            icon='RENDER_ANIMATION',
-        )
-        props.animation = True
-        props.render_keyed_only = True
-
-        layout.separator()
-
         layout.menu("INFO_MT_area")
 
 
@@ -2723,42 +2699,6 @@ class VIEW3D_MT_armature_add(Menu):
         layout.operator("object.armature_add", text="Single Bone", icon='BONE_DATA')
 
 
-class VIEW3D_MT_light_add(Menu):
-    bl_idname = "VIEW3D_MT_light_add"
-    bl_context = i18n_contexts.id_light
-    bl_label = "Light"
-    bl_options = {'SEARCH_ON_KEY_PRESS'}
-
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator_enum("object.light_add", "type")
-
-
-class VIEW3D_MT_lightprobe_add(Menu):
-    bl_idname = "VIEW3D_MT_lightprobe_add"
-    bl_label = "Light Probe"
-    bl_options = {'SEARCH_ON_KEY_PRESS'}
-
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator_enum("object.lightprobe_add", "type")
-
-
-class VIEW3D_MT_camera_add(Menu):
-    bl_idname = "VIEW3D_MT_camera_add"
-    bl_label = "Camera"
-    bl_options = {'SEARCH_ON_KEY_PRESS'}
-
-    def draw(self, _context):
-        layout = self.layout
-        layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("object.camera_add", text="Camera", icon='OUTLINER_OB_CAMERA')
-
-
 class VIEW3D_MT_volume_add(Menu):
     bl_idname = "VIEW3D_MT_volume_add"
     bl_label = "Volume"
@@ -2873,22 +2813,6 @@ class VIEW3D_MT_add(Menu):
 
         layout.menu("VIEW3D_MT_empty_add", icon='OUTLINER_OB_EMPTY')
         layout.menu("VIEW3D_MT_image_add", text="Image", icon='OUTLINER_OB_IMAGE')
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_light_add", icon='OUTLINER_OB_LIGHT')
-        layout.menu("VIEW3D_MT_lightprobe_add", icon='OUTLINER_OB_LIGHTPROBE')
-
-        layout.separator()
-
-        if VIEW3D_MT_camera_add.is_extended():
-            layout.menu("VIEW3D_MT_camera_add", icon='OUTLINER_OB_CAMERA')
-        else:
-            VIEW3D_MT_camera_add.draw(self, context)
-
-        layout.separator()
-
-        layout.operator("object.speaker_add", text="Speaker", icon='OUTLINER_OB_SPEAKER')
 
         layout.separator()
 
@@ -4719,8 +4643,6 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
 
         layout = self.layout
 
-        with_freestyle = bpy.app.build_options.freestyle
-
         layout.operator_context = 'INVOKE_REGION_WIN'
 
         # If nothing is selected
@@ -4842,12 +4764,6 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.operator("mesh.mark_sharp", icon='EDGE_SHARP').clear = False
             col.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
             col.operator("mesh.set_sharpness_by_angle")
-
-            if with_freestyle:
-                col.separator()
-
-                col.operator("mesh.mark_freestyle_edge").clear = False
-                col.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge").clear = True
 
             col.separator()
 
@@ -5010,8 +4926,6 @@ class VIEW3D_MT_edit_mesh_edges(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        with_freestyle = bpy.app.build_options.freestyle
-
         layout.operator_context = 'INVOKE_REGION_WIN'
 
         layout.operator("mesh.extrude_edges_move", text="Extrude Edges")
@@ -5059,12 +4973,6 @@ class VIEW3D_MT_edit_mesh_edges(Menu):
 
         layout.operator("mesh.set_sharpness_by_angle")
 
-        if with_freestyle:
-            layout.separator()
-
-            layout.operator("mesh.mark_freestyle_edge").clear = False
-            layout.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge").clear = True
-
         layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
 
 
@@ -5073,8 +4981,6 @@ class VIEW3D_MT_edit_mesh_faces_data(Menu):
 
     def draw(self, _context):
         layout = self.layout
-
-        with_freestyle = bpy.app.build_options.freestyle
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
@@ -5090,10 +4996,6 @@ class VIEW3D_MT_edit_mesh_faces_data(Menu):
 
         layout.operator("mesh.flip_quad_tessellation")
 
-        if with_freestyle:
-            layout.separator()
-            layout.operator("mesh.mark_freestyle_face").clear = False
-            layout.operator("mesh.mark_freestyle_face", text="Clear Freestyle Face").clear = True
         layout.template_node_operator_asset_menu_items(catalog_path="Face/Face Data")
 
 
@@ -7101,23 +7003,6 @@ class VIEW3D_PT_shading_render_pass(Panel):
         layout.prop(shading, "render_pass", text="")
 
 
-class VIEW3D_PT_shading_compositor(Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'HEADER'
-    bl_label = "Compositor"
-    bl_parent_id = "VIEW3D_PT_shading"
-    bl_order = 10
-
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.shading.type in {'MATERIAL', 'RENDERED'}
-
-    def draw(self, context):
-        shading = context.space_data.shading
-        row = self.layout.row()
-        row.prop(shading, "use_compositor", expand=True)
-
-
 class VIEW3D_PT_gizmo_display(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'HEADER'
@@ -7616,31 +7501,6 @@ class VIEW3D_PT_overlay_edit_mesh_normals(Panel):
             sub.prop(overlay, "normals_length", text="Size")
 
         row.prop(overlay, "use_normals_constant_screen_size", text="", icon='FIXED_SIZE')
-
-
-class VIEW3D_PT_overlay_edit_mesh_freestyle(Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'HEADER'
-    bl_parent_id = "VIEW3D_PT_overlay_edit_mesh"
-    bl_label = "Freestyle"
-
-    @classmethod
-    def poll(cls, context):
-        return context.mode == 'EDIT_MESH' and bpy.app.build_options.freestyle
-
-    def draw(self, context):
-        layout = self.layout
-
-        view = context.space_data
-        overlay = view.overlay
-        display_all = overlay.show_overlays
-
-        col = layout.column()
-        col.active = display_all
-
-        row = col.row()
-        row.prop(overlay, "show_freestyle_edge_marks", text="Edge Marks")
-        row.prop(overlay, "show_freestyle_face_marks", text="Face Marks")
 
 
 class VIEW3D_PT_overlay_edit_curve(Panel):
@@ -9442,9 +9302,6 @@ classes = (
     TOPBAR_MT_edit_curve_add,
     TOPBAR_MT_edit_armature_add,
     VIEW3D_MT_armature_add,
-    VIEW3D_MT_light_add,
-    VIEW3D_MT_lightprobe_add,
-    VIEW3D_MT_camera_add,
     VIEW3D_MT_volume_add,
     VIEW3D_MT_grease_pencil_add,
     VIEW3D_MT_lattice_add,
@@ -9603,7 +9460,6 @@ classes = (
     VIEW3D_PT_shading_options_ssao,
     VIEW3D_PT_shading_cavity,
     VIEW3D_PT_shading_render_pass,
-    VIEW3D_PT_shading_compositor,
     VIEW3D_PT_gizmo_display,
     VIEW3D_PT_overlay,
     VIEW3D_PT_overlay_guides,
@@ -9616,7 +9472,6 @@ classes = (
     VIEW3D_PT_overlay_edit_mesh_shading,
     VIEW3D_PT_overlay_edit_mesh_measurement,
     VIEW3D_PT_overlay_edit_mesh_normals,
-    VIEW3D_PT_overlay_edit_mesh_freestyle,
     VIEW3D_PT_overlay_edit_curve,
     VIEW3D_PT_overlay_edit_curves,
     VIEW3D_PT_overlay_texture_paint,

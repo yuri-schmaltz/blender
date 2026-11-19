@@ -154,9 +154,6 @@ set_property(GLOBAL PROPERTY ICON_GEOM_NAMES
   ops.sculpt.polyline_hide
   ops.sculpt.polyline_mask
   ops.sculpt.polyline_trim
-  ops.sequencer.blade
-  ops.sequencer.retime
-  ops.sequencer.slip
   ops.transform.bone_envelope
   ops.transform.bone_size
   ops.transform.edge_slide

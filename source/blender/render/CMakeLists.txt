@@ -6,9 +6,6 @@
 set(INC
   PUBLIC .
   intern
-  ../compositor
-  ../compositor/cached_resources
-  ../compositor/derived_resources
   ../functions
   ../draw/intern
   ../gpu/intern
@@ -23,7 +20,6 @@ set(INC_SYS
 
 set(SRC
   intern/bake.cc
-  intern/compositor.cc
   intern/engine.cc
   intern/initrender.cc
   intern/multires_bake.cc
@@ -37,7 +33,6 @@ set(SRC
   intern/zbuf.cc
 
   RE_bake.h
-  RE_compositor.hh
   RE_engine.h
   RE_multires_bake.h
   RE_pipeline.h
@@ -63,13 +58,12 @@ set(LIB
   PRIVATE bf::imbuf
   PRIVATE bf::imbuf::movie
   PRIVATE bf::intern::guardedalloc
-  bf_compositor
   bf_imbuf_openexr
   PRIVATE bf::intern::atomic
   PRIVATE bf::intern::clog
   PRIVATE bf::nodes
-  PRIVATE bf::sequencer
   PRIVATE bf::windowmanager
+  PRIVATE bf::sequencer
 )
 
 if(WITH_PYTHON)
@@ -77,20 +71,6 @@ if(WITH_PYTHON)
   list(APPEND INC
     ../python
   )
-endif()
-
-if(WITH_FREESTYLE)
-  list(APPEND INC
-    ../freestyle
-  )
-  list(APPEND LIB
-    bf_freestyle
-  )
-  add_definitions(-DWITH_FREESTYLE)
-endif()
-
-if(WITH_HYDRA)
-  add_subdirectory(hydra)
 endif()
 
 blender_add_lib_nolist(bf_render "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")

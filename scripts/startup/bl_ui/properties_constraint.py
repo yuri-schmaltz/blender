@@ -793,8 +793,6 @@ class ConstraintButtonsPanel:
         row.active = not con.use_3d_position
         row.prop(con, "depth_object")
 
-        layout.operator("clip.constraint_to_fcurve")
-
         self.draw_influence(layout, con)
 
     def draw_camera_solver(self, context):
@@ -807,8 +805,6 @@ class ConstraintButtonsPanel:
 
         if not con.use_active_clip:
             layout.prop(con, "clip")
-
-        layout.operator("clip.constraint_to_fcurve")
 
         self.draw_influence(layout, con)
 
@@ -837,8 +833,6 @@ class ConstraintButtonsPanel:
         row = layout.row()
         row.operator("constraint.objectsolver_set_inverse")
         row.operator("constraint.objectsolver_clear_inverse")
-
-        layout.operator("clip.constraint_to_fcurve")
 
         self.draw_influence(layout, con)
 

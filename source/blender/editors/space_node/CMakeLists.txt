@@ -5,11 +5,6 @@
 set(INC
   ../include
   ../io
-  ../../compositor
-  ../../compositor/algorithms
-  ../../compositor/cached_resources
-  ../../compositor/derived_resources
-  ../../compositor/utilities
   ../../makesrna
   ../../nodes/geometry/include
   ../../sequencer
@@ -29,7 +24,6 @@ set(SRC
   link_drag_search.cc
   node_add.cc
   node_bundle_type_search.cc
-  node_compositor_job.cc
   node_context_path.cc
   node_copy_util.cc
   node_draw.cc
@@ -70,7 +64,6 @@ set(LIB
   PRIVATE bf::gpu
   PRIVATE bf::imbuf
   PRIVATE bf::intern::guardedalloc
-  bf_compositor
   PRIVATE bf::nodes
   PRIVATE bf::render
   PRIVATE bf::windowmanager

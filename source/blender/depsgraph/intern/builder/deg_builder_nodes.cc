@@ -82,7 +82,6 @@
 #include "BKE_pointcache.h"
 #include "BKE_rigidbody.h"
 #include "BKE_scene.hh"
-#include "BKE_shader_fx.hh"
 #include "BKE_sound.hh"
 #include "BKE_volume.hh"
 #include "BKE_world.h"
@@ -808,12 +807,6 @@ void DepsgraphNodeBuilder::build_object(int base_index,
     BuilderWalkUserData data;
     data.builder = this;
     BKE_grease_pencil_modifiers_foreach_ID_link(object, modifier_walk, &data);
-  }
-  /* Shader FX. */
-  if (object->shader_fx.first() != nullptr) {
-    BuilderWalkUserData data;
-    data.builder = this;
-    BKE_shaderfx_foreach_ID_link(object, modifier_walk, &data);
   }
   /* Constraints. */
   if (object->constraints.first() != nullptr) {

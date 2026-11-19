@@ -45,10 +45,6 @@
 #include "RE_engine.h"
 #include "RE_pipeline.h"
 
-#include "SEQ_animation.hh"
-#include "SEQ_prefetch.hh"
-#include "SEQ_relations.hh"
-#include "SEQ_sequencer.hh"
 
 #include "ED_node.hh"
 #include "ED_node_preview.hh"
@@ -168,23 +164,6 @@ void ED_render_view3d_pause_notify(Main *bmain)
   });
 }
 
-static void update_compositor(const DEGEditorUpdateContext *update_context)
-{
-  const Scene *scene = DEG_get_evaluated(update_context->depsgraph, update_context->scene);
-  if (!(scene->id.recalc & ID_RECALC_COMPOSITOR)) {
-    return;
-  }
-
-  const bool is_user_modified = DEG_scene_component_is_user_modified(
-      update_context->depsgraph, scene, DEG_SCENE_COMP_COMPOSITOR);
-  if (is_user_modified) {
-    update_context->scene->runtime->compositor.cache.clear_frames();
-  }
-
-  ED_node_compositor_job(
-      update_context->bmain, update_context->scene, update_context->view_layer, is_user_modified);
-}
-
 void ED_render_scene_update(const DEGEditorUpdateContext *update_ctx, const bool updated)
 {
   Main *bmain = update_ctx->bmain;
@@ -218,8 +197,6 @@ void ED_render_scene_update(const DEGEditorUpdateContext *update_ctx, const bool
       }
     }
   }
-
-  update_compositor(update_ctx);
 
   recursive_check = false;
 }
@@ -365,50 +342,6 @@ static void scene_changed(Main *bmain, Scene *scene)
   }
 }
 
-static void update_sequencer(const DEGEditorUpdateContext *update_ctx, Main *bmain, ID *id)
-{
-  const uint ignored = ID_RECALC_SELECT | ID_RECALC_FRAME_CHANGE | ID_RECALC_AUDIO_FPS |
-                       ID_RECALC_AUDIO_VOLUME | ID_RECALC_AUDIO_MUTE | ID_RECALC_AUDIO_LISTENER |
-                       ID_RECALC_AUDIO;
-  /* Only the evaluated ID has recalc flags of changes flushed from dependencies, so use it here.
-   * The checks below use the original ID, for direct changes and lookups of original data. */
-  const ID *id_eval = DEG_get_evaluated_id(update_ctx->depsgraph, id);
-  if ((id_eval->recalc & ~ignored) == 0) {
-    return;
-  }
-  Scene *changed_scene = update_ctx->scene;
-
-  /* Changed datablocks invalidate camera-input scene strips. */
-  if (id->id_type() != ID_SCE) {
-    seq::relations_invalidate_scene_strips(bmain, changed_scene);
-  }
-  /* Changed strips invalidate sequencer-input scene strips. */
-  else if (id->recalc & ID_RECALC_SEQUENCER_STRIPS) {
-    seq::relations_invalidate_scene_strips(bmain, id_cast<Scene *>(id));
-  }
-
-  /* Invalidate rendered VSE caches in `changed_scene`, because strip animation may have been
-   * updated. */
-  if (id->id_type() == ID_AC) {
-    Editing *ed = seq::editing_get(changed_scene);
-    if (ed != nullptr && seq::animation_keyframes_exist(changed_scene) &&
-        &changed_scene->adt->action->id == id)
-    {
-      seq::prefetch_stop(changed_scene);
-      seq::cache_cleanup(changed_scene, seq::CacheCleanup::FinalAndIntra);
-      seq::relations_invalidate_generator_strips(changed_scene);
-    }
-  }
-
-  /* Invalidate cache for strips that use this compositing tree. */
-  if (id->id_type() == ID_NT) {
-    const bNodeTree *node_tree = reinterpret_cast<const bNodeTree *>(id);
-    if (node_tree->type == NTREE_COMPOSIT) {
-      seq::relations_invalidate_compositor_users(bmain, node_tree);
-    }
-  }
-}
-
 void ED_render_id_flush_update(const DEGEditorUpdateContext *update_ctx, ID *id)
 {
   /* this can be called from render or baking thread when a python script makes
@@ -444,8 +377,6 @@ void ED_render_id_flush_update(const DEGEditorUpdateContext *update_ctx, ID *id)
     default:
       break;
   }
-
-  update_sequencer(update_ctx, bmain, id);
 }
 
 /** \} */

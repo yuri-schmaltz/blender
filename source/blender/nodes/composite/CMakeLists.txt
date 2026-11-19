@@ -133,11 +133,11 @@ set(LIB
   bf_compositor
   PRIVATE bf::render
   PRIVATE bf::windowmanager
-  PRIVATE bf::sequencer
   PRIVATE bf::dependencies::opencolorio
   PRIVATE bf::dependencies::optional::tbb
   PRIVATE bf::dependencies::optional::openimagedenoise
   PRIVATE bf::dependencies::optional::fftw3
+  PRIVATE bf::sequencer
 )
 
 add_node_discovery(

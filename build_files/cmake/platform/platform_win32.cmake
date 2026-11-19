@@ -408,12 +408,6 @@ find_package(fmt REQUIRED CONFIG)
 set(Eigen3_DIR ${LIBDIR}/eigen)
 find_package(Eigen3 REQUIRED CONFIG)
 
-if(WITH_LIBMV)
-  set(absl_DIR ${LIBDIR}/abseil)
-  set(Ceres_DIR ${LIBDIR}/ceres)
-  find_package(Ceres REQUIRED CONFIG)
-endif()
-
 if(WITH_DRACO)
   find_package(draco REQUIRED CONFIG)
 endif()
@@ -523,41 +517,12 @@ if(WITH_IMAGE_WEBP)
   set(WEBP_FOUND ON)
 endif()
 
-if(WITH_CODEC_FFMPEG)
-  set(FFMPEG_INCLUDE_DIRS
-    ${LIBDIR}/ffmpeg/include
-    ${LIBDIR}/ffmpeg/include/msvc
-  )
-  windows_find_package(FFmpeg)
-  if(NOT FFmpeg_FOUND)
-    warn_hardcoded_paths(FFmpeg)
-    set(FFMPEG_LIBRARIES
-      ${LIBDIR}/ffmpeg/lib/avcodec.lib
-      ${LIBDIR}/ffmpeg/lib/avformat.lib
-      ${LIBDIR}/ffmpeg/lib/avdevice.lib
-      ${LIBDIR}/ffmpeg/lib/avutil.lib
-      ${LIBDIR}/ffmpeg/lib/swscale.lib
-    )
-  endif()
-endif()
-
 set(openjph_ROOT ${LIBDIR}/openjph)
 
 set(IMATH_ROOT ${LIBDIR}/imath)
 find_package(IMATH REQUIRED CONFIG)
 set(OpenEXR_ROOT ${LIBDIR}/openexr)
 find_package(OpenEXR REQUIRED CONFIG)
-
-if(WITH_JACK)
-  set(JACK_INCLUDE_DIRS
-    ${LIBDIR}/jack/include/jack
-    ${LIBDIR}/jack/include
-  )
-  set(JACK_LIBRARIES
-    optimized ${LIBDIR}/jack/lib/libjack.lib
-    debug ${LIBDIR}/jack/lib/libjack_d.lib
-  )
-endif()
 
 set(_PYTHON_VERSION "3.13")
 string(REPLACE "." "" _PYTHON_VERSION_NO_DOTS ${_PYTHON_VERSION})
@@ -757,27 +722,8 @@ if(WITH_OPENSUBDIV)
   endif()
 endif()
 
-if(WITH_RUBBERBAND)
-  set(RUBBERBAND_FOUND TRUE)
-  set(RUBBERBAND_INCLUDE_DIRS ${LIBDIR}/rubberband/include)
-  set(RUBBERBAND_LIBRARIES
-    optimized ${LIBDIR}/rubberband/lib/rubberband-static.lib
-    debug ${LIBDIR}/rubberband/lib/rubberband-static_d.lib
-  )
-endif()
-
 if(WITH_SDL)
   find_package(SDL3 REQUIRED CONFIG)
-endif()
-
-# Audio IO
-if(WITH_SYSTEM_AUDASPACE)
-  set(AUDASPACE_INCLUDE_DIRS ${LIBDIR}/audaspace/include/audaspace)
-  set(AUDASPACE_LIBRARIES ${LIBDIR}/audaspace/lib/audaspace.lib)
-  set(AUDASPACE_C_INCLUDE_DIRS ${LIBDIR}/audaspace/include/audaspace)
-  set(AUDASPACE_C_LIBRARIES ${LIBDIR}/audaspace/lib/audaspace-c.lib)
-  set(AUDASPACE_PY_INCLUDE_DIRS ${LIBDIR}/audaspace/include/audaspace)
-  set(AUDASPACE_PY_LIBRARIES ${LIBDIR}/audaspace/lib/audaspace-py.lib)
 endif()
 
 if(WITH_TBB)
@@ -819,29 +765,6 @@ include_directories(SYSTEM "${PTHREADS_INCLUDE_DIRS}")
 
 set(WINTAB_INC ${CMAKE_SOURCE_DIR}/extern/wintab/include)
 
-if(WITH_OPENAL)
-  set(OPENAL ${LIBDIR}/openal)
-  set(OPENALDIR ${LIBDIR}/openal)
-  set(OPENAL_INCLUDE_DIR ${OPENAL}/include/AL)
-  set(OPENAL_LIBPATH ${OPENAL}/lib)
-  if(MSVC)
-    set(OPENAL_LIBRARY ${OPENAL_LIBPATH}/openal32.lib)
-  else()
-    set(OPENAL_LIBRARY ${OPENAL_LIBPATH}/wrap_oal.lib)
-  endif()
-endif()
-
-if(WITH_CODEC_SNDFILE)
-  set(LIBSNDFILE ${LIBDIR}/sndfile)
-  set(LIBSNDFILE_INCLUDE_DIRS ${LIBSNDFILE}/include)
-  set(LIBSNDFILE_LIBPATH ${LIBSNDFILE}/lib) # TODO, deprecate
-  if(EXISTS ${LIBSNDFILE_LIBPATH}/sndfile.lib)
-    set(LIBSNDFILE_LIBRARIES ${LIBSNDFILE_LIBPATH}/sndfile.lib)
-  else()
-    set(LIBSNDFILE_LIBRARIES ${LIBSNDFILE_LIBPATH}/libsndfile-1.lib)
-  endif()
-endif()
-
 test_neon_support()
 if(SUPPORTS_NEON_BUILD)
   windows_find_package(sse2neon)
@@ -850,12 +773,6 @@ if(SUPPORTS_NEON_BUILD)
     set(SSE2NEON_INCLUDE_DIRS ${LIBDIR}/sse2neon)
     set(SSE2NEON_FOUND True)
   endif()
-endif()
-
-if(WITH_CYCLES AND WITH_CYCLES_OSL)
-  set(CYCLES_OSL ${LIBDIR}/osl CACHE PATH "Path to OpenShadingLanguage installation")
-  set(OSL_ROOT ${CYCLES_OSL})
-  find_package(OSL REQUIRED CONFIG)
 endif()
 
 if(WITH_EMBREE)
@@ -1111,31 +1028,15 @@ if(WITH_VULKAN_BACKEND)
   endif()
 endif()
 
-if(WITH_CYCLES AND WITH_CYCLES_PATH_GUIDING)
-  find_package(openpgl QUIET)
-  if(openpgl_FOUND)
-    get_target_property(OPENPGL_LIBRARIES_RELEASE openpgl::openpgl LOCATION_RELEASE)
-    get_target_property(OPENPGL_LIBRARIES_DEBUG openpgl::openpgl LOCATION_DEBUG)
-    set(OPENPGL_LIBRARIES
-      optimized ${OPENPGL_LIBRARIES_RELEASE}
-      debug ${OPENPGL_LIBRARIES_DEBUG}
-    )
-    get_target_property(OPENPGL_INCLUDE_DIR openpgl::openpgl INTERFACE_INCLUDE_DIRECTORIES)
-  else()
-    set(WITH_CYCLES_PATH_GUIDING OFF)
-    message(STATUS "OpenPGL not found, disabling WITH_CYCLES_PATH_GUIDING")
-  endif()
-endif()
-
 set(ZSTD_INCLUDE_DIRS ${LIBDIR}/zstd/include)
 set(ZSTD_LIBRARIES ${LIBDIR}/zstd/lib/zstd_static.lib)
 
-if((WITH_EMBREE AND EMBREE_SYCL_SUPPORT) OR (WITH_CYCLES AND WITH_CYCLES_DEVICE_ONEAPI))
+if(WITH_EMBREE AND EMBREE_SYCL_SUPPORT)
   set(LEVEL_ZERO_ROOT_DIR ${LIBDIR}/level_zero)
-  set(CYCLES_SYCL ${LIBDIR}/dpcpp CACHE PATH "Path to oneAPI DPC++ compiler")
-  mark_as_advanced(CYCLES_SYCL)
-  if(EXISTS ${CYCLES_SYCL} AND NOT SYCL_ROOT_DIR)
-    set(SYCL_ROOT_DIR ${CYCLES_SYCL})
+  set(EMBREE_SYCL_ROOT ${LIBDIR}/dpcpp CACHE PATH "Path to oneAPI DPC++ compiler")
+  mark_as_advanced(EMBREE_SYCL_ROOT)
+  if(EXISTS ${EMBREE_SYCL_ROOT} AND NOT SYCL_ROOT_DIR)
+    set(SYCL_ROOT_DIR ${EMBREE_SYCL_ROOT})
   endif()
   file(GLOB _sycl_runtime_libraries_glob
     ${SYCL_ROOT_DIR}/bin/sycl.dll
@@ -1202,10 +1103,6 @@ endif()
 
 if(WITH_JOLT)
   find_package(Jolt REQUIRED CONFIG)
-endif()
-
-if(WITH_OPENTIMELINEIO)
-  find_package(OpenTimelineIO REQUIRED CONFIG)
 endif()
 
 # Add the MSVC directory to the path so when building with ASAN enabled tools such as

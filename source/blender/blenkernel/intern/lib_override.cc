@@ -29,7 +29,6 @@
 #include "DNA_modifier_types.h"
 #include "DNA_object_types.h"
 #include "DNA_scene_types.h"
-#include "DNA_shader_fx_types.h"
 #include "DNA_userdef_types.h"
 
 #include "DEG_depsgraph.hh"
@@ -4199,9 +4198,6 @@ void BKE_lib_override_flag_subdata_local(ID &id)
       }
       for (bConstraint &constraint : ob.constraints) {
         constraint.flag |= CONSTRAINT_OVERRIDE_LIBRARY_LOCAL;
-      }
-      for (ShaderFxData &fx : ob.shader_fx) {
-        fx.flag |= eShaderFxFlag_OverrideLibrary_Local;
       }
       if (ob.pose) {
         for (bPoseChannel &pose_bone : ob.pose->chanbase) {
