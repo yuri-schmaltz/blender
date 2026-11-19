@@ -141,7 +141,6 @@ set(LIB
   PRIVATE bf::windowmanager
 
   PRIVATE bf::dependencies::optional::python
-  PRIVATE bf::dependencies::optional::ffmpeg
   PRIVATE bf::dependencies::optional::sdl
 )
 

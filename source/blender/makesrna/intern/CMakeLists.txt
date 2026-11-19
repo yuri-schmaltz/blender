@@ -308,9 +308,6 @@ if(WITH_IMAGE_WEBP)
   add_definitions(-DWITH_IMAGE_WEBP)
 endif()
 
-if(WITH_CODEC_FFMPEG)
-  add_definitions(-DWITH_FFMPEG)
-endif()
 
 if(WITH_FFTW3)
   add_definitions(-DWITH_FFTW3)
@@ -471,7 +468,6 @@ set(LIB
   bf_editor_io
   bf_editor_mesh
   bf_editor_object
-  bf_editor_physics
   bf_editor_pointcloud
   bf_editor_render
   bf_editor_scene

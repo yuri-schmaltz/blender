@@ -47,7 +47,6 @@
 #include "RNA_prototypes.hh"
 
 #include "ED_buttons.hh"
-#include "ED_physics.hh"
 #include "ED_screen.hh"
 
 #include "UI_interface.hh"
@@ -1132,15 +1131,6 @@ int /*eContextResult*/ buttons_context(const bContext *C,
   }
   if (CTX_data_equals(member, "particle_system")) {
     set_pointer_type(path, result, RNA_ParticleSystem);
-    return CTX_RESULT_OK;
-  }
-  if (CTX_data_equals(member, "particle_system_editable")) {
-    if (PE_poll(const_cast<bContext *>(C))) {
-      set_pointer_type(path, result, RNA_ParticleSystem);
-    }
-    else {
-      CTX_data_pointer_set(result, nullptr, RNA_ParticleSystem, nullptr);
-    }
     return CTX_RESULT_OK;
   }
   if (CTX_data_equals(member, "particle_settings")) {

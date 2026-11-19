@@ -147,7 +147,6 @@ static PyObject *make_builtopts_info()
   SetObjIncref(Py_False);
 #endif
 
-  SetObjIncref(Py_False);
 
 #ifdef WITH_INTERNATIONAL
   SetObjIncref(Py_True);

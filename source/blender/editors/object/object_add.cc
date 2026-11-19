@@ -123,7 +123,6 @@
 #include "ED_node.hh"
 #include "ED_object.hh"
 #include "ED_outliner.hh"
-#include "ED_physics.hh"
 #include "ED_pointcloud.hh"
 #include "ED_render.hh"
 #include "ED_screen.hh"
@@ -3211,7 +3210,6 @@ static Object *convert_mesh_to_curves_legacy(Base &base,
   if (newob->type == OB_CURVES_LEGACY) {
     BKE_object_free_modifiers(newob, 0); /* after derivedmesh calls! */
     if (newob->rigidbody_object != nullptr) {
-      ED_rigidbody_object_remove(info.bmain, info.scene, newob);
     }
   }
 
@@ -3294,7 +3292,6 @@ static Object *convert_mesh_to_pointcloud(Base &base,
 
   if (newob->type == OB_POINTCLOUD) {
     BKE_object_free_modifiers(newob, 0); /* after derivedmesh calls! */
-    ED_rigidbody_object_remove(info.bmain, info.scene, newob);
   }
 
   return newob;
@@ -4284,7 +4281,6 @@ static Object *convert_pointcloud_to_mesh(Base &base,
 
   if (newob->type == OB_MESH) {
     BKE_object_free_modifiers(newob, 0); /* after derivedmesh calls! */
-    ED_rigidbody_object_remove(info.bmain, info.scene, newob);
   }
 
   return newob;

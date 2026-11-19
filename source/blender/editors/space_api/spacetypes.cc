@@ -41,7 +41,6 @@
 #include "ED_node.hh"
 #include "ED_object.hh"
 #include "ED_paint.hh"
-#include "ED_physics.hh"
 #include "ED_pointcloud.hh"
 #include "ED_render.hh"
 #include "ED_scene.hh"
@@ -101,7 +100,6 @@ void ED_spacetypes_init()
   ED_operatortypes_sculpt_curves();
   ED_operatortypes_uvedit();
   ED_operatortypes_paint();
-  ED_operatortypes_physics();
   ED_operatortypes_curve();
   curves::operatortypes_curves();
   pointcloud::operatortypes_pointcloud();
@@ -191,7 +189,6 @@ void ED_spacetypes_keymap(wmKeyConfig *keyconf)
   curves::keymap_curves(keyconf);
   pointcloud::keymap_pointcloud(keyconf);
   ED_keymap_armature(keyconf);
-  ED_keymap_physics(keyconf);
   ED_keymap_metaball(keyconf);
   ED_keymap_paint(keyconf);
   ED_keymap_mask(keyconf);

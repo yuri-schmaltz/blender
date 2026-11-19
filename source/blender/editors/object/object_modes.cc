@@ -44,7 +44,6 @@
 #include "ED_gpencil_legacy.hh"
 #include "ED_outliner.hh"
 #include "ED_paint.hh"
-#include "ED_physics.hh"
 #include "ED_sculpt.hh"
 #include "ED_undo.hh"
 #include "ED_view3d.hh"
@@ -76,9 +75,6 @@ static const char *object_mode_op_string(eObjectMode mode)
   }
   if (mode == OB_MODE_TEXTURE_PAINT) {
     return "PAINT_OT_texture_paint_toggle";
-  }
-  if (mode == OB_MODE_PARTICLE_EDIT) {
-    return "PARTICLE_OT_particle_edit_toggle";
   }
   if (mode == OB_MODE_POSE) {
     return "OBJECT_OT_posemode_toggle";
@@ -113,11 +109,6 @@ bool mode_compat_test(const Object *ob, eObjectMode mode)
                   OB_MODE_TEXTURE_PAINT))
       {
         return true;
-      }
-      if (mode & OB_MODE_PARTICLE_EDIT) {
-        if (ED_object_particle_edit_mode_supported(ob)) {
-          return true;
-        }
       }
       break;
     case OB_CURVES_LEGACY:
@@ -324,12 +315,6 @@ static bool ed_object_mode_generic_exit_ex(
       return true;
     }
     ED_object_texture_paint_mode_exit_ex(*bmain, *scene, *ob);
-  }
-  else if (ob->mode & OB_MODE_PARTICLE_EDIT) {
-    if (only_test) {
-      return true;
-    }
-    ED_object_particle_edit_mode_exit_ex(scene, ob);
   }
   else if (ob->type == OB_GREASE_PENCIL) {
     BLI_assert((ob->mode & OB_MODE_OBJECT) == 0);
